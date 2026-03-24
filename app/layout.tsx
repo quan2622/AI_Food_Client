@@ -20,7 +20,7 @@ export default function RootLayout({
         <div className="fixed inset-0 bg-linear-to-b from-[#CAFD00]/20 via-white/80 to-white -z-10" />
 
         <Header />
-        <main className="flex-1 pt-32 relative">{children}</main>
+        <main className="flex-1 pt-28 relative">{children}</main>
       </body>
     </html>
   );
