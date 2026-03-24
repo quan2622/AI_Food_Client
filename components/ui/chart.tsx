@@ -50,12 +50,22 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
   return (
     <style
       dangerouslySetInnerHTML={{
-        __html: Object.entries(config)
-          .map(([key, config]) => {
-            const color = config.theme?.[(typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") as keyof typeof config.theme] || config.color
-            return color ? `--color-${key}: ${color};` : null
-          })
-          .join("\n"),
+        __html: `
+#${id} {
+${Object.entries(config)
+  .map(([key, config]) => {
+    const color =
+      config.theme?.[
+        (typeof window !== "undefined" &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "light") as keyof typeof config.theme
+      ] || config.color
+    return color ? `--color-${key}: ${color};` : null
+  })
+  .join("\n")}
+}
+        `,
       }}
     />
   )
