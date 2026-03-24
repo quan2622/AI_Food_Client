@@ -13,10 +13,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full antialiased">
+    <html lang="en" className="h-full antialiased" suppressHydrationWarning>
       <body className="group min-h-full flex flex-col selection:bg-[#9FD923]/90 relative overflow-x-hidden">
+
         {/* Background Gradient Layer */}
-        <div className="fixed inset-0 bg-linear-to-b from-[#9FD923]/40 via-[#F2F2F2]/80 to-[#F2F2F2] -z-10" />
+        <div className="fixed inset-0 bg-linear-to-b from-[#CAFD00]/20 via-white/80 to-white -z-10" />
 
         <Header />
         <main className="flex-1 pt-32 relative">{children}</main>

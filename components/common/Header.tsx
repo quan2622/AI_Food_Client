@@ -25,7 +25,7 @@ import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 
 const NAV_ITEMS = [
-  { label: "Dashboard", href: "#" },
+  { label: "Trang chủ", href: "#" },
   { label: "People", href: "#" },
   { label: "Hiring", href: "#" },
   { label: "Devices", href: "#" },
@@ -51,7 +51,7 @@ const NOTIFICATIONS = [
 ];
 
 const Header = () => {
-  const [activeTab, setActiveTab] = useState("Dashboard");
+  const [activeTab, setActiveTab] = useState("Trang chủ");
   const [showNotifications, setShowNotifications] = useState(false);
   const [canScrollMore, setCanScrollMore] = useState(false);
   const [profileTab, setProfileTab] = useState("Profile");
@@ -77,7 +77,7 @@ const Header = () => {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 px-10 py-5">
-      <div className="mx-auto grid grid-cols-3 items-center max-w-7xl h-[80px]">
+      <div className="mx-auto grid grid-cols-3 items-center max-w-[1600px] h-[80px]">
         {/* Left Section: Logo */}
         <div className="flex items-center justify-start">
           <div className="flex items-center gap-3 rounded-full border border-[#0D0D0D]/10 px-6 py-2.5 bg-white/80 backdrop-blur-xl transition-all duration-300 hover:bg-white hover:border-[#9FD923]/40 shadow-sm group cursor-pointer">
