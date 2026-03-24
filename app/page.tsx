@@ -14,8 +14,8 @@ import NutritionTrends from "@/components/dashboard/NutritionTrends";
 
 export default function Home() {
   return (
-    <ScrollArea className="h-[calc(100vh-120px)] w-full">
-      <div className="px-10 pb-16">
+    <ScrollArea className="h-screen w-full">
+      <div className="pt-28 px-10 pb-16">
         <div className="max-w-[1600px] mx-auto pt-2">
           <div className="grid grid-cols-12 gap-5">
             {/* Top Row: Lifestyle Fuel & Sidebar (Macros + Goal) */}

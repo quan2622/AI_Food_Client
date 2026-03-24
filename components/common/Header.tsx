@@ -2,6 +2,8 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   Bell,
   User,
@@ -25,8 +27,8 @@ import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 
 const NAV_ITEMS = [
-  { label: "Trang chủ", href: "#" },
-  { label: "People", href: "#" },
+  { label: "Trang chủ", href: "/" },
+  { label: "Gợi ý", href: "/suggestions" },
   { label: "Hiring", href: "#" },
   { label: "Devices", href: "#" },
 ];
@@ -51,7 +53,7 @@ const NOTIFICATIONS = [
 ];
 
 const Header = () => {
-  const [activeTab, setActiveTab] = useState("Trang chủ");
+  const pathname = usePathname();
   const [showNotifications, setShowNotifications] = useState(false);
   const [canScrollMore, setCanScrollMore] = useState(false);
   const [profileTab, setProfileTab] = useState("Profile");
@@ -95,13 +97,16 @@ const Header = () => {
         <div className="flex items-center justify-center">
           <nav className="relative flex overflow-hidden rounded-full bg-white/80 backdrop-blur-md p-1.5 items-center border border-[#0D0D0D]/10 shadow-sm">
             {NAV_ITEMS.map((item) => {
-              const isActive = activeTab === item.label;
+              // Ensure perfect active state matching
+              const isActive =
+                pathname === item.href ||
+                (pathname === "/" && item.label === "Trang chủ");
               return (
-                <button
+                <Link
                   key={item.label}
-                  onClick={() => setActiveTab(item.label)}
+                  href={item.href}
                   className={cn(
-                    "relative w-28 py-2.5 text-[14px] font-semibold transition-colors duration-300 text-center rounded-full outline-none cursor-pointer",
+                    "relative w-28 py-2.5 text-[14px] font-semibold transition-colors duration-300 text-center rounded-full outline-none cursor-pointer flex items-center justify-center",
                     isActive
                       ? "text-[#0D0D0D]"
                       : "text-[#0D0D0D]/60 hover:text-[#0D0D0D]",
@@ -112,14 +117,14 @@ const Header = () => {
                       layoutId="nav-slider"
                       className="absolute inset-0 rounded-full bg-[#9FD923]/90 backdrop-blur-md border border-[#B3D929] shadow-sm"
                       transition={{
-                        type: "spring",
-                        stiffness: 700,
-                        damping: 50,
+                        type: "tween",
+                        ease: [0.6, -0.05, 0.1, 0.99],
+                        duration: 0.3,
                       }}
                     />
                   )}
                   <span className="relative z-10">{item.label}</span>
-                </button>
+                </Link>
               );
             })}
           </nav>
