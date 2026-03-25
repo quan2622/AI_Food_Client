@@ -24,7 +24,12 @@ import {
   Dna,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const NAV_ITEMS = [
   { label: "Trang chủ", href: "/" },
@@ -140,7 +145,7 @@ const Header = () => {
           >
             <button className="relative flex h-12 w-12 items-center justify-center rounded-full bg-white/80 backdrop-blur-xl border border-[#0D0D0D]/10 transition-all duration-300 hover:bg-[#F2F2F2] hover:border-[#9FD923]/30 shadow-sm group">
               <Bell className="h-5.5 w-5.5 text-[#0D0D0D]/70 group-hover:shake" />
-              <span className="absolute top-[12px] right-[12px] h-2.5 w-2.5 rounded-full bg-[#9FD923] shadow-[0_0_8px_rgba(159,217,35,0.6)]" />
+              <span className="absolute top-[10px] right-[12px] h-2.5 w-2.5 rounded-full bg-[#9FD923] shadow-[0_0_8px_rgba(159,217,35,0.6)]" />
             </button>
 
             {/* Notification Popover */}
@@ -157,9 +162,9 @@ const Header = () => {
                     bounce: 0.4,
                   }}
                   style={{ originX: "85%", originY: "0%" }}
-                  className="absolute top-full right-0 pt-4 w-[350px] z-100 transform-gpu"
+                  className="absolute top-full right-0 pt-3 w-[360px] z-100 transform-gpu"
                 >
-                  <div className="rounded-3xl bg-white/90 backdrop-blur-2xl border border-[#0D0D0D]/10 shadow-[0_20px_50px_rgba(0,0,0,0.1)] overflow-hidden relative">
+                  <div className="rounded-2xl bg-white border border-[#0D0D0D]/10 shadow-[0_20px_50px_rgba(0,0,0,0.1)] overflow-hidden relative">
                     <div className="p-5 border-b border-[#0D0D0D]/5">
                       <h3 className="text-[16px] font-bold text-[#0D0D0D]">
                         Notifications
@@ -227,13 +232,18 @@ const Header = () => {
             </AnimatePresence>
           </div>
 
-          <Dialog>
+          <Dialog
+            onOpenChange={(isOpen) => {
+              if (isOpen) setProfileTab("Profile");
+            }}
+          >
             <DialogTrigger asChild>
               <button className="flex h-12 w-12 items-center justify-center rounded-full bg-white/80 backdrop-blur-xl text-[#0D0D0D] border border-[#0D0D0D]/10 transition-all duration-300 hover:border-[#9FD923]/30 shadow-sm cursor-pointer overflow-hidden group">
                 <User className="h-6 w-6 text-[#0D0D0D]/80 group-hover:text-[#9FD923] transition-colors" />
               </button>
             </DialogTrigger>
             <DialogContent className="min-w-7xl p-0 overflow-hidden border-none bg-white rounded-3xl shadow-2xl">
+              <DialogTitle className="sr-only">User Settings</DialogTitle>
               <div className="flex h-[650px]">
                 {/* Sidebar */}
                 <div className="w-[240px] bg-[#F2F2F2]/50 border-r border-[#0D0D0D]/5 p-6 flex flex-col gap-2">
@@ -289,7 +299,12 @@ const Header = () => {
                 </div>
 
                 {/* Content Area */}
-                <div className="flex-1 p-10 overflow-y-auto custom-scrollbar relative">
+                <motion.div
+                  initial={{ opacity: 0, x: 40 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.4, ease: "easeOut", delay: 0.1 }}
+                  className="flex-1 p-10 overflow-y-auto custom-scrollbar relative"
+                >
                   <AnimatePresence mode="wait">
                     {profileTab === "Profile" && (
                       <motion.div
@@ -558,10 +573,10 @@ const Header = () => {
                     {profileTab === "Goals" && (
                       <motion.div
                         key="goals"
-                        initial={{ opacity: 0, x: 10 }}
+                        initial={{ opacity: 0, x: 15 }}
                         animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -10 }}
-                        transition={{ duration: 0.2 }}
+                        exit={{ opacity: 0, x: -15 }}
+                        transition={{ duration: 0.2, ease: "easeOut" }}
                         className="space-y-8 h-full flex flex-col"
                       >
                         <div className="p-6 bg-[#D9F2A2]/20 rounded-3xl border border-[#9FD923]/20 flex items-center justify-between">
@@ -658,10 +673,10 @@ const Header = () => {
                     {profileTab === "Allergies" && (
                       <motion.div
                         key="allergies"
-                        initial={{ opacity: 0, x: 10 }}
+                        initial={{ opacity: 0, x: 15 }}
                         animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -10 }}
-                        transition={{ duration: 0.2 }}
+                        exit={{ opacity: 0, x: -15 }}
+                        transition={{ duration: 0.2, ease: "easeOut" }}
                         className="space-y-8 h-full flex flex-col"
                       >
                         <div className="flex items-center justify-between mb-2">
@@ -741,10 +756,10 @@ const Header = () => {
                     {profileTab === "Security" && (
                       <motion.div
                         key="security"
-                        initial={{ opacity: 0, x: 10 }}
+                        initial={{ opacity: 0, x: 15 }}
                         animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -10 }}
-                        transition={{ duration: 0.2 }}
+                        exit={{ opacity: 0, x: -15 }}
+                        transition={{ duration: 0.2, ease: "easeOut" }}
                         className="space-y-6"
                       >
                         <h3 className="text-[22px] font-bold text-[#0D0D0D]">
@@ -832,7 +847,7 @@ const Header = () => {
                       </motion.div>
                     )}
                   </AnimatePresence>
-                </div>
+                </motion.div>
               </div>
             </DialogContent>
           </Dialog>

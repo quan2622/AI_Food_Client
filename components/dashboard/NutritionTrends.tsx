@@ -94,18 +94,18 @@ export default function NutritionTrends() {
           </div>
           <Select value={timeRange} onValueChange={setTimeRange}>
             <SelectTrigger
-              className="w-[180px] h-9 rounded-lg focus:ring-[#0ea5e9] font-bold text-xs"
+              className="w-[180px] h-9 rounded-lg border border-[#E2E8F0] shadow-sm focus:ring-[#0ea5e9] font-bold text-xs"
               aria-label="Select period"
             >
               <SelectValue placeholder="Last 30 days" />
             </SelectTrigger>
             <SelectContent
               position="popper"
-              className="w-[180px] rounded-lg"
+              className="w-[180px] rounded-lg border border-[#E2E8F0] shadow-sm"
             >
-              <SelectItem value="90d">Last 3 months</SelectItem>
-              <SelectItem value="30d">Last 30 days</SelectItem>
-              <SelectItem value="7d">Last 7 days</SelectItem>
+              <SelectItem value="90d" className="h-9 font-bold text-xs cursor-pointer">Last 3 months</SelectItem>
+              <SelectItem value="30d" className="h-9 font-bold text-xs cursor-pointer">Last 30 days</SelectItem>
+              <SelectItem value="7d" className="h-9 font-bold text-xs cursor-pointer">Last 7 days</SelectItem>
             </SelectContent>
           </Select>
         </CardHeader>
