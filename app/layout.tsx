@@ -17,7 +17,7 @@ export default function RootLayout({
       <body className="group min-h-full flex flex-col selection:bg-[#9FD923]/90 relative overflow-x-hidden">
 
         {/* Background Gradient Layer */}
-        <div className="fixed inset-0 bg-linear-to-b from-[#CAFD00]/20 via-white/80 to-white -z-10" />
+        <div className="fixed top-0 left-0 right-0 h-[50vh] bg-linear-to-b from-[#9FD923]/40 via-[#9FD923]/12 to-transparent pointer-events-none -z-10" />
 
         <Header />
         <main className="flex-1 relative h-screen">{children}</main>

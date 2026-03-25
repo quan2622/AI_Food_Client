@@ -133,14 +133,19 @@
   }
 
   .custom-scrollbar::-webkit-scrollbar {
-    width: 4px;
+    width: 6px;
+    height: 6px;
   }
   .custom-scrollbar::-webkit-scrollbar-track {
     background: transparent;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.15);
+    background: #9FD923;
     border-radius: 10px;
     transition: all 0.3s;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #8CCB15;
+    cursor: pointer;
   }
 }

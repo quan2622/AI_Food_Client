@@ -29,6 +29,7 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 const NAV_ITEMS = [
   { label: "Trang chủ", href: "/" },
   { label: "Gợi ý", href: "/suggestions" },
+  { label: "Nhật ký", href: "/diary" },
   { label: "Hiring", href: "#" },
   { label: "Devices", href: "#" },
 ];
@@ -118,8 +119,8 @@ const Header = () => {
                       className="absolute inset-0 rounded-full bg-[#9FD923]/90 backdrop-blur-md border border-[#B3D929] shadow-sm"
                       transition={{
                         type: "tween",
-                        ease: [0.6, -0.05, 0.1, 0.99],
-                        duration: 0.3,
+                        ease: [0.6, -0.02, 0.1, 0.99],
+                        duration: 0.5,
                       }}
                     />
                   )}
