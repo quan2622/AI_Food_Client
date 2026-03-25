@@ -3,7 +3,7 @@ import { Zap } from "lucide-react";
 
 export default function MacroBreakdown() {
   return (
-    <div className="bg-white rounded-[2rem] p-6 shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-[#F1F5F9] flex-1">
+    <div className="bg-white rounded-[2rem] p-5 shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-[#F1F5F9] flex-1">
       <h3 className="text-base font-black text-[#0F172A] mb-6 flex items-center gap-2 uppercase tracking-tight">
         <span className="w-7 h-7 rounded-lg bg-[#2563eb]/10 flex items-center justify-center text-[#2563eb]">
           <Zap className="h-3.5 w-3.5" />

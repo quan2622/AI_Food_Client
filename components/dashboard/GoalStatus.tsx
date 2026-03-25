@@ -3,7 +3,7 @@ import { Scale } from "lucide-react";
 
 export default function GoalStatus() {
   return (
-    <div className="bg-[#CAFD00] rounded-[2rem] p-6 text-[#0F172A] relative overflow-hidden group shadow-[0_15px_30px_rgba(202,253,0,0.15)] flex flex-col justify-between">
+    <div className="bg-[#CAFD00] rounded-[2rem] p-5 text-[#0F172A] relative overflow-hidden group shadow-[0_15px_30px_rgba(202,253,0,0.15)] flex flex-col justify-between">
       <div className="absolute -right-4 -bottom-4 opacity-10">
         <Scale className="w-24 h-24" />
       </div>

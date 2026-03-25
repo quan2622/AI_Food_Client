@@ -20,7 +20,7 @@ const chartConfig = {
 
 export default function LifestyleFuel() {
   return (
-    <div className="col-span-12 lg:col-span-7 bg-white rounded-[2rem] p-10 shadow-[0_4px_25px_rgb(0,0,0,0.04)] border border-[#F1F5F9] flex flex-col items-center justify-center relative overflow-hidden group min-h-[520px]">
+    <div className="col-span-12 lg:col-span-7 bg-white rounded-[2rem] p-6 shadow-[0_4px_25px_rgb(0,0,0,0.04)] border border-[#F1F5F9] flex flex-col items-center justify-center relative overflow-hidden group min-h-[520px]">
       <div className="absolute top-0 right-0 p-8 opacity-5">
         <Zap className="w-32 h-32 text-[#0F172A]" />
       </div>
