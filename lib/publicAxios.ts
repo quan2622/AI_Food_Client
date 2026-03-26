@@ -1,5 +1,4 @@
-import axios from "axios";
-import { IBackendRes } from "@/types/backend.type";
+import axios, { AxiosResponse, AxiosError } from "axios";
 
 const publicAxios = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BACKEND_URL,
@@ -10,13 +9,13 @@ const publicAxios = axios.create({
 });
 
 publicAxios.interceptors.response.use(
-  (response) => {
-    // response.data chính là { metadata, data } từ backend
-    // Trả nguyên gốc để component nhận đúng IBackendRes<T>
-    return response.data as IBackendRes<unknown>;
+  (response: AxiosResponse) => {
+    // response.data exactly equals { metadata, data } from backend
+    // Type result as ApiResponse<any> to keep flexibility
+    return response.data;
   },
-  (error) => {
-    // error.response.data chính là IBackendErrorRes từ HttpExceptionFilter
+  (error: AxiosError) => {
+    // Return typed error response
     return Promise.reject(error?.response?.data || error);
   }
 );

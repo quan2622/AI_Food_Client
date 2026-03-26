@@ -1,6 +1,6 @@
-import axios from "axios";
+import axios, { AxiosResponse, AxiosError, InternalAxiosRequestConfig } from "axios";
 import { useAuthStore } from "@/stores/authStore";
-import { IBackendRes } from "@/types/backend.type";
+import { ApiResponse, ApiErrorResponse } from "@/types/backend.type";
 import { IAuthTokenData } from "@/types/authen.type";
 import publicAxios from "./publicAxios";
 
@@ -22,8 +22,9 @@ const handleRefreshToken = async (): Promise<string | null> => {
     refreshPromise = (async () => {
       try {
         // Dùng publicAxios tránh loop interceptor của privateAxios
-        // publicAxios trả về { metadata, data } (IBackendRes<IAccount>)
-        const res = (await publicAxios.post("/api/v1/auth/refresh-token")) as IBackendRes<IAuthTokenData>;
+        const res = (await publicAxios.post(
+          "/api/v1/auth/refresh-token"
+        )) as ApiResponse<IAuthTokenData>;
 
         if (res && res.metadata?.EC === 0 && res.data) {
           return res.data.access_token || null;
@@ -40,9 +41,9 @@ const handleRefreshToken = async (): Promise<string | null> => {
 };
 
 // ───── Request Interceptor: Gắn Bearer token ─────
-privateAxios.interceptors.request.use((config) => {
+privateAxios.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   const access_token = useAuthStore.getState().access_token;
-  if (access_token) {
+  if (access_token && config.headers) {
     config.headers.Authorization = `Bearer ${access_token}`;
   }
   return config;
@@ -50,13 +51,12 @@ privateAxios.interceptors.request.use((config) => {
 
 // ───── Response Interceptor ─────
 privateAxios.interceptors.response.use(
-  (response) => {
+  (response: AxiosResponse) => {
     // response.data = { metadata, data } từ TransformInterceptor
-    // Trả nguyên gốc IBackendRes<T> để component truy cập metadata.EC, data, …
     return response.data;
   },
-  async (error) => {
-    const originalRequest = error.config;
+  async (error: AxiosError) => {
+    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
     // ── Xử lý 401: Token hết hạn → tự động refresh ──
     if (
@@ -64,15 +64,19 @@ privateAxios.interceptors.response.use(
       error.response &&
       +error.response.status === 401 &&
       originalRequest.url !== "/auth/login" &&
-      !originalRequest.headers[NO_RETRY_HEADER]
+      !originalRequest.headers?.[NO_RETRY_HEADER]
     ) {
-      originalRequest.headers[NO_RETRY_HEADER] = "true";
+      if (originalRequest.headers) {
+        originalRequest.headers[NO_RETRY_HEADER] = "true";
+      }
 
       const new_access_token = await handleRefreshToken();
 
       if (new_access_token) {
         useAuthStore.getState().setAccessToken(new_access_token);
-        originalRequest.headers["Authorization"] = `Bearer ${new_access_token}`;
+        if (originalRequest.headers) {
+          originalRequest.headers["Authorization"] = `Bearer ${new_access_token}`;
+        }
         return privateAxios.request(originalRequest);
       } else {
         const message = "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.";
@@ -87,13 +91,13 @@ privateAxios.interceptors.response.use(
       +error.response.status === 400 &&
       originalRequest.url === "/api/v1/auth/refresh-token"
     ) {
-      // error.response.data = IBackendErrorRes
+      const data = error.response.data as ApiErrorResponse;
       const message =
-        error?.response?.data?.message || "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.";
+        data?.message || "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.";
       useAuthStore.getState().setRefreshTokenAction(true, message);
     }
 
-    // Luôn reject bằng IBackendErrorRes để component catch được
+    // Luôn reject bằng ApiErrorResponse để component catch được
     return Promise.reject(error?.response?.data || error);
   }
 );

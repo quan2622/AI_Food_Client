@@ -1,19 +1,55 @@
 "use client";
 
 import { useState } from "react";
-import { Mail, Lock, EyeOff, Eye, Utensils } from "lucide-react";
+import { Mail, Lock, EyeOff, Eye, Utensils, Loader2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import heroImg from "@/assets/images/nutrition-hero1.png";
+import { authService } from "@/services/authService";
+import { useAuthStore } from "@/stores/authStore";
 
 const SignInPage = () => {
+  const router = useRouter();
+  const loginAction = useAuthStore((state) => state.loginAction);
+
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Signing in with:", { email, password });
+    if (isLoading) return;
+
+    setIsLoading(true);
+    try {
+      const res = await authService.login({ email, password });
+
+      if (res.metadata?.EC === 0 && res.data) {
+        // Success: persist info to store and redirect
+        loginAction(res.data.access_token, res.data.user);
+        router.push("/");
+      } else {
+        // Handle custom error message from backend
+        alert(res.metadata?.message || "Đăng nhập thất bại. Vui lòng thử lại.");
+      }
+    } catch (error: unknown) {
+      console.error("Login failed:", error);
+      let errorMsg = "Đã xảy ra lỗi kết nối. Vui lòng kiểm tra lại mạng.";
+      if (error instanceof Error) {
+        errorMsg = error.message;
+      } else if (
+        typeof error === "object" &&
+        error !== null &&
+        "message" in error
+      ) {
+        errorMsg = String((error as { message: unknown }).message);
+      }
+      alert(errorMsg);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -82,7 +118,10 @@ const SignInPage = () => {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="flex w-full flex-col gap-3.5">
+          <form
+            onSubmit={handleSubmit}
+            className="flex w-full flex-col gap-3.5"
+          >
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-semibold text-muted-foreground ml-1 uppercase tracking-wider">
                 Email
@@ -96,6 +135,7 @@ const SignInPage = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   className="flex-1 bg-transparent text-sm text-card-foreground placeholder:text-muted-foreground/60 outline-none"
                   required
+                  disabled={isLoading}
                 />
               </div>
             </div>
@@ -113,6 +153,7 @@ const SignInPage = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   className="flex-1 bg-transparent text-sm text-card-foreground placeholder:text-muted-foreground/60 outline-none"
                   required
+                  disabled={isLoading}
                 />
                 <button
                   type="button"
@@ -139,9 +180,17 @@ const SignInPage = () => {
 
             <button
               type="submit"
-              className="mt-1 w-full rounded-xl bg-primary py-3.5 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 active:translate-y-0"
+              disabled={isLoading}
+              className="mt-1 w-full rounded-xl bg-primary py-3.5 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 active:translate-y-0 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              Đăng nhập
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Đang xử lý...
+                </>
+              ) : (
+                "Đăng nhập"
+              )}
             </button>
           </form>
 

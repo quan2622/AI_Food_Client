@@ -1,14 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { Mail, Lock, Utensils, Eye, EyeOff, ChevronRight } from "lucide-react";
+import { Mail, Lock, Utensils, Eye, EyeOff, Loader2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import heroImg from "@/assets/images/nutrition-hero2.png";
+import { authService } from "@/services/authService";
 
 const SignUpPage = () => {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -22,10 +26,49 @@ const SignUpPage = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Signing up with:", formData);
-    // Add logic here
+    if (isLoading) return;
+
+    // 1. Kiểm tra khớp mật khẩu
+    if (formData.password !== formData.confirmPassword) {
+      alert("Mật khẩu nhập lại không khớp!");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // Vì form đã tối giản (bỏ fullName), chúng ta lấy phần đầu email làm fullName mặc định
+      const fullName = formData.email.split("@")[0];
+
+      const res = await authService.register({
+        email: formData.email,
+        password: formData.password,
+        fullName: fullName,
+      });
+
+      if (res.metadata?.EC === 0) {
+        alert("Đăng ký tài khoản thành công! Vui lòng đăng nhập.");
+        router.push("/sign-in");
+      } else {
+        alert(res.metadata?.message || "Đăng ký thất bại. Vui lòng thử lại.");
+      }
+    } catch (error: unknown) {
+      console.error("Register failed:", error);
+      let errorMsg = "Đã xảy ra lỗi kết nối. Vui lòng kiểm tra lại mạng.";
+      if (error instanceof Error) {
+        errorMsg = error.message;
+      } else if (
+        typeof error === "object" &&
+        error !== null &&
+        "message" in error
+      ) {
+        errorMsg = String((error as { message: unknown }).message);
+      }
+      alert(errorMsg);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -105,7 +148,7 @@ const SignUpPage = () => {
               </label>
               <div className="flex items-center gap-3 rounded-xl border border-border bg-muted/30 px-4 py-3 focus-within:border-primary focus-within:bg-card transition-all duration-300">
                 <Mail className="h-4.5 w-4.5 text-muted-foreground" />
-                <input
+                 <input
                   type="email"
                   name="email"
                   placeholder="name@example.com"
@@ -113,6 +156,7 @@ const SignUpPage = () => {
                   onChange={handleChange}
                   className="flex-1 bg-transparent text-sm text-card-foreground placeholder:text-muted-foreground/60 outline-none"
                   required
+                  disabled={isLoading}
                 />
               </div>
             </div>
@@ -124,7 +168,7 @@ const SignUpPage = () => {
               </label>
               <div className="flex items-center gap-3 rounded-xl border border-border bg-muted/30 px-4 py-3 focus-within:border-primary focus-within:bg-card transition-all duration-300">
                 <Lock className="h-4.5 w-4.5 text-muted-foreground" />
-                <input
+                 <input
                   type={showPassword ? "text" : "password"}
                   name="password"
                   placeholder="••••••••"
@@ -133,6 +177,7 @@ const SignUpPage = () => {
                   className="flex-1 bg-transparent text-sm text-card-foreground placeholder:text-muted-foreground/60 outline-none"
                   minLength={6}
                   required
+                  disabled={isLoading}
                 />
                 <button
                   type="button"
@@ -155,7 +200,7 @@ const SignUpPage = () => {
               </label>
               <div className="flex items-center gap-3 rounded-xl border border-border bg-muted/30 px-4 py-3 focus-within:border-primary focus-within:bg-card transition-all duration-300">
                 <Lock className="h-4.5 w-4.5 text-muted-foreground" />
-                <input
+                 <input
                   type={showConfirmPassword ? "text" : "password"}
                   name="confirmPassword"
                   placeholder="••••••••"
@@ -163,6 +208,7 @@ const SignUpPage = () => {
                   onChange={handleChange}
                   className="flex-1 bg-transparent text-sm text-card-foreground placeholder:text-muted-foreground/60 outline-none"
                   required
+                  disabled={isLoading}
                 />
                 <button
                   type="button"
@@ -178,11 +224,19 @@ const SignUpPage = () => {
               </div>
             </div>
 
-            <button
+             <button
               type="submit"
-              className="mt-4 w-full rounded-xl bg-primary py-4 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 active:scale-[0.98] flex items-center justify-center gap-2"
+              disabled={isLoading}
+              className="mt-4 w-full rounded-xl bg-primary py-4 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              Đăng ký tài khoản
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Đang xử lý...
+                </>
+              ) : (
+                "Đăng ký tài khoản"
+              )}
             </button>
           </form>
 
