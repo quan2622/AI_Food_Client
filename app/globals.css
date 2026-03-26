@@ -76,6 +76,8 @@
   --chart-4: #0d0d0d;
   --chart-5: #737373;
   --radius: 12px;
+  --hero-panel: 75 80% 25%;
+  --hero-panel-foreground: 0 0% 100%;
 }
 
 .dark {

@@ -12,7 +12,6 @@ import {
   LogOut,
   Camera,
   Mail,
-  Phone,
   Calendar,
   Target,
   Zap,
@@ -82,6 +81,8 @@ const Header = () => {
       }, 300); // Wait for transition animation
     }
   }, [showNotifications]);
+
+  if (pathname === "/sign-in" || pathname === "/sign-up") return null;
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 px-10 py-5">
