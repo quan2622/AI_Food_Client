@@ -34,8 +34,7 @@ const NAV_ITEMS = [
   { label: "Trang chủ", href: "/" },
   { label: "Gợi ý", href: "/suggestions" },
   { label: "Nhật ký", href: "/diary" },
-  { label: "Hiring", href: "#" },
-  { label: "Devices", href: "#" },
+  { label: "Báo cáo", href: "/report" },
 ];
 
 const NOTIFICATIONS = [
