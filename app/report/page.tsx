@@ -10,9 +10,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function ReportPage() {
   return (
-    <div className="h-screen pt-[80px] bg-linear-to-b from-white to-[#9fd923]/5">
+    <div className="h-screen">
       <ScrollArea className="h-full w-full">
-        <div className="px-6 pb-12 flex flex-col pt-6 font-sans">
+        <div className=" px-6 pb-12 flex flex-col pt-30 font-sans">
           {/* SECTION 1: Nutrition Charts — 7 : 3 */}
           <motion.div
             initial={{ opacity: 0, y: 15 }}

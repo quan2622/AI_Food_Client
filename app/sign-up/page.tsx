@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Mail, Lock, Utensils, Eye, EyeOff, Loader2 } from "lucide-react";
+import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -118,14 +119,25 @@ const SignUpPage = () => {
         {/* Right Panel - Sign Up Form */}
         <div className="flex w-full flex-col items-center justify-start p-6 md:w-1/2 md:p-8 lg:p-10 pt-16">
           {/* Logo */}
-          <div className="mb-6 flex items-center gap-2 group cursor-pointer">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/20 transition-transform group-hover:scale-110">
-              <Utensils className="h-5 w-5 text-primary-foreground" />
-            </div>
-            <span className="text-2xl font-black text-card-foreground tracking-tighter">
-              Nutri<span className="text-primary">Life</span>
-            </span>
-          </div>
+          <Link href="/">
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="mb-8 flex items-center gap-3 group cursor-pointer"
+            >
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/20 transition-transform group-hover:rotate-12">
+                <Utensils className="h-6 w-6 text-primary-foreground" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-2xl font-black text-card-foreground tracking-tighter leading-tight">
+                  Nutri<span className="text-primary font-extrabold italic">Life</span>
+                </span>
+                <span className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-[0.2em] mt-0.5 ml-0.5">
+                  Smart Nutrition
+                </span>
+              </div>
+            </motion.div>
+          </Link>
 
           <div className="w-full space-y-1 mb-6 text-center md:text-left">
             <h1 className="text-2xl font-bold text-card-foreground tracking-tight">

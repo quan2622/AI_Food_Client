@@ -4,10 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  Bell,
-  ChevronDown,
-} from "lucide-react";
+import { Bell, ChevronDown, Utensils } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ProfileDialog } from "@/components/common/ProfileDialog";
 
@@ -67,15 +64,33 @@ const Header = () => {
       <div className="mx-auto grid grid-cols-3 items-center max-w-[1600px] h-[80px]">
         {/* Left Section: Logo */}
         <div className="flex items-center justify-start">
-          <div className="flex items-center gap-3 rounded-full border border-[#0D0D0D]/10 px-6 py-2.5 bg-white/80 backdrop-blur-xl transition-all duration-300 hover:bg-white hover:border-[#9FD923]/40 shadow-sm group cursor-pointer">
+          <Link href="/" className="outline-none">
             <motion.div
-              whileHover={{ scale: 1.25 }}
-              className="h-2.5 w-2.5 rounded-full bg-[#9FD923]"
-            />
-            <span className="text-[20px] font-extrabold tracking-tight text-[#0D0D0D] leading-none">
-              Crextio
-            </span>
-          </div>
+              whileHover={{ scale: 1.02, y: -1 }}
+              whileTap={{ scale: 0.98 }}
+              className="flex items-center gap-3 rounded-full border border-[#0D0D0D]/10 px-6 py-2 bg-white/80 backdrop-blur-xl transition-all duration-300 hover:bg-white hover:border-[#9FD923]/40 shadow-sm cursor-pointer group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <motion.div
+                    whileHover={{ rotate: 12 }}
+                    className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/25 transition-all duration-300 group-hover:shadow-primary/40 relative z-10"
+                  >
+                    <Utensils className="h-5 w-5 text-primary-foreground" />
+                  </motion.div>
+                  <div className="absolute -inset-1 rounded-xl bg-primary/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xl font-black text-card-foreground tracking-tighter leading-none">
+                    Nutri<span className="text-primary">Life</span>
+                  </span>
+                  <span className="text-[9px] font-bold text-[#0D0D0D]/30 uppercase tracking-[0.2em] mt-0.5 ml-0.5">
+                    Smart Nutrition
+                  </span>
+                </div>
+              </div>
+            </motion.div>
+          </Link>
         </div>
 
         {/* Center Section: Navigation */}
