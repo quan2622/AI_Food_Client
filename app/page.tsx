@@ -30,7 +30,7 @@ export default function Home() {
             <RecentFuel />
 
             {/* Row 3: Nutrition Trends Chart (Full Width) */}
-            <NutritionTrends />
+            {/* <NutritionTrends /> */}
           </div>
 
           {/* FAB - Fixed Action Button */}

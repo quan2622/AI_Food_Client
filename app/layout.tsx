@@ -14,7 +14,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="h-full antialiased" suppressHydrationWarning>
-      <body className="group min-h-full flex flex-col selection:bg-[#9FD923]/90 relative overflow-x-hidden" suppressHydrationWarning>
+      <body className="min-h-full flex flex-col selection:bg-[#9FD923]/90 relative overflow-x-hidden" suppressHydrationWarning>
 
         {/* Background Gradient Layer */}
         <div className="fixed top-0 left-0 right-0 h-[50vh] bg-linear-to-b from-[#9FD923]/40 via-[#9FD923]/12 to-transparent pointer-events-none -z-10" />
