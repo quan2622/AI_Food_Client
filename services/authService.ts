@@ -1,4 +1,5 @@
 import publicAxios from "@/lib/publicAxios";
+import privateAxios from "@/lib/privateAxios";
 import { ILoginRequest, IUser, ICreateUserRequest } from "@/types/authen.type";
 import { ApiResponse } from "@/types/backend.type";
 
@@ -40,5 +41,14 @@ export const authService = {
   logout: async (): Promise<ApiResponse<null>> => {
     const res = await publicAxios.post<ApiResponse<null>>("/auth/logout");
     return res as unknown as ApiResponse<null>;
+  },
+
+  /**
+   * Lấy thông tin người dùng hiện tại
+   * @returns ApiResponse<IUser>
+   */
+  getMe: async (): Promise<ApiResponse<IUser>> => {
+    const res = await privateAxios.get<ApiResponse<IUser>>("/users/me");
+    return res as unknown as ApiResponse<IUser>;
   },
 };

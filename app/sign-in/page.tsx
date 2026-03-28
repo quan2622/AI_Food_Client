@@ -28,8 +28,22 @@ const SignInPage = () => {
       const res = await authService.login({ email, password });
 
       if (res.metadata?.EC === 0 && res.data) {
-        // Success: persist info to store and redirect
+        // Bước 1: Lưu token vào store trước (để privateAxios có thể dùng ngay)
         loginAction(res.data.access_token, res.data.user);
+
+        // Bước 2: Gọi /users/me để lấy đầy đủ thông tin (bao gồm userProfile)
+        try {
+          const meRes = await authService.getMe();
+          if (meRes?.metadata?.EC === 0 && meRes.data) {
+            loginAction(
+              meRes.data.accessToken ?? res.data.access_token,
+              meRes.data
+            );
+          }
+        } catch {
+          // Nếu getMe thất bại, vẫn dùng data từ login response (đã set ở trên)
+        }
+
         router.push("/");
       } else {
         // Handle custom error message from backend

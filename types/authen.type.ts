@@ -1,7 +1,9 @@
 /* ============================================================================
  * AUTHEN TYPES
- * APIs: POST /auth/login | POST /auth/refresh-token | POST /auth/register
+ * APIs: POST /auth/login | POST /auth/refresh-token | POST /auth/register | GET /users/me
  * ========================================================================== */
+
+import { IUserProfile } from "./user-profile.type";
 
 // ─── Token Data ───────────────────────────────────────────────────────────────
 
@@ -24,6 +26,7 @@ export interface IUser {
   updatedAt: string;
   accessToken?: string | null;
   refreshToken?: string | null;
+  userProfile?: IUserProfile | null;
 }
 
 // ─── JWT Payload ──────────────────────────────────────────────────────────────

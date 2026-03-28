@@ -7,6 +7,8 @@ import { usePathname } from "next/navigation";
 import { Bell, ChevronDown, Utensils } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ProfileDialog } from "@/components/common/ProfileDialog";
+import { useAuthStore } from "@/stores/authStore";
+import { useAuthInit } from "@/hooks/useAuthInit";
 
 const NAV_ITEMS = [
   { label: "Trang chủ", href: "/" },
@@ -35,7 +37,10 @@ const NOTIFICATIONS = [
 ];
 
 const Header = () => {
+  useAuthInit();
   const pathname = usePathname();
+  const { isAuthenticated } = useAuthStore();
+  
   const [showNotifications, setShowNotifications] = useState(false);
   const [canScrollMore, setCanScrollMore] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -226,7 +231,19 @@ const Header = () => {
             </AnimatePresence>
           </div>
 
-          <ProfileDialog />
+          {isAuthenticated ? (
+            <ProfileDialog />
+          ) : (
+            <Link href="/sign-in">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="px-6 py-2.5 rounded-full bg-[#0D0D0D] text-white text-[14px] font-bold shadow-lg shadow-[#0D0D0D]/10 hover:bg-[#9FD923] hover:text-[#0D0D0D] transition-all duration-300"
+              >
+                Sign In
+              </motion.button>
+            </Link>
+          )}
         </div>
       </div>
     </header>

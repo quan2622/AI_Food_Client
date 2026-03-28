@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
 import { IUser } from "@/types/authen.type";
 
 interface AuthState {
@@ -12,19 +13,41 @@ interface AuthState {
   setRefreshTokenAction: (show: boolean, message?: string) => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
-  access_token: null,
-  user: null,
-  isAuthenticated: false,
-  setAccessToken: (token) => set({ access_token: token, isAuthenticated: !!token }),
-  setUser: (user) => set({ user }),
-  loginAction: (token, user) => set({ access_token: token, user, isAuthenticated: true }),
-  logoutAction: () => set({ access_token: null, user: null, isAuthenticated: false }),
-  setRefreshTokenAction: (show, message) => {
-    // Basic logic for now. Use with alert or toast in UI.
-    console.warn(`Token expired notify [${show}]: ${message || ""}`);
-    if (show) {
-      set({ access_token: null, user: null, isAuthenticated: false });
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      access_token: null,
+      user: null,
+      isAuthenticated: false,
+
+      setAccessToken: (token) =>
+        set({ access_token: token, isAuthenticated: !!token }),
+
+      setUser: (user) => set({ user }),
+
+      loginAction: (token, user) =>
+        set({ access_token: token, user, isAuthenticated: true }),
+
+      logoutAction: () =>
+        set({ access_token: null, user: null, isAuthenticated: false }),
+
+      setRefreshTokenAction: (show, message) => {
+        console.warn(`Token expired notify [${show}]: ${message || ""}`);
+        if (show) {
+          set({ access_token: null, user: null, isAuthenticated: false });
+        }
+      },
+    }),
+    {
+      name: "auth-storage", // key trong localStorage
+      storage: createJSONStorage(() => localStorage),
+      // Persist token + isAuthenticated + user để khôi phục ngay khi reload
+      // user sẽ được refetch từ /users/me trong background để đồng bộ data mới nhất
+      partialize: (state) => ({
+        access_token: state.access_token,
+        isAuthenticated: state.isAuthenticated,
+        user: state.user,
+      }),
     }
-  },
-}));
+  )
+);
