@@ -79,11 +79,11 @@ const Header = () => {
                 <div className="relative">
                   <motion.div
                     whileHover={{ rotate: 12 }}
-                    className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/25 transition-all duration-300 group-hover:shadow-primary/40 relative z-10"
+                    className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/30 transition-all duration-300 group-hover:shadow-primary/50 relative z-10"
                   >
-                    <Utensils className="h-5 w-5 text-primary-foreground" />
+                    <Utensils className="h-5 w-5 text-[#0D0D0D]" />
                   </motion.div>
-                  <div className="absolute -inset-1 rounded-xl bg-primary/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  <div className="absolute -inset-1 rounded-xl bg-primary/25 blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 </div>
                 <div className="flex flex-col">
                   <span className="text-xl font-black text-card-foreground tracking-tighter leading-none">

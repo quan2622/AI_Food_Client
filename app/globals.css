@@ -1,4 +1,5 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@400;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap");
 
 @import "tailwindcss";
 @import "tw-animate-css";
@@ -41,6 +42,43 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+
+  --color-on-tertiary: #ffffff;
+  --color-on-tertiary-container: #003656;
+  --color-on-secondary-fixed: #002107;
+  --color-on-tertiary-fixed-variant: #004b74;
+  --color-on-error-container: #93000a;
+  --color-on-error: #ffffff;
+  /* Dashboard color palette — matches app's lime-green (#9FD923) design system */
+  --color-dash-primary: #9fd923;
+  --color-dash-primary-dark: #7ab818;
+  --color-dash-primary-container: #d9f2a2;
+  --color-dash-secondary-fixed: #d9f2a2;
+  --color-dash-inverse-on-surface: #f5faec;
+  --color-dash-secondary-container: #eef8cc;
+  --color-dash-surface-container-lowest: #ffffff;
+  --color-dash-surface-variant: #f0f7e0;
+  --color-dash-error: #e53935;
+  --color-dash-tertiary-fixed: #e3f2d0;
+  --color-dash-outline: #a8b89a;
+  --color-dash-surface-dim: #e8f0d8;
+  --color-dash-tertiary: #5a9a2a;
+  --color-dash-inverse-surface: #2a3a18;
+  --color-dash-surface-container-highest: #dcedc8;
+  --color-dash-surface-container: #f0f7e0;
+  --color-dash-tertiary-container: #d9f2a2;
+  --color-dash-surface-container-high: #e8f5d0;
+  --color-dash-surface: #f8fdf0;
+  --color-dash-surface-bright: #fbfef5;
+  --color-dash-surface-container-low: #f3f9e8;
+  --color-dash-secondary: #7ab818;
+  --color-dash-outline-variant: #c5e09a;
+  --color-dash-background: #f8fdf0;
+  --color-primary-fixed: #d9f2a2;
+
+  --font-headline: "Manrope", sans-serif;
+  --font-body: "Inter", sans-serif;
+  --font-label: "Inter", sans-serif;
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -137,6 +175,14 @@
   .custom-scrollbar::-webkit-scrollbar {
     width: 6px;
     height: 6px;
+  }
+  
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  }
+  .glass-effect {
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
   }
   .custom-scrollbar::-webkit-scrollbar-track {
     background: transparent;
