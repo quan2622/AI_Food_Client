@@ -4,8 +4,11 @@ import React from "react";
 import Image from "next/image";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Scan, Plus, Sun, Utensils, UtensilsCrossed, PlusCircle, Cookie, Droplets, TestTube, Leaf, Candy, TrendingDown, ArrowRight, Lightbulb } from "lucide-react";
+import ImageUploadDialog from "@/components/dashboard/ImageUploadDialog";
 
 export default function Home() {
+  const [isScanDialogOpen, setIsScanDialogOpen] = React.useState(false);
+
   return (
     <ScrollArea className="h-screen w-full">
       <main className="max-w-[1600px] mx-auto px-10 pt-28 pb-24">
@@ -16,7 +19,10 @@ export default function Home() {
             <p className="text-lg text-on-surface-variant font-medium">Bạn đã duy trì chuỗi <span className="text-dash-primary font-bold">12 ngày</span> sống khỏe. Cố gắng lên!</p>
           </div>
           <div className="flex gap-3">
-            <button className="bg-linear-to-br from-dash-primary to-dash-primary-container text-on-primary px-6 py-3 rounded-xl font-bold flex items-center gap-2 active:scale-95 transition-transform cursor-pointer shadow-sm">
+            <button 
+              onClick={() => setIsScanDialogOpen(true)}
+              className="bg-linear-to-br from-dash-primary to-dash-primary-container text-on-primary px-6 py-3 rounded-xl font-bold flex items-center gap-2 active:scale-95 transition-transform cursor-pointer shadow-sm"
+            >
               <Scan className="w-5 h-5" />
               Scan Food
             </button>
@@ -278,6 +284,15 @@ export default function Home() {
           </div>
         </section>
       </main>
+
+      <ImageUploadDialog 
+        isOpen={isScanDialogOpen} 
+        onClose={() => setIsScanDialogOpen(false)} 
+        onUpload={(files) => {
+          console.log("Uploading files in dashboard:", files);
+          // Handle upload logic here if needed
+        }}
+      />
     </ScrollArea>
   );
 }

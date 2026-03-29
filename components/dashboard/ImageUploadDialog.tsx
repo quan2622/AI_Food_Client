@@ -90,7 +90,7 @@ const ImageUploadDialog: React.FC<ImageUploadDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px] bg-[#0F172A] border-[#CAFD00]/20 text-white p-0 overflow-hidden shadow-2xl">
+      <DialogContent className="sm:max-w-[650px] w-[95vw] max-h-[94vh] flex flex-col overflow-hidden bg-[#0F172A] border-[#CAFD00]/20 text-white p-0 shadow-2xl rounded-3xl border">
         <DialogHeader className="p-6 pb-2">
           <DialogTitle className="text-xl font-bold flex items-center gap-2 text-white">
             <div className="p-2 rounded-lg bg-[#CAFD00]/10">
@@ -103,119 +103,133 @@ const ImageUploadDialog: React.FC<ImageUploadDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="p-6 pt-2 space-y-4">
-          <div
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-            onClick={() => fileInputRef.current?.click()}
-            className={cn(
-              "relative border-2 border-dashed rounded-2xl p-10 transition-all duration-300 flex flex-col items-center justify-center gap-4 cursor-pointer",
-              isDragging
-                ? "border-[#CAFD00] bg-[#CAFD00]/10 scale-[0.98]"
-                : "border-white/10 bg-white/5 hover:border-[#CAFD00]/40 hover:bg-white/10",
-            )}
+        <div className="flex-1 overflow-y-auto scrollbar-hide">
+          <motion.div 
+            initial={false}
+            className="p-6 pt-2 space-y-4"
           >
-            <input
-              type="file"
-              multiple
-              accept="image/*"
-              className="hidden"
-              ref={fileInputRef}
-              onChange={handleFileSelect}
-            />
-
-            <div
+            <motion.div
+              layout="position"
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              onClick={() => fileInputRef.current?.click()}
               className={cn(
-                "w-16 h-16 rounded-full flex items-center justify-center transition-all duration-300",
+                "relative border-2 border-dashed rounded-2xl p-6 transition-all duration-300 flex flex-col items-center justify-center gap-2 cursor-pointer outline-none",
                 isDragging
-                  ? "bg-[#CAFD00] text-[#0F172A] shadow-[0_0_30px_rgba(202,253,0,0.3)]"
-                  : "bg-white/5 text-slate-400",
+                  ? "border-[#CAFD00] bg-[#CAFD00]/10 scale-[0.98]"
+                  : "border-white/10 bg-white/5 hover:border-[#CAFD00]/40 hover:bg-white/10",
               )}
             >
-              <Upload
-                className={cn("h-8 w-8", isDragging && "animate-bounce")}
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                className="hidden"
+                ref={fileInputRef}
+                onChange={handleFileSelect}
               />
-            </div>
 
-            <div className="text-center">
-              <p className="font-semibold text-lg text-white">
-                Kéo và thả ảnh vào đây
-              </p>
-              <p className="text-sm text-slate-400 mt-1">
-                hoặc nhấn để chọn từ thiết bị
-              </p>
-            </div>
-
-            <div className="flex gap-4 mt-2">
-              <span className="text-[10px] text-slate-500 uppercase tracking-widest font-bold px-2 py-1 rounded bg-white/5">
-                JPEG, PNG, WEBP
-              </span>
-              <span className="text-[10px] text-slate-500 uppercase tracking-widest font-bold px-2 py-1 rounded bg-white/5">
-                Max 10MB
-              </span>
-            </div>
-          </div>
-
-          <AnimatePresence>
-            {files.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="space-y-2 max-h-[232px] overflow-y-auto overflow-x-hidden [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] py-1"
+              <div
+                className={cn(
+                  "w-16 h-16 rounded-full flex items-center justify-center transition-all duration-300",
+                  isDragging
+                    ? "bg-[#CAFD00] text-[#0F172A] shadow-[0_0_30px_rgba(202,253,0,0.3)]"
+                    : "bg-white/5 text-slate-400",
+                )}
               >
-                {files.map((fileObj, index) => (
-                  <motion.div
-                    key={`${fileObj.file.name}-${index}`}
-                    layout
-                    initial={{ x: -80, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    exit={{ x: 50, opacity: 0, scale: 0.95 }}
-                    transition={{
-                      duration: 0.6,
-                      ease: [0.2, 1, 0.3, 1], // Exponential ease-out for ultra-smooth glide
-                      delay: index * 0.05,
+                <Upload
+                  className={cn("h-8 w-8", isDragging && "animate-bounce")}
+                />
+              </div>
+
+              <div className="text-center">
+                <p className="font-semibold text-lg text-white">
+                  Kéo và thả ảnh vào đây
+                </p>
+                <p className="text-sm text-slate-400 mt-1">
+                  hoặc nhấn để chọn từ thiết bị
+                </p>
+              </div>
+
+              <div className="flex gap-4 mt-2">
+                <span className="text-[10px] text-slate-500 uppercase tracking-widest font-bold px-2 py-1 rounded bg-white/5">
+                  JPEG, PNG, WEBP
+                </span>
+                <span className="text-[10px] text-slate-500 uppercase tracking-widest font-bold px-2 py-1 rounded bg-white/5">
+                  Max 10MB
+                </span>
+              </div>
+            </motion.div>
+
+            <AnimatePresence>
+              {files.length > 0 && (
+                <motion.div
+                className="space-y-2 max-h-[240px] overflow-y-auto overflow-x-hidden scrollbar-hide py-1"
+              >
+                  {files.map((fileObj, index) => (
+                    <motion.div
+                      key={`${fileObj.file.name}-${index}`}
+                      layout
+                      initial={{ x: -80, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      exit={{
+                      x: 160,
+                      opacity: 0,
+                      height: 0,
+                      marginTop: 0,
+                      marginBottom: 0,
+                      paddingTop: 0,
+                      paddingBottom: 0,
+                      borderTopWidth: 0,
+                      borderBottomWidth: 0,
+                      overflow: "hidden"
                     }}
-                    className="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/10 group hover:border-[#CAFD00]/30 transition-all mx-1"
-                  >
-                    <div className="w-12 h-12 shrink-0 rounded-lg bg-slate-800 flex items-center justify-center overflow-hidden border border-white/10 relative">
-                      <Image
-                        src={fileObj.preview}
-                        alt={fileObj.file.name}
-                        fill
-                        className="object-cover"
-                        unoptimized
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-medium truncate text-white">
-                          {fileObj.file.name}
-                        </p>
-                        <CheckCircle2 className="h-3.5 w-3.5 text-[#CAFD00]" />
-                      </div>
-                      <p className="text-xs text-slate-500">
-                        {(fileObj.file.size / 1024 / 1024).toFixed(2)} MB
-                      </p>
-                    </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        removeFile(index);
-                      }}
-                      className="p-2 hover:bg-white/10 rounded-full text-slate-400 hover:text-red-400 transition-all"
+                    transition={{
+                      duration: 0.25,
+                      ease: "easeInOut",
+                      layout: { duration: 0.25 }
+                    }}
+                    className="flex items-center gap-3 px-2 py-2 bg-white/5 rounded-xl border border-white/10 group hover:border-[#CAFD00]/30 transition-all origin-top"
                     >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </motion.div>
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
+                      <div className="w-12 h-12 shrink-0 rounded-lg bg-slate-800 flex items-center justify-center overflow-hidden border border-white/10 relative">
+                        <Image
+                          src={fileObj.preview}
+                          alt={fileObj.file.name}
+                          fill
+                          className="object-cover"
+                          unoptimized
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium truncate text-white">
+                            {fileObj.file.name}
+                          </p>
+                          <CheckCircle2 className="h-3.5 w-3.5 text-[#CAFD00]" />
+                        </div>
+                        <p className="text-xs text-slate-500">
+                          {(fileObj.file.size / 1024 / 1024).toFixed(2)} MB
+                        </p>
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeFile(index);
+                        }}
+                        className="p-2 hover:bg-white/10 rounded-full text-slate-400 hover:text-red-400 transition-all"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </motion.div>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
         </div>
 
-        <DialogFooter className="p-6 pt-4 bg-muted/5 border-t border-white/5 gap-3 sm:justify-end">
+        <DialogFooter className="m-0 p-6 pt-4 bg-white/2 border-t border-white/5 gap-3 sm:justify-end rounded-b-3xl">
           <Button
             variant="ghost"
             onClick={() => {
