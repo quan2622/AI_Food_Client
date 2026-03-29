@@ -5,6 +5,7 @@ import Image from "next/image";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Scan, Plus, Sun, Utensils, UtensilsCrossed, PlusCircle, Cookie, Droplets, TestTube, Leaf, Candy, TrendingDown, ArrowRight, Lightbulb } from "lucide-react";
 import ImageUploadDialog from "@/components/dashboard/ImageUploadDialog";
+import { cn } from "@/lib/utils";
 
 export default function Home() {
   const [isScanDialogOpen, setIsScanDialogOpen] = React.useState(false);
@@ -24,11 +25,11 @@ export default function Home() {
               className="bg-linear-to-br from-dash-primary to-dash-primary-container text-on-primary px-6 py-3 rounded-xl font-bold flex items-center gap-2 active:scale-95 transition-transform cursor-pointer shadow-sm"
             >
               <Scan className="w-5 h-5" />
-              Scan Food
+              Quét món ăn
             </button>
             <button className="bg-dash-secondary-container text-on-secondary-container px-6 py-3 rounded-xl font-bold flex items-center gap-2 active:scale-95 transition-transform cursor-pointer shadow-sm">
               <Plus className="w-5 h-5" />
-              Manual Add
+              Thêm bằng tay
             </button>
           </div>
         </section>
@@ -39,7 +40,7 @@ export default function Home() {
           <div className="md:col-span-4 flex flex-col gap-6">
             {/* Daily Calorie Progress */}
             <div className="bg-dash-surface-container-lowest p-8 rounded-xl shadow-[0_4px_24px_rgba(0,110,28,0.04)] flex flex-col items-center text-center">
-              <h3 className="text-on-surface-variant font-bold uppercase tracking-widest text-xs mb-8">Daily Calories</h3>
+              <h3 className="text-on-surface-variant font-bold uppercase tracking-widest text-xs mb-8">Calories hằng ngày</h3>
               <div className="relative w-48 h-48 flex items-center justify-center mb-6">
                 {/* Progress Ring (SVG) */}
                 <svg className="w-full h-full -rotate-90">
@@ -58,7 +59,7 @@ export default function Home() {
 
             {/* Macros Breakdown */}
             <div className="bg-dash-surface-container-low p-6 rounded-xl flex flex-col gap-5 border border-dash-surface-container-highest/50">
-              <h3 className="text-on-surface font-bold text-lg mb-2">Macro-nutrients</h3>
+              <h3 className="text-on-surface font-bold text-lg mb-2">Chỉ số dưỡng chất</h3>
               {/* Protein */}
               <div className="space-y-2">
                 <div className="flex justify-between items-end">
@@ -66,7 +67,7 @@ export default function Home() {
                   <span className="text-on-surface-variant text-xs"><span className="font-bold text-on-surface">85g</span> / 120g</span>
                 </div>
                 <div className="h-2 w-full bg-dash-surface-container-highest rounded-full overflow-hidden">
-                  <div className="h-full bg-dash-primary w-[70%] rounded-full"></div>
+                  <div className="h-full bg-protein w-[70%] rounded-full"></div>
                 </div>
               </div>
               {/* Carbs */}
@@ -76,7 +77,7 @@ export default function Home() {
                   <span className="text-on-surface-variant text-xs"><span className="font-bold text-on-surface">160g</span> / 220g</span>
                 </div>
                 <div className="h-2 w-full bg-dash-surface-container-highest rounded-full overflow-hidden">
-                  <div className="h-full bg-dash-primary-container w-[72%] rounded-full"></div>
+                  <div className="h-full bg-carbs w-[72%] rounded-full"></div>
                 </div>
               </div>
               {/* Fat */}
@@ -86,7 +87,17 @@ export default function Home() {
                   <span className="text-on-surface-variant text-xs"><span className="font-bold text-on-surface">42g</span> / 65g</span>
                 </div>
                 <div className="h-2 w-full bg-dash-surface-container-highest rounded-full overflow-hidden">
-                  <div className="h-full bg-dash-secondary w-[64%] rounded-full"></div>
+                  <div className="h-full bg-fat w-[64%] rounded-full"></div>
+                </div>
+              </div>
+              {/* Fiber */}
+              <div className="space-y-2">
+                <div className="flex justify-between items-end">
+                  <span className="font-bold text-sm">Fiber</span>
+                  <span className="text-on-surface-variant text-xs"><span className="font-bold text-on-surface">18g</span> / 30g</span>
+                </div>
+                <div className="h-2 w-full bg-dash-surface-container-highest rounded-full overflow-hidden">
+                  <div className="h-full bg-fiber w-[60%] rounded-full"></div>
                 </div>
               </div>
             </div>
@@ -98,7 +109,7 @@ export default function Home() {
             <div className="bg-dash-tertiary-fixed text-on-tertiary-fixed-variant p-5 rounded-xl flex items-start gap-4 shadow-sm border border-dash-tertiary-fixed-dim/20">
               <Lightbulb className="w-5 h-5 text-dash-tertiary shrink-0 fill-dash-tertiary/20" />
               <div>
-                <p className="font-bold text-sm leading-tight mb-1">Bạn chưa đủ protein hôm nay...</p>
+                <p className="font-bold text-sm leading-tight mb-1">Bạn chưa đủ Protein hôm nay...</p>
                 <p className="text-xs opacity-80">Hãy thử thêm ức gà hoặc đậu phụ vào bữa tối để đạt mục tiêu nhé!</p>
               </div>
             </div>
@@ -171,18 +182,39 @@ export default function Home() {
 
           {/* Right Column: Micro-nutrients, Water, Weight */}
           <div className="md:col-span-3 flex flex-col gap-6">
-            {/* Quick Water Log */}
-            <div className="bg-dash-tertiary-container/20 p-6 rounded-xl border border-dash-tertiary/10">
-              <div className="flex justify-between items-center mb-4">
-                <Droplets className="w-5 h-5 text-dash-tertiary fill-dash-tertiary/20" />
-                <span className="text-xs font-bold text-dash-tertiary">MỤC TIÊU: 2.5L</span>
+            {/* Water Intake Tracking */}
+            <div className="bg-dash-surface-container-low p-6 rounded-xl shadow-sm border border-dash-surface-container-highest/50 flex flex-col h-full">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 rounded-full bg-carbs/10 flex items-center justify-center shadow-sm">
+                  <Droplets className="w-6 h-6 text-carbs" />
+                </div>
+                <div>
+                  <h3 className="text-on-surface font-bold text-base">Lượng nước uống</h3>
+                  <p className="text-carbs font-bold text-lg leading-tight">1.8 <span className="text-sm font-normal text-on-surface-variant">/ 2.5 Lít</span></p>
+                </div>
               </div>
-              <h4 className="text-2xl font-extrabold font-headline mb-4">1.8 <span className="text-sm font-normal text-on-surface-variant">Lít</span></h4>
-              <div className="flex gap-2">
-                <button className="flex-1 bg-white dark:bg-zinc-800 py-2 rounded-lg text-xs font-bold border border-dash-tertiary/20 hover:bg-dash-tertiary hover:text-white cursor-pointer transition-colors shadow-sm">
+              
+              <div className="h-2 w-full bg-dash-surface-container-highest rounded-full overflow-hidden mb-6">
+                <div className="h-full bg-carbs w-[72%] rounded-full"></div>
+              </div>
+
+              <div className="flex gap-2 items-center justify-between mb-6">
+                {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                  <div 
+                    key={i} 
+                    className={cn(
+                      "w-4 h-4 rounded-full border-2 transition-all duration-300",
+                      i <= 6 ? "bg-carbs border-carbs" : "border-dash-surface-container-highest"
+                    )}
+                  />
+                ))}
+              </div>
+
+              <div className="flex gap-2 mt-auto">
+                <button className="flex-1 bg-carbs/10 text-carbs py-2.5 rounded-xl text-xs font-bold hover:bg-carbs hover:text-white cursor-pointer transition-all active:scale-95">
                   + 250ml
                 </button>
-                <button className="flex-1 bg-white dark:bg-zinc-800 py-2 rounded-lg text-xs font-bold border border-dash-tertiary/20 hover:bg-dash-tertiary hover:text-white cursor-pointer transition-colors shadow-sm">
+                <button className="flex-1 bg-carbs/10 text-carbs py-2.5 rounded-xl text-xs font-bold hover:bg-carbs hover:text-white cursor-pointer transition-all active:scale-95">
                   + 500ml
                 </button>
               </div>
@@ -190,7 +222,7 @@ export default function Home() {
 
             {/* Micro-nutrients Tracking */}
             <div className="bg-dash-surface-container-low p-6 rounded-xl border border-dash-surface-container-highest/50">
-              <h3 className="font-bold text-sm uppercase tracking-widest text-on-surface-variant mb-6">Micro-nutrients</h3>
+              <h3 className="font-bold text-sm uppercase tracking-widest text-on-surface-variant mb-6">Dinh dưỡng vi lượng</h3>
               <div className="space-y-6">
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded-full bg-dash-tertiary-fixed flex items-center justify-center shadow-sm shrink-0">
@@ -207,8 +239,8 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full bg-dash-primary-fixed flex items-center justify-center shadow-sm shrink-0">
-                    <Leaf className="w-4 h-4 text-dash-primary" />
+                  <div className="w-10 h-10 rounded-full bg-fiber/10 flex items-center justify-center shadow-sm shrink-0">
+                    <Leaf className="w-4 h-4 text-fiber" />
                   </div>
                   <div className="grow">
                     <div className="flex justify-between text-[11px] font-bold mb-1">
@@ -216,7 +248,7 @@ export default function Home() {
                       <span>18/30g</span>
                     </div>
                     <div className="h-1 w-full bg-dash-surface-container-highest rounded-full">
-                      <div className="h-full bg-dash-primary w-[60%] rounded-full"></div>
+                      <div className="h-full bg-fiber w-[60%] rounded-full"></div>
                     </div>
                   </div>
                 </div>
@@ -241,7 +273,7 @@ export default function Home() {
             <div className="bg-dash-surface-container-lowest p-6 rounded-xl shadow-[0_4px_24px_rgba(0,110,28,0.04)] border border-dash-surface-container-highest/20">
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Weight Goal</p>
+                  <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Cân nặng mục tiêu</p>
                   <h4 className="text-2xl font-extrabold font-headline">68.5 <span className="text-sm font-medium text-on-surface-variant">kg</span></h4>
                 </div>
                 <div className="text-dash-primary text-[10px] font-bold flex items-center gap-1 bg-dash-primary/10 px-2 py-0.5 rounded-sm">
@@ -260,8 +292,8 @@ export default function Home() {
                 <div className="flex-1 bg-dash-primary h-[60%] rounded-t-sm shadow-[0_0_8px_rgba(0,110,28,0.3)]"></div>
               </div>
               <div className="flex justify-between mt-2 px-1">
-                <span className="text-[8px] font-bold text-on-surface-variant">MON</span>
-                <span className="text-[8px] font-bold text-on-surface-variant">SUN</span>
+                <span className="text-[8px] font-bold text-on-surface-variant">T2</span>
+                <span className="text-[8px] font-bold text-on-surface-variant">CN</span>
               </div>
             </div>
           </div>
