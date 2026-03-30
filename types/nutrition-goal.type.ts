@@ -9,40 +9,48 @@ import { GoalType } from './enum.type';
 
 export interface INutritionGoal {
   id: number;
-  goalType: GoalType;
+  goalType: GoalType | string;
+  status: string;
+  targetWeight: number;
   targetCalories: number;
   targetProtein: number;
   targetCarbs: number;
   targetFat: number;
   targetFiber: number;
-  startDay: string;
+  startDate: string;
   endDate: string;
   userId: number;
   createdAt: string;
   updatedAt: string;
+  goalTypeInfo?: Record<string, unknown> | null;
+  statusInfo?: Record<string, unknown> | null;
 }
 
 // ─── Request Bodies ───────────────────────────────────────────────────────────
 
 export interface ICreateNutritionGoalRequest {
-  goalType: GoalType;
+  goalType: GoalType | string;
+  status?: string;
+  targetWeight: number;
   targetCalories: number;
   targetProtein: number;
   targetCarbs: number;
   targetFat: number;
   targetFiber: number;
-  startDay: string;
+  startDate: string;
   endDate: string;
 }
 
 export interface IUpdateNutritionGoalRequest {
-  goalType?: GoalType;
+  goalType?: GoalType | string;
+  status?: string;
+  targetWeight?: number;
   targetCalories?: number;
   targetProtein?: number;
   targetCarbs?: number;
   targetFat?: number;
   targetFiber?: number;
-  startDay?: string;
+  startDate?: string;
   endDate?: string;
 }
 

@@ -16,6 +16,8 @@ import {
   Activity,
   AlertTriangle,
   Dna,
+  History,
+  CheckCircle,
 } from "lucide-react";
 import { cn, formatDate, formatNumber } from "@/lib/utils";
 import { useAuthStore } from "@/stores/authStore";
@@ -416,25 +418,110 @@ export const ProfileDialog = ({ trigger }: ProfileDialogProps) => {
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -15 }}
                       transition={{ duration: 0.2, ease: "easeOut" }}
-                      className="space-y-8 h-full flex flex-col"
+                      className="space-y-8 h-full flex flex-col pt-2"
                     >
-                      <div className="p-6 bg-[#D9F2A2]/20 rounded-3xl border border-[#9FD923]/20 flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <div className="w-14 h-14 bg-[#9FD923] rounded-2xl flex items-center justify-center text-[#0D0D0D] shadow-lg">
-                            <Target className="w-7 h-7" />
+                      {/* Current Goal */}
+                      <div>
+                        <h4 className="text-[11px] font-black text-[#0D0D0D]/30 uppercase tracking-[0.2em] mb-3 ml-2">
+                          Active Goal
+                        </h4>
+                        <div className="p-5 bg-[#D9F2A2]/20 rounded-3xl border border-[#9FD923]/20 flex items-center justify-between hover:bg-[#D9F2A2]/30 transition-colors shadow-sm">
+                          <div className="flex items-center gap-4">
+                            <div className="w-14 h-14 bg-[#9FD923] rounded-2xl flex items-center justify-center text-[#0D0D0D] shadow-lg shadow-[#9FD923]/20">
+                              <Target className="w-7 h-7" />
+                            </div>
+                            <div>
+                              <h3 className="text-[18px] font-black text-[#0D0D0D]">
+                                Weight Loss Journey
+                              </h3>
+                              <p className="text-[12px] text-[#0D0D0D]/50 font-bold flex items-center gap-1.5 mt-0.5">
+                                <Calendar className="w-3.5 h-3.5 opacity-70" />
+                                Jan 1, 2024 - Dec 31, 2024
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <h3 className="text-[18px] font-bold text-[#0D0D0D]">
-                              Weight Loss Journey
-                            </h3>
-                            <p className="text-[13px] text-[#0D0D0D]/40 font-medium">
-                              Jan 1, 2024 - Dec 31, 2024
-                            </p>
-                          </div>
+                          <button className="px-5 py-2.5 bg-[#0D0D0D] text-white rounded-[14px] text-[11px] font-black uppercase tracking-[0.1em] hover:bg-[#9FD923] hover:text-[#0D0D0D] transition-all group border border-transparent shadow hover:shadow-[#9FD923]/20">
+                            Edit Goal
+                          </button>
                         </div>
-                        <button className="px-5 py-2.5 bg-[#0D0D0D] text-white rounded-xl text-[13px] font-bold">
-                          Edit Goal
-                        </button>
+                      </div>
+
+                      {/* Goal History */}
+                      <div className="flex-1 flex flex-col min-h-0">
+                        <div className="flex items-center gap-2 mb-3 ml-2">
+                          <History className="w-4 h-4 text-[#0D0D0D]/30" />
+                          <h4 className="text-[11px] font-black text-[#0D0D0D]/30 uppercase tracking-[0.2em]">
+                            Goal History
+                          </h4>
+                        </div>
+                        
+                        <div className="flex flex-col gap-3 overflow-y-auto pr-3 -mr-3 custom-scrollbar pb-6 max-h-[340px]">
+                          {[
+                            {
+                              id: 1,
+                              title: "Muscle Build Phase",
+                              duration: "Aug 1, 2023 - Dec 31, 2023",
+                              status: "Completed",
+                              result: "+4kg Muscle",
+                            },
+                            {
+                              id: 2,
+                              title: "Summer Cut",
+                              duration: "Mar 1, 2023 - Jul 31, 2023",
+                              status: "Completed",
+                              result: "-5kg Fat",
+                            },
+                            {
+                              id: 3,
+                              title: "Healthy Maintenance",
+                              duration: "Jan 1, 2022 - Feb 28, 2023",
+                              status: "Completed",
+                              result: "Maintained 70kg",
+                            },
+                            {
+                              id: 4,
+                              title: "Initial Weight Loss",
+                              duration: "Jul 1, 2021 - Dec 31, 2021",
+                              status: "Completed",
+                              result: "-8kg Fat",
+                            },
+                            {
+                              id: 5,
+                              title: "Get Started Journey",
+                              duration: "Jan 1, 2021 - Jun 30, 2021",
+                              status: "Completed",
+                              result: "Formed Habit",
+                            }
+                          ].map((history) => (
+                            <div 
+                              key={history.id}
+                              className="p-4 bg-[#F2F2F2]/50 rounded-[1.25rem] border border-[#0D0D0D]/5 flex items-center justify-between group hover:bg-white hover:border-[#0D0D0D]/10 transition-all duration-300 hover:shadow-xs"
+                            >
+                              <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center border border-[#0D0D0D]/5 group-hover:bg-[#D9F2A2]/20 group-hover:border-[#9FD923]/20 transition-colors shadow-xs">
+                                  <CheckCircle className="w-5 h-5 text-[#0D0D0D]/20 group-hover:text-[#9FD923] transition-colors" />
+                                </div>
+                                <div className="flex flex-col justify-center">
+                                  <h4 className="text-[14px] font-bold text-[#0D0D0D] group-hover:text-[#0D0D0D] transition-colors line-clamp-1">
+                                    {history.title}
+                                  </h4>
+                                  <p className="text-[11px] text-[#0D0D0D]/40 font-bold flex items-center gap-1.5 mt-0.5">
+                                    <Calendar className="w-3 h-3 opacity-60" />
+                                    {history.duration}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="text-right shrink-0 ml-4 flex flex-col items-end justify-center">
+                                <div className="inline-block px-2 py-0.5 bg-[#D9F2A2]/40 text-[#5c8111] rounded-md text-[9px] font-black uppercase tracking-widest mb-1.5 border border-[#9FD923]/20">
+                                  {history.status}
+                                </div>
+                                <p className="text-[12px] font-black text-[#0D0D0D]/70 bg-white/50 px-2 py-0.5 rounded-lg border border-[#0D0D0D]/5">
+                                  {history.result}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </motion.div>
                   )}

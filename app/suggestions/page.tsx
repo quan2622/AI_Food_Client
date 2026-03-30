@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { SuggestionFilter } from "./_components/SuggestionFilter";
 import { SuggestionList } from "./_components/SuggestionList";
+import { dailyLogService, DashboardDailyLogResponse } from "@/services/dailyLogService";
+import { nutritionGoalService, NutritionGoal } from "@/services/nutritionGoalService";
 
 export interface FoodItem {
   id: string;
@@ -34,10 +36,23 @@ const baseFoods = [
 
 export default function SuggestionsPage() {
   const [selectedMeal, setSelectedMeal] = useState("Bữa sáng");
+  const [selectedPriority, setSelectedPriority] = useState("Cân bằng");
+  
+  const [dailyLog, setDailyLog] = useState<DashboardDailyLogResponse | null>(null);
+  const [activeGoal, setActiveGoal] = useState<NutritionGoal | null>(null);
 
+  useEffect(() => {
+    dailyLogService.getDailyLogToday().then(res => {
+      if (res.data) setDailyLog(res.data);
+    }).catch(console.error);
 
+    nutritionGoalService.getCurrentGoal().then(res => {
+      if (res.data) setActiveGoal(res.data);
+    }).catch(console.error);
+  }, []);
 
-  // Nhân bản dữ liệu để danh sách dài ra, dễ thấy thanh cuộn ở bên phải
+  const target = activeGoal || dailyLog?.nutritionGoal || { targetCalories: 2000, targetProtein: 120, targetCarbs: 220, targetFat: 65, targetFiber: 30 };
+  const totals = dailyLog?.totals || { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 };  // Nhân bản dữ liệu để danh sách dài ra, dễ thấy thanh cuộn ở bên phải
   const displayFoods: FoodItem[] = useMemo(() => {
     return Array.from({ length: 4 }).flatMap(() => 
       baseFoods.filter(f => f.meal === selectedMeal)
@@ -50,7 +65,14 @@ export default function SuggestionsPage() {
       <div className="flex-1 grid grid-cols-10 gap-6 overflow-hidden max-w-[1600px] w-full mx-auto">
         
         {/* KHỐI BÊN TRÁI: FORM CHỌN TIÊU CHÍ (3/10) */}
-        <SuggestionFilter selectedMeal={selectedMeal} onMealChange={setSelectedMeal} />
+        <SuggestionFilter 
+          selectedMeal={selectedMeal} 
+          onMealChange={setSelectedMeal} 
+          selectedPriority={selectedPriority}
+          onPriorityChange={setSelectedPriority}
+          totals={totals}
+          target={target}
+        />
 
         {/* KHỐI BÊN PHẢI: DANH SÁCH MÓN ĂN (7/10) */}
         <SuggestionList foods={displayFoods} selectedMeal={selectedMeal} />
