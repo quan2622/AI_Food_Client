@@ -10,9 +10,10 @@ interface SuggestionFilterProps {
   onPriorityChange: (priority: string) => void;
   totals: { calories: number; protein: number; carbs: number; fat: number; fiber: number; };
   target: { targetCalories: number; targetProtein: number; targetCarbs: number; targetFat: number; targetFiber: number; };
+  onApplyFilter: () => void;
 }
 
-export function SuggestionFilter({ selectedMeal, onMealChange, selectedPriority, onPriorityChange, totals, target }: SuggestionFilterProps) {
+export function SuggestionFilter({ selectedMeal, onMealChange, selectedPriority, onPriorityChange, totals, target, onApplyFilter }: SuggestionFilterProps) {
   const meals = ["Bữa sáng", "Bữa trưa", "Bữa tối", "Bữa phụ"];
   const priorities = ["Cân bằng", "Nhiều Protein", "Nhiều Carbs", "Nhiều Fat", "Nhiều Fiber"];
 
@@ -112,7 +113,10 @@ export function SuggestionFilter({ selectedMeal, onMealChange, selectedPriority,
       
       {/* Footer sticky bottom */}
       <div className="pt-4 border-t border-[#F1F5F9] shrink-0 mt-2">
-        <button className="w-full bg-[#0F172A] text-[#CAFD00] py-4 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-[#1e293b] active:scale-95 transition-all shadow-xl">
+        <button 
+          onClick={onApplyFilter}
+          className="w-full bg-[#0F172A] text-[#CAFD00] py-4 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-[#1e293b] active:scale-95 transition-all shadow-xl"
+        >
           Áp Dụng Bộ Lọc
         </button>
       </div>

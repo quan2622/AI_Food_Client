@@ -8,9 +8,10 @@ import { FoodItem } from "../page";
 interface SuggestionListProps {
   foods: FoodItem[];
   selectedMeal: string;
+  isLoading?: boolean;
 }
 
-export function SuggestionList({ foods, selectedMeal }: SuggestionListProps) {
+export function SuggestionList({ foods, selectedMeal, isLoading }: SuggestionListProps) {
   return (
     <div className="col-span-7 bg-white rounded-3xl p-6 shadow-sm border border-[#F1F5F9] flex flex-col h-full overflow-hidden">
       <div className="mb-6 flex justify-between items-center shrink-0">
@@ -18,7 +19,7 @@ export function SuggestionList({ foods, selectedMeal }: SuggestionListProps) {
           Gợi Ý Món Ăn
         </h2>
         <span className="text-sm font-bold text-[#64748B] bg-[#F1F5F9] px-4 py-1.5 rounded-full">
-          {foods.length} lựa chọn cho {selectedMeal.toLowerCase()}
+          {isLoading ? "Đang tải..." : `${foods.length} lựa chọn cho ${selectedMeal.toLowerCase()}`}
         </span>
       </div>
 
