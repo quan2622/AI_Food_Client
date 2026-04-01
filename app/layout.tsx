@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Header from "@/components/common/Header";
+import { AuthGuard } from "@/components/common/AuthGuard";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -19,8 +20,10 @@ export default function RootLayout({
         {/* Background Gradient Layer */}
         <div className="fixed top-0 left-0 right-0 h-[50vh] bg-linear-to-b from-[#9FD923]/40 via-[#9FD923]/12 to-transparent pointer-events-none -z-10" />
 
-        <Header />
-        <main className="flex-1 overflow-hidden">{children}</main>
+        <AuthGuard>
+          <Header />
+          <main className="flex-1 overflow-hidden">{children}</main>
+        </AuthGuard>
       </body>
     </html>
   );

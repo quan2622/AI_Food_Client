@@ -8,7 +8,6 @@ import { Bell, ChevronDown, Utensils } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ProfileDialog } from "@/components/common/ProfileDialog";
 import { useAuthStore } from "@/stores/authStore";
-import { useAuthInit } from "@/hooks/useAuthInit";
 
 const NAV_ITEMS = [
   { label: "Trang chủ", href: "/" },
@@ -37,7 +36,6 @@ const NOTIFICATIONS = [
 ];
 
 const Header = () => {
-  useAuthInit();
   const pathname = usePathname();
   const { isAuthenticated } = useAuthStore();
   
