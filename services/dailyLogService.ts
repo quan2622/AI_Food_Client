@@ -27,6 +27,7 @@ export interface Meal {
 export interface MealItem {
   id: number;
   quantity: number;
+  grams: number;
   calories: number;
   protein: number;
   carbs: number;
@@ -75,6 +76,14 @@ export const dailyLogService = {
    */
   getDailyLogToday: async (): Promise<ApiResponse<DashboardDailyLogResponse>> => {
     const res = await privateAxios.get<ApiResponse<DashboardDailyLogResponse>>("/daily-logs/today");
+    return res as unknown as ApiResponse<DashboardDailyLogResponse>;
+  },
+
+  /**
+   * Get daily log by specific date (YYYY-MM-DD)
+   */
+  getDailyLogByDate: async (date: string): Promise<ApiResponse<DashboardDailyLogResponse>> => {
+    const res = await privateAxios.get<ApiResponse<DashboardDailyLogResponse>>(`/daily-logs/${date}`);
     return res as unknown as ApiResponse<DashboardDailyLogResponse>;
   },
 };

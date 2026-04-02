@@ -11,6 +11,7 @@ import { IFood } from './food.type';
 export interface IMealItem {
   id: number;
   quantity: number;
+  grams: number;
   calories: number;
   protein: number;
   carbs: number;
@@ -70,6 +71,7 @@ export interface IDailyLogSummary {
 export interface ICreateMealItemRequest {
   foodId: number;
   quantity: number;
+  grams?: number;
   calories?: number;
   protein?: number;
   carbs?: number;
@@ -79,6 +81,7 @@ export interface ICreateMealItemRequest {
 
 export interface IUpdateMealItemRequest {
   quantity?: number;
+  grams?: number;
   calories?: number;
   protein?: number;
   carbs?: number;

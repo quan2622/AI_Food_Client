@@ -39,7 +39,7 @@ export const authService = {
    * Đăng xuất
    */
   logout: async (): Promise<ApiResponse<null>> => {
-    const res = await publicAxios.post<ApiResponse<null>>("/auth/logout");
+    const res = await privateAxios.post<ApiResponse<null>>("/auth/logout");
     return res as unknown as ApiResponse<null>;
   },
 

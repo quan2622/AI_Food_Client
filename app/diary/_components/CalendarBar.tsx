@@ -6,7 +6,11 @@ import { useState, useEffect, useRef } from "react";
 
 const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-const CalendarBar = () => {
+interface CalendarBarProps {
+  onDateChange: (date: Date) => void;
+}
+
+const CalendarBar = ({ onDateChange }: CalendarBarProps) => {
   const today = new Date();
   
   const [activeYear, setActiveYear] = useState(today.getFullYear());
@@ -29,7 +33,10 @@ const CalendarBar = () => {
         inline: "center",
       });
     }
-  }, [activeMonth, activeYear]); // Scroll when month changes or on initial load
+    
+    // Notify parent about date change
+    onDateChange(new Date(activeYear, activeMonth, activeDay));
+  }, [activeYear, activeMonth, activeDay, onDateChange]); // Scroll and notify when date changes
 
   const handlePrevYear = () => setActiveYear((prev) => prev - 1);
   const handleNextYear = () => setActiveYear((prev) => prev + 1);
