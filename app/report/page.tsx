@@ -1,14 +1,47 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import NutritionTrendChart from "./_components/NutritionTrendChart";
 import NutritionPieChart from "./_components/NutritionPieChart";
 import CaloriesTrendChart from "./_components/CaloriesTrendChart";
 import BodyMetrics from "./_components/BodyMetrics";
 import { motion } from "framer-motion";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  reportService,
+  NutritionTrendItem,
+  TrendOption,
+} from "@/services/reportService";
 
 export default function ReportPage() {
+  const [period, setPeriod] = useState<TrendOption>("day");
+  const [trendData, setTrendData] = useState<NutritionTrendItem[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const res = await reportService.getNutritionTrend(period);
+        if (isMounted && res.data) {
+          setTrendData(res.data);
+        }
+      } catch {
+        if (isMounted) setTrendData([]);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    fetchData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [period]);
+
   return (
     <div className="h-screen">
       <ScrollArea className="h-full w-full">
@@ -22,12 +55,21 @@ export default function ReportPage() {
           >
             {/* Left: line chart */}
             <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden min-h-[450px]">
-              <NutritionTrendChart />
+              <NutritionTrendChart
+                data={trendData}
+                loading={loading}
+                period={period}
+                onPeriodChange={setPeriod}
+              />
             </div>
 
-            {/* Right: pie chart */}
+            {/* Right: pie chart — synced to same data & period */}
             <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden min-h-[450px]">
-              <NutritionPieChart />
+              <NutritionPieChart
+                data={trendData}
+                loading={loading}
+                period={period}
+              />
             </div>
           </motion.div>
 

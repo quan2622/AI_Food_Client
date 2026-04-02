@@ -16,13 +16,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-
-const chartData = [
-  { nutrient: "protein", amount: 82, fill: "var(--color-protein)" },
-  { nutrient: "carbs", amount: 210, fill: "var(--color-carbs)" },
-  { nutrient: "fat", amount: 60, fill: "var(--color-fat)" },
-  { nutrient: "fiber", amount: 25, fill: "var(--color-fiber)" },
-];
+import { NutritionTrendItem, TrendOption } from "@/services/reportService";
 
 const chartConfig = {
   amount: { label: "Amount (g)" },
@@ -32,9 +26,44 @@ const chartConfig = {
   fiber: { label: "Fiber", color: "#ec4899" },
 } satisfies ChartConfig;
 
-const total = chartData.reduce((sum, item) => sum + item.amount, 0);
+interface NutritionPieChartProps {
+  data: NutritionTrendItem[];
+  loading: boolean;
+  period: TrendOption;
+}
 
-export default function NutritionPieChart() {
+const periodLabel: Record<TrendOption, string> = {
+  day: "các ngày trong tuần",
+  week: "các tuần",
+  month: "các tháng",
+};
+
+export default function NutritionPieChart({
+  data,
+  loading,
+  period,
+}: NutritionPieChartProps) {
+  // Sum up all nutrients across all data points
+  const totals = data.reduce(
+    (acc, item) => ({
+      protein: acc.protein + (item.protein ?? 0),
+      carbs: acc.carbs + (item.carbs ?? 0),
+      fat: acc.fat + (item.fat ?? 0),
+      fiber: acc.fiber + (item.fiber ?? 0),
+    }),
+    { protein: 0, carbs: 0, fat: 0, fiber: 0 }
+  );
+
+  const grandTotal =
+    totals.protein + totals.carbs + totals.fat + totals.fiber;
+
+  const chartData = [
+    { nutrient: "protein", amount: totals.protein, fill: "var(--color-protein)" },
+    { nutrient: "carbs", amount: totals.carbs, fill: "var(--color-carbs)" },
+    { nutrient: "fat", amount: totals.fat, fill: "var(--color-fat)" },
+    { nutrient: "fiber", amount: totals.fiber, fill: "var(--color-fiber)" },
+  ];
+
   return (
     <Card className="h-full flex flex-col rounded-3xl border-0 shadow-none">
       <CardHeader className="items-center pb-0 shrink-0">
@@ -42,41 +71,56 @@ export default function NutritionPieChart() {
           Tỉ lệ dinh dưỡng
         </CardTitle>
         <CardDescription>
-          Phân bổ theo % tổng lượng calories hôm nay
+          Tổng hợp từ {periodLabel[period]}
         </CardDescription>
       </CardHeader>
 
-      <CardContent className="flex-1 min-h-0 pb-0 flex items-center justify-center">
-        <ChartContainer
-          config={chartConfig}
-          className="mx-auto aspect-square max-h-[240px] w-full pb-0 [&_.recharts-pie-label-text]:fill-foreground"
-        >
-          <PieChart>
-            <ChartTooltip
-              content={<ChartTooltipContent nameKey="nutrient" hideLabel />}
-            />
-            <Pie
-              data={chartData}
-              dataKey="amount"
-              nameKey="nutrient"
-              label
-              innerRadius={60}
-              strokeWidth={4}
-            />
-          </PieChart>
-        </ChartContainer>
+      <CardContent className="flex-1 min-h-0 pb-0 flex items-center justify-center relative">
+        {/* Loading overlay */}
+        {loading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-white/60 z-10 backdrop-blur-sm rounded-2xl">
+            <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-[#9FD923]" />
+          </div>
+        )}
+
+        {grandTotal === 0 ? (
+          <p className="text-sm text-gray-400 font-medium">Chưa có dữ liệu</p>
+        ) : (
+          <ChartContainer
+            config={chartConfig}
+            className="mx-auto aspect-square max-h-[240px] w-full pb-0 [&_.recharts-pie-label-text]:fill-foreground"
+          >
+            <PieChart>
+              <ChartTooltip
+                content={<ChartTooltipContent nameKey="nutrient" hideLabel />}
+              />
+              <Pie
+                data={chartData}
+                dataKey="amount"
+                nameKey="nutrient"
+                label
+                innerRadius={60}
+                strokeWidth={4}
+              />
+            </PieChart>
+          </ChartContainer>
+        )}
       </CardContent>
 
       <CardFooter className="flex-col shrink-0 px-8 pb-12 pt-8 border-t border-gray-100 bg-gray-50/20">
         <div className="grid grid-cols-2 gap-x-16 gap-y-6 w-full">
-          {chartData.map((data) => {
+          {chartData.map((item) => {
             const config =
               chartConfig[
-                data.nutrient as Exclude<keyof typeof chartConfig, "amount">
+                item.nutrient as Exclude<keyof typeof chartConfig, "amount">
               ];
+            const pct =
+              grandTotal > 0
+                ? Math.round((item.amount / grandTotal) * 100)
+                : 0;
             return (
               <div
-                key={data.nutrient}
+                key={item.nutrient}
                 className="flex items-center justify-between group"
               >
                 <div className="flex items-center gap-3">
@@ -89,7 +133,7 @@ export default function NutritionPieChart() {
                   </span>
                 </div>
                 <span className="font-black text-gray-900 tabular-nums">
-                  {Math.round((data.amount / total) * 100)}%
+                  {pct}%
                 </span>
               </div>
             );
