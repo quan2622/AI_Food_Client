@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import {
   ChartContainer,
@@ -15,32 +15,71 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-
-type Period = "week" | "month";
-
-// Full Week: Monday to Sunday (T7, CN = 0)
-const weekData = [
-  { label: "T2", calories: 1800 },
-  { label: "T3", calories: 1950 },
-  { label: "T4", calories: 2100 },
-  { label: "T5", calories: 1850 },
-  { label: "T6", calories: 2200 },
-];
-
-// Full Month: 1 to 31 (March). Days 28-31 = 0
-const monthData = Array.from({ length: 28 }, (_, i) => ({
-  label: (i + 1).toString().padStart(2, "0"),
-  calories: 1700 + Math.floor(Math.random() * 600),
-}));
+import {
+  reportService,
+  MetricPeriod,
+  MetricTrendDataPoint,
+  MetricTrendResponse,
+} from "@/services/reportService";
+import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 const chartConfig = {
-  calories: { label: "Calories", color: "#9fd923" },
+  value: { label: "Calories", color: "#9fd923" },
 } satisfies ChartConfig;
 
-export default function CaloriesTrendChart() {
-  const [period, setPeriod] = useState<Period>("week");
+const periodLabel: Record<MetricPeriod, string> = {
+  week: "Từ thứ 2 đến nay",
+  month: "Từ đầu tháng đến nay",
+};
 
-  const data = period === "week" ? weekData : monthData;
+export default function CaloriesTrendChart() {
+  const [period, setPeriod] = useState<MetricPeriod>("month");
+  const [chartData, setChartData] = useState<MetricTrendDataPoint[]>([]);
+  const [summary, setSummary] = useState<MetricTrendResponse["summary"] | null>(
+    null
+  );
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const res = await reportService.getMetricTrend(period, "calories");
+        if (isMounted && res.data) {
+          setChartData(res.data.data);
+          setSummary(res.data.summary);
+        }
+      } catch {
+        if (isMounted) {
+          setChartData([]);
+          setSummary(null);
+        }
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    fetchData();
+    return () => {
+      isMounted = false;
+    };
+  }, [period]);
+
+  const TrendIcon =
+    summary?.trendDirection === "up"
+      ? TrendingUp
+      : summary?.trendDirection === "down"
+      ? TrendingDown
+      : Minus;
+
+  const trendColor =
+    summary?.trendDirection === "up"
+      ? "text-[#9fd923]"
+      : summary?.trendDirection === "down"
+      ? "text-red-500"
+      : "text-gray-400";
 
   return (
     <Card className="rounded-3xl border-0 shadow-sm bg-white overflow-hidden h-full flex flex-col">
@@ -49,14 +88,12 @@ export default function CaloriesTrendChart() {
           <CardTitle className="text-lg font-bold text-gray-800">
             Xu hướng Calories
           </CardTitle>
-          <CardDescription>
-            {period === "week" ? "Từ thứ 2 đến nay" : "Từ đầu tháng đến nay"}
-          </CardDescription>
+          <CardDescription>{periodLabel[period]}</CardDescription>
         </div>
 
-        {/* Period toggle — Only Week and Month */}
+        {/* Period toggle */}
         <div className="flex items-center gap-1 bg-gray-100 rounded-xl p-1 w-fit">
-          {(["week", "month"] as Period[]).map((p) => (
+          {(["week", "month"] as MetricPeriod[]).map((p) => (
             <button
               key={p}
               onClick={() => setPeriod(p)}
@@ -72,11 +109,39 @@ export default function CaloriesTrendChart() {
         </div>
       </CardHeader>
 
-      <CardContent className="flex-1 min-h-0 pb-4">
-        <ChartContainer config={chartConfig} className="h-full w-full">
+      <CardContent className="flex-1 min-h-0 pb-4 relative">
+        {/* Loading overlay */}
+        {loading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-white/60 z-10 backdrop-blur-sm rounded-2xl">
+            <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-[#9FD923]" />
+          </div>
+        )}
+
+        {/* Summary bar */}
+        {summary && !loading && (
+          <div className="flex items-center justify-between px-1 mb-3">
+            <div className="flex items-center gap-1.5">
+              <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">
+                TB
+              </span>
+              <span className="text-sm font-black text-gray-800 tabular-nums">
+                {Math.round(summary.average).toLocaleString()} kcal
+              </span>
+            </div>
+            <div className={`flex items-center gap-1 ${trendColor}`}>
+              <TrendIcon className="w-4 h-4" />
+              <span className="text-xs font-bold tabular-nums">
+                {summary.trend > 0 ? "+" : ""}
+                {Math.round(summary.trend).toLocaleString()} kcal
+              </span>
+            </div>
+          </div>
+        )}
+
+        <ChartContainer config={chartConfig} className="h-[calc(100%-40px)] w-full">
           <AreaChart
             key={period}
-            data={data}
+            data={chartData}
             margin={{ top: 20, right: 10, left: 0, bottom: 0 }}
           >
             <defs>
@@ -102,12 +167,12 @@ export default function CaloriesTrendChart() {
               tickLine={false}
               tickMargin={10}
               unit=" kcal"
-              width={60}
+              width={65}
             />
             <ChartTooltip content={<ChartTooltipContent />} />
             <Area
               type="monotone"
-              dataKey="calories"
+              dataKey="value"
               stroke="#9fd923"
               fillOpacity={1}
               fill="url(#colorCalories)"

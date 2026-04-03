@@ -53,6 +53,27 @@ export type NutritionTrendItem =
   | NutritionTrendWeek
   | NutritionTrendMonth;
 
+export type MetricType = "calories" | "protein" | "carbs" | "fat" | "fiber";
+export type MetricPeriod = "week" | "month";
+
+export interface MetricTrendDataPoint {
+  label: string;
+  date: string;
+  value: number;
+}
+
+export interface MetricTrendResponse {
+  type: MetricPeriod;
+  metric: MetricType;
+  range: { start: string; end: string };
+  data: MetricTrendDataPoint[];
+  summary: {
+    average: number;
+    trend: number;
+    trendDirection: "up" | "down" | "stable";
+  };
+}
+
 export const reportService = {
   /**
    * Get nutrition trend (day / week / month)
@@ -65,5 +86,20 @@ export const reportService = {
       { option }
     );
     return res as unknown as ApiResponse<NutritionTrendItem[]>;
+  },
+
+  /**
+   * Get metric trend (calories | protein | carbs | fat | fiber)
+   * type: "week" | "month"
+   */
+  getMetricTrend: async (
+    type: "week" | "month",
+    metric: MetricType
+  ): Promise<ApiResponse<MetricTrendResponse>> => {
+    const res = await privateAxios.post<ApiResponse<MetricTrendResponse>>(
+      "/user-reports/metric-trend",
+      { type, metric }
+    );
+    return res as unknown as ApiResponse<MetricTrendResponse>;
   },
 };
