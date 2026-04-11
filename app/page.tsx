@@ -543,34 +543,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Featured Nutrition Insight Card */}
-        <section className="mt-12 rounded-3xl overflow-hidden relative min-h-[320px] flex items-center bg-zinc-900 group shadow-lg">
-          <div className="absolute inset-0 opacity-60 transition-transform duration-700 group-hover:scale-105">
-            <Image
-              fill
-              alt="Healthy Nutrition"
-              className="object-cover"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuB_KzrD5JfbvaV7mGV4e-MpmV7ZAnQbFV6LhmsJZqFkJvMRyeVFv2PsJuHak8kTIOGmOKNnYIMWw2w_T0FrX_yBFhlxs5h3YKpYx4fXq7EWTucqotGKTeiZRIJIOCV4CYGsGHHco9avvnhdR25e3bQOxF819ftOIOUj9vygKgpEHNrLoI11KGuDG-lufiKAoCR84GZycLXRNAGmPD-pnXoooOVoc-79mAZwe-7_Q7NXw0_037esIIHkrM30SLtkuczJJRP2FbWweV2e"
-            />
-          </div>
-          <div className="absolute inset-0 bg-linear-to-r from-zinc-950/90 via-zinc-950/70 to-transparent"></div>
-          <div className="relative z-10 px-6 md:px-12 max-w-2xl">
-            <span className="bg-dash-primary px-3 py-1 rounded-full text-white text-[10px] font-bold uppercase tracking-widest mb-4 inline-block shadow-sm">
-              Mẹo dinh dưỡng
-            </span>
-            <h2 className="text-3xl md:text-4xl font-extrabold text-white font-headline leading-tight mb-4">
-              Lợi ích của việc bổ sung chất xơ hòa tan vào bữa sáng
-            </h2>
-            <p className="text-zinc-300 mb-8 text-base md:text-lg">
-              Hạt chia, yến mạch và các loại quả mọng không chỉ ngon mà còn giúp
-              bạn no lâu hơn và ổn định đường huyết suốt cả ngày.
-            </p>
-            <button className="cursor-pointer text-white border border-white/30 px-6 md:px-8 py-3 rounded-xl font-bold hover:bg-white hover:text-black transition-all flex items-center gap-3 backdrop-blur-sm">
-              Đọc thêm bài viết
-              <ArrowRight className="w-5 h-5" />
-            </button>
-          </div>
-        </section>
+
       </main>
 
       <ImageUploadDialog
