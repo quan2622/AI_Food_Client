@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   User,
@@ -18,11 +18,22 @@ import {
   Dna,
   History,
   CheckCircle,
+  Search,
+  ArrowLeft,
+  Trash2,
+  Plus,
+  Pencil,
 } from "lucide-react";
 import { cn, formatDate, formatNumber } from "@/lib/utils";
 import { useAuthStore } from "@/stores/authStore";
 import { authService } from "@/services/authService";
+import { allergenService } from "@/services/allergenService";
+import { nutritionGoalService } from "@/services/nutritionGoalService";
+import { SeverityType, GoalType, NutritionGoalStatus } from "@/types/enum.type";
+import { IAllergen, IUserAllergy } from "@/types/allergen.type";
+import { INutritionGoal, ICreateNutritionGoalRequest } from "@/types/nutrition-goal.type";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -42,6 +53,43 @@ export const ProfileDialog = ({ trigger }: ProfileDialogProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
+  // Security Form State
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+
+  // Allergies State
+  const [userAllergies, setUserAllergies] = useState<IUserAllergy[]>([]);
+  const [allAllergens, setAllAllergens] = useState<IAllergen[]>([]);
+  const [isAddingAllergy, setIsAddingAllergy] = useState(false);
+  const [editingAllergyId, setEditingAllergyId] = useState<number | null>(null);
+  const [allergenSearch, setAllergenSearch] = useState("");
+  const [selectedAllergenId, setSelectedAllergenId] = useState<number | null>(null);
+  const [allergenSeverity, setAllergenSeverity] = useState<SeverityType>(SeverityType.SEV_MEDIUM);
+  const [allergenNote, setAllergenNote] = useState("");
+  const [isLoadingAllergies, setIsLoadingAllergies] = useState(false);
+
+  // Nutrition Goals State
+  const [currentGoal, setCurrentGoal] = useState<INutritionGoal | null>(null);
+  const [goalHistory, setGoalHistory] = useState<INutritionGoal[]>([]);
+  const [isAddingGoal, setIsAddingGoal] = useState(false);
+  const [editingGoalId, setEditingGoalId] = useState<number | null>(null);
+  const [isLoadingGoals, setIsLoadingGoals] = useState(false);
+
+  // Nutrition Goal Form State
+  const [goalForm, setGoalForm] = useState<ICreateNutritionGoalRequest>({
+    goalType: GoalType.GOAL_LOSS,
+    targetWeight: user?.weight || 0,
+    targetCalories: 2000,
+    targetProtein: 150,
+    targetCarbs: 250,
+    targetFat: 70,
+    targetFiber: 30,
+    startDate: new Date().toISOString().split("T")[0],
+    endDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+    status: NutritionGoalStatus.NUTR_GOAL_ONGOING,
+  });
+
   const handleLogout = async () => {
     try {
       await authService.logout();
@@ -50,6 +98,293 @@ export const ProfileDialog = ({ trigger }: ProfileDialogProps) => {
     } finally {
       logoutAction();
       router.push("/sign-in");
+    }
+  };
+
+  const handleUpdatePassword = async () => {
+    if (!user?.id) return;
+    if (!oldPassword || !newPassword) {
+      toast.error("Vui lòng điền đầy đủ thông tin.");
+      return;
+    }
+    if (newPassword.length < 6 || newPassword.length > 100) {
+      toast.error("Mật khẩu mới phải từ 6 đến 100 ký tự.");
+      return;
+    }
+
+    setIsUpdatingPassword(true);
+    try {
+      const res = await authService.updatePassword(user.id, {
+        oldPassword,
+        newPassword,
+      });
+
+      if (res.metadata?.EC === 0) {
+        toast.success("Cập nhật mật khẩu thành công!");
+        setOldPassword("");
+        setNewPassword("");
+      } else {
+        toast.error(res.metadata?.message || "Cập nhật mật khẩu thất bại.");
+      }
+    } catch (error: any) {
+      console.error("Update password failed:", error);
+      toast.error(error?.response?.data?.metadata?.message || "Đã xảy ra lỗi.");
+    } finally {
+      setIsUpdatingPassword(false);
+    }
+  };
+
+  // ── Allergies Logic ────────────────────────────────────────────────────────
+  const fetchUserAllergies = async () => {
+    if (!user?.id) return;
+    try {
+      const res = await allergenService.getUserAllergies(user.id);
+      if (res.data) setUserAllergies(res.data);
+    } catch (error) {
+      console.error("Failed to fetch user allergies", error);
+    }
+  };
+
+  const fetchAllAllergens = async () => {
+    try {
+      const res = await allergenService.getAllAllergens();
+      // Xử lý cả 2 trường hợp: mảng trực tiếp hoặc bọc trong object ApiResponse
+      if (Array.isArray(res)) {
+        setAllAllergens(res);
+      } else if (res && (res as ApiResponse<IAllergen[]>).data) {
+        setAllAllergens((res as ApiResponse<IAllergen[]>).data);
+      }
+    } catch (error: any) {
+      console.error("Failed to fetch all allergens:", error);
+      // In chi tiết lỗi nếu có phản hồi từ server
+      if (error.response) {
+        console.error("Server response:", error.response.status, error.response.data);
+      }
+    }
+  };
+
+  // Use combined useEffect in Nutrition Goals Logic section
+
+  const filteredAllergens = useMemo(() => {
+    return allAllergens.filter((a) =>
+      a.name.toLowerCase().includes(allergenSearch.toLowerCase())
+    );
+  }, [allAllergens, allergenSearch]);
+
+  const handleAddAllergy = async () => {
+    if (!user?.id || !selectedAllergenId) return;
+    setIsLoadingAllergies(true);
+    try {
+      const res = await allergenService.addUserAllergy({
+        userId: user.id,
+        allergenId: selectedAllergenId,
+        severity: allergenSeverity,
+        note: allergenNote,
+      });
+      if (res.metadata?.EC === 0) {
+        toast.success("Đã thêm dị ứng mới thành công!");
+        setIsAddingAllergy(false);
+        setSelectedAllergenId(null);
+        setAllergenNote("");
+        fetchUserAllergies();
+      } else {
+        toast.error(res.metadata?.message || "Thêm dị ứng thất bại.");
+      }
+    } catch (error: any) {
+      console.error("Add allergy failed:", error);
+      toast.error(error?.response?.data?.metadata?.message || "Đã xảy ra lỗi.");
+    } finally {
+      setIsLoadingAllergies(false);
+    }
+  };
+
+  const handleEditAllergy = (allergy: IUserAllergy) => {
+    setEditingAllergyId(allergy.id);
+    setSelectedAllergenId(allergy.allergenId);
+    setAllergenSeverity(allergy.severity);
+    setAllergenNote(allergy.note || "");
+    setIsAddingAllergy(true);
+  };
+
+  const handleUpdateAllergy = async () => {
+    if (!editingAllergyId) return;
+    setIsLoadingAllergies(true);
+    try {
+      const res = await allergenService.updateUserAllergy(editingAllergyId, {
+        severity: allergenSeverity,
+        note: allergenNote,
+      });
+      if (res.metadata?.EC === 0) {
+        toast.success("Cập nhật dị ứng thành công!");
+        setIsAddingAllergy(false);
+        setEditingAllergyId(null);
+        setSelectedAllergenId(null);
+        setAllergenNote("");
+        fetchUserAllergies();
+      } else {
+        toast.error(res.metadata?.message || "Cập nhật thất bại.");
+      }
+    } catch (error: any) {
+      console.error("Update allergy failed:", error);
+      toast.error(error?.response?.data?.metadata?.message || "Đã xảy ra lỗi.");
+    } finally {
+      setIsLoadingAllergies(false);
+    }
+  };
+
+  const handleDeleteAllergy = async (id: number) => {
+    if (!confirm("Bạn có chắc chắn muốn xóa dị ứng này không?")) return;
+    try {
+      const res = await allergenService.deleteUserAllergy(id);
+      if (res.metadata?.EC === 0) {
+        toast.success("Đã xóa dị ứng.");
+        fetchUserAllergies();
+      }
+    } catch (error) {
+      toast.error("Xóa dị ứng thất bại.");
+    }
+  };
+
+  const getSeverityColor = (severity: SeverityType) => {
+    switch (severity) {
+      case SeverityType.SEV_LOW: return "text-blue-500 bg-blue-50 border-blue-100";
+      case SeverityType.SEV_MEDIUM: return "text-yellow-600 bg-yellow-50 border-yellow-100";
+      case SeverityType.SEV_HIGH: return "text-orange-600 bg-orange-50 border-orange-100";
+      case SeverityType.SEV_LIFE_THREATENING: return "text-red-600 bg-red-50 border-red-100";
+      default: return "text-gray-500 bg-gray-50 border-gray-100";
+    }
+  };
+
+  // ── Nutrition Goals Logic ──────────────────────────────────────────────────
+  const fetchGoals = async () => {
+    try {
+      const [currentRes, historyRes] = await Promise.all([
+        nutritionGoalService.getCurrentGoal(),
+        nutritionGoalService.getMyGoals(),
+      ]);
+      
+      const currentData = currentRes.data ? currentRes.data : (currentRes && 'id' in currentRes ? currentRes : null);
+      setCurrentGoal(currentData as INutritionGoal | null);
+
+      const historyData = Array.isArray(historyRes) ? historyRes : (historyRes && Array.isArray(historyRes.data) ? historyRes.data : []);
+      setGoalHistory(historyData);
+    } catch (error) {
+      console.error("Failed to fetch goals", error);
+      setGoalHistory([]);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      if (profileTab === "Allergies") {
+        fetchUserAllergies();
+        fetchAllAllergens();
+      } else if (profileTab === "Goals") {
+        fetchGoals();
+      }
+    }
+  }, [isOpen, profileTab]);
+
+  const handleGoalFormChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setGoalForm((prev) => ({
+      ...prev,
+      [name]: name.startsWith("target") ? Number(value) : value,
+    }));
+  };
+
+  const handleAddGoal = async () => {
+    setIsLoadingGoals(true);
+    try {
+      const res = await nutritionGoalService.createGoal(goalForm);
+      if (res.metadata?.EC === 0) {
+        toast.success("Đã tạo mục tiêu mới!");
+        setIsAddingGoal(false);
+        fetchGoals();
+      } else {
+        toast.error(res.metadata?.message || "Tạo mục tiêu thất bại.");
+      }
+    } catch (error: any) {
+      toast.error(error?.response?.data?.metadata?.message || "Đã xảy ra lỗi.");
+    } finally {
+      setIsLoadingGoals(false);
+    }
+  };
+
+  const handleEditGoal = (goal: INutritionGoal) => {
+    setEditingGoalId(goal.id);
+    setGoalForm({
+      goalType: goal.goalType,
+      targetWeight: goal.targetWeight,
+      targetCalories: goal.targetCalories,
+      targetProtein: goal.targetProtein,
+      targetCarbs: goal.targetCarbs,
+      targetFat: goal.targetFat,
+      targetFiber: goal.targetFiber,
+      startDate: goal.startDate.split("T")[0],
+      endDate: goal.endDate.split("T")[0],
+      status: goal.status,
+    });
+    setIsAddingGoal(true);
+  };
+
+  const handleUpdateGoal = async () => {
+    if (!editingGoalId) return;
+    setIsLoadingGoals(true);
+    try {
+      const res = await nutritionGoalService.updateGoal(editingGoalId, goalForm);
+      if (res.metadata?.EC === 0) {
+        toast.success("Cập nhật mục tiêu thành công!");
+        setIsAddingGoal(false);
+        setEditingGoalId(null);
+        fetchGoals();
+      } else {
+        toast.error(res.metadata?.message || "Cập nhật mục tiêu thất bại.");
+      }
+    } catch (error: any) {
+      toast.error(error?.response?.data?.metadata?.message || "Đã xảy ra lỗi.");
+    } finally {
+      setIsLoadingGoals(false);
+    }
+  };
+
+  const handleDeleteGoal = async (id: number) => {
+    if (!confirm("Bạn có chắc chắn muốn xóa mục tiêu này?")) return;
+    try {
+      const res = await nutritionGoalService.deleteGoal(id);
+      if (res.metadata?.EC === 0) {
+        toast.success("Đã xóa mục tiêu.");
+        fetchGoals();
+      }
+    } catch (error) {
+      toast.error("Xóa mục tiêu thất bại.");
+    }
+  };
+
+  const getGoalTypeLabel = (type: GoalType) => {
+    switch (type) {
+      case GoalType.GOAL_LOSS: return "Weight Loss";
+      case GoalType.GOAL_GAIN: return "Weight Gain";
+      case GoalType.GOAL_MAINTAIN: return "Maintain";
+      case GoalType.GOAL_STRICT: return "Strict Diet";
+      default: return type;
+    }
+  };
+
+  const getStatusBadge = (status: NutritionGoalStatus) => {
+    switch (status) {
+      case NutritionGoalStatus.NUTR_GOAL_ONGOING:
+        return "bg-blue-100 text-blue-600 border-blue-200";
+      case NutritionGoalStatus.NUTR_GOAL_COMPLETED:
+        return "bg-green-100 text-green-600 border-green-200";
+      case NutritionGoalStatus.NUTR_GOAL_PAUSED:
+        return "bg-yellow-100 text-yellow-600 border-yellow-200";
+      case NutritionGoalStatus.NUTR_GOAL_FAILED:
+        return "bg-red-100 text-red-600 border-red-200";
+      default:
+        return "bg-gray-100 text-gray-600 border-gray-200";
     }
   };
 
@@ -418,111 +753,543 @@ export const ProfileDialog = ({ trigger }: ProfileDialogProps) => {
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -15 }}
                       transition={{ duration: 0.2, ease: "easeOut" }}
-                      className="space-y-8 h-full flex flex-col pt-2"
+                      className="h-full flex flex-col pt-2"
                     >
-                      {/* Current Goal */}
-                      <div>
-                        <h4 className="text-[11px] font-black text-[#0D0D0D]/30 uppercase tracking-[0.2em] mb-3 ml-2">
-                          Active Goal
-                        </h4>
-                        <div className="p-5 bg-[#D9F2A2]/20 rounded-3xl border border-[#9FD923]/20 flex items-center justify-between hover:bg-[#D9F2A2]/30 transition-colors shadow-sm">
-                          <div className="flex items-center gap-4">
-                            <div className="w-14 h-14 bg-[#9FD923] rounded-2xl flex items-center justify-center text-[#0D0D0D] shadow-lg shadow-[#9FD923]/20">
-                              <Target className="w-7 h-7" />
-                            </div>
+                      <AnimatePresence mode="wait">
+                        {!isAddingGoal ? (
+                          <motion.div
+                            key="goal-list"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            className="flex-1 flex flex-col min-h-0 space-y-6"
+                          >
+                            {/* Current Goal */}
                             <div>
-                              <h3 className="text-[18px] font-black text-[#0D0D0D]">
-                                Weight Loss Journey
-                              </h3>
-                              <p className="text-[12px] text-[#0D0D0D]/50 font-bold flex items-center gap-1.5 mt-0.5">
-                                <Calendar className="w-3.5 h-3.5 opacity-70" />
-                                Jan 1, 2024 - Dec 31, 2024
-                              </p>
-                            </div>
-                          </div>
-                          <button className="px-5 py-2.5 bg-[#0D0D0D] text-white rounded-[14px] text-[11px] font-black uppercase tracking-[0.1em] hover:bg-[#9FD923] hover:text-[#0D0D0D] transition-all group border border-transparent shadow hover:shadow-[#9FD923]/20">
-                            Edit Goal
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Goal History */}
-                      <div className="flex-1 flex flex-col min-h-0">
-                        <div className="flex items-center gap-2 mb-3 ml-2">
-                          <History className="w-4 h-4 text-[#0D0D0D]/30" />
-                          <h4 className="text-[11px] font-black text-[#0D0D0D]/30 uppercase tracking-[0.2em]">
-                            Goal History
-                          </h4>
-                        </div>
-                        
-                        <div className="flex flex-col gap-3 overflow-y-auto pr-3 -mr-3 custom-scrollbar pb-6 max-h-[340px]">
-                          {[
-                            {
-                              id: 1,
-                              title: "Muscle Build Phase",
-                              duration: "Aug 1, 2023 - Dec 31, 2023",
-                              status: "Completed",
-                              result: "+4kg Muscle",
-                            },
-                            {
-                              id: 2,
-                              title: "Summer Cut",
-                              duration: "Mar 1, 2023 - Jul 31, 2023",
-                              status: "Completed",
-                              result: "-5kg Fat",
-                            },
-                            {
-                              id: 3,
-                              title: "Healthy Maintenance",
-                              duration: "Jan 1, 2022 - Feb 28, 2023",
-                              status: "Completed",
-                              result: "Maintained 70kg",
-                            },
-                            {
-                              id: 4,
-                              title: "Initial Weight Loss",
-                              duration: "Jul 1, 2021 - Dec 31, 2021",
-                              status: "Completed",
-                              result: "-8kg Fat",
-                            },
-                            {
-                              id: 5,
-                              title: "Get Started Journey",
-                              duration: "Jan 1, 2021 - Jun 30, 2021",
-                              status: "Completed",
-                              result: "Formed Habit",
-                            }
-                          ].map((history) => (
-                            <div 
-                              key={history.id}
-                              className="p-4 bg-[#F2F2F2]/50 rounded-[1.25rem] border border-[#0D0D0D]/5 flex items-center justify-between group hover:bg-white hover:border-[#0D0D0D]/10 transition-all duration-300 hover:shadow-xs"
-                            >
-                              <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center border border-[#0D0D0D]/5 group-hover:bg-[#D9F2A2]/20 group-hover:border-[#9FD923]/20 transition-colors shadow-xs">
-                                  <CheckCircle className="w-5 h-5 text-[#0D0D0D]/20 group-hover:text-[#9FD923] transition-colors" />
-                                </div>
-                                <div className="flex flex-col justify-center">
-                                  <h4 className="text-[14px] font-bold text-[#0D0D0D] group-hover:text-[#0D0D0D] transition-colors line-clamp-1">
-                                    {history.title}
-                                  </h4>
-                                  <p className="text-[11px] text-[#0D0D0D]/40 font-bold flex items-center gap-1.5 mt-0.5">
-                                    <Calendar className="w-3 h-3 opacity-60" />
-                                    {history.duration}
-                                  </p>
-                                </div>
+                              <div className="flex items-center justify-between mb-3 ml-2">
+                                <h4 className="text-[11px] font-black text-[#0D0D0D]/30 uppercase tracking-[0.2em]">
+                                  Active Goal
+                                </h4>
+                                {!currentGoal && (
+                                  <button
+                                    onClick={() => setIsAddingGoal(true)}
+                                    className="flex items-center gap-2 px-3 py-1.5 bg-[#9FD923] text-[#0D0D0D] rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-md shadow-[#9FD923]/20"
+                                  >
+                                    <Plus className="w-3 h-3" />
+                                    New Goal
+                                  </button>
+                                )}
                               </div>
-                              <div className="text-right shrink-0 ml-4 flex flex-col items-end justify-center">
-                                <div className="inline-block px-2 py-0.5 bg-[#D9F2A2]/40 text-[#5c8111] rounded-md text-[9px] font-black uppercase tracking-widest mb-1.5 border border-[#9FD923]/20">
-                                  {history.status}
+                              
+                              {currentGoal ? (
+                                <div className="p-5 bg-[#D9F2A2]/20 rounded-3xl border border-[#9FD923]/20 flex items-center justify-between hover:bg-[#D9F2A2]/30 transition-colors shadow-sm group">
+                                  <div className="flex items-center gap-4">
+                                    <div className="w-14 h-14 bg-[#9FD923] rounded-2xl flex items-center justify-center text-[#0D0D0D] shadow-lg shadow-[#9FD923]/20">
+                                      <Target className="w-7 h-7" />
+                                    </div>
+                                    <div>
+                                      <h3 className="text-[18px] font-black text-[#0D0D0D]">
+                                        {getGoalTypeLabel(currentGoal.goalType)}
+                                      </h3>
+                                      <div className="flex items-center gap-3 mt-1">
+                                        <p className="text-[12px] text-[#0D0D0D]/50 font-bold flex items-center gap-1.5">
+                                          <Calendar className="w-3.5 h-3.5 opacity-70" />
+                                          {formatDate(currentGoal.startDate)} - {formatDate(currentGoal.endDate)}
+                                        </p>
+                                        <span className={cn(
+                                          "px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider border",
+                                          getStatusBadge(currentGoal.status)
+                                        )}>
+                                          {currentGoal.status.replace("NUTR_GOAL_", "")}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                     <button 
+                                      onClick={() => handleEditGoal(currentGoal)}
+                                      className="p-2.5 bg-white text-[#0D0D0D] rounded-xl border border-[#0D0D0D]/5 hover:border-[#9FD923] transition-all shadow-sm"
+                                    >
+                                      <Pencil className="w-4 h-4" />
+                                    </button>
+                                  </div>
                                 </div>
-                                <p className="text-[12px] font-black text-[#0D0D0D]/70 bg-white/50 px-2 py-0.5 rounded-lg border border-[#0D0D0D]/5">
-                                  {history.result}
+                              ) : (
+                                <div className="p-8 bg-[#F2F2F2]/50 rounded-3xl border border-dashed border-[#0D0D0D]/10 flex flex-col items-center justify-center text-center">
+                                  <Target className="w-8 h-8 text-[#0D0D0D]/10 mb-2" />
+                                  <p className="text-[13px] text-[#0D0D0D]/40 font-bold">No active nutrition goal.</p>
+                                  <button 
+                                    onClick={() => setIsAddingGoal(true)}
+                                    className="mt-4 text-[#9FD923] text-[11px] font-black uppercase tracking-widest hover:underline"
+                                  >
+                                    Set a goal now
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Goal History */}
+                            <div className="flex-1 flex flex-col min-h-0">
+                              <div className="flex items-center justify-between mb-3 ml-2">
+                                <div className="flex items-center gap-2">
+                                  <History className="w-4 h-4 text-[#0D0D0D]/30" />
+                                  <h4 className="text-[11px] font-black text-[#0D0D0D]/30 uppercase tracking-[0.2em]">
+                                    Goal History
+                                  </h4>
+                                </div>
+                                {currentGoal && (
+                                  <button
+                                    onClick={() => setIsAddingGoal(true)}
+                                    className="text-[10px] font-black text-[#9FD923] uppercase tracking-widest hover:underline"
+                                  >
+                                    + Add New
+                                  </button>
+                                )}
+                              </div>
+                              
+                              <div className="flex flex-col gap-3 overflow-y-auto pr-3 -mr-3 custom-scrollbar pb-6 flex-1">
+                                {(!goalHistory || goalHistory.length === 0) ? (
+                                  <div className="py-12 text-center">
+                                    <p className="text-[12px] text-[#0D0D0D]/20 font-bold italic">No history preserved yet.</p>
+                                  </div>
+                                ) : (
+                                  (Array.isArray(goalHistory) ? goalHistory : [])
+                                    .filter(g => g.id !== currentGoal?.id)
+                                    .map((goal) => (
+                                      <div 
+                                        key={goal.id}
+                                        className="p-4 bg-[#F2F2F2]/50 rounded-[1.25rem] border border-[#0D0D0D]/5 flex items-center justify-between group hover:bg-white hover:border-[#0D0D0D]/10 transition-all duration-300 hover:shadow-xs"
+                                      >
+                                        <div className="flex items-center gap-4">
+                                          <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center border border-[#0D0D0D]/5 group-hover:bg-[#D9F2A2]/20 group-hover:border-[#9FD923]/20 transition-colors shadow-xs">
+                                            <CheckCircle className="w-5 h-5 text-[#0D0D0D]/20 group-hover:text-[#9FD923] transition-colors" />
+                                          </div>
+                                          <div className="flex flex-col justify-center">
+                                            <h4 className="text-[14px] font-bold text-[#0D0D0D] group-hover:text-[#0D0D0D] transition-colors line-clamp-1">
+                                              {getGoalTypeLabel(goal.goalType)}
+                                            </h4>
+                                            <p className="text-[11px] text-[#0D0D0D]/40 font-bold flex items-center gap-1.5 mt-0.5">
+                                              <Calendar className="w-3 h-3 opacity-60" />
+                                              {formatDate(goal.startDate)} - {formatDate(goal.endDate)}
+                                            </p>
+                                          </div>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                          <div className="text-right shrink-0 flex flex-col items-end justify-center">
+                                            <div className={cn(
+                                              "inline-block px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest mb-1 border",
+                                              getStatusBadge(goal.status)
+                                            )}>
+                                              {goal.status.replace("NUTR_GOAL_", "")}
+                                            </div>
+                                            <p className="text-[11px] font-black text-[#0D0D0D]/40">
+                                              Target: {goal.targetWeight}kg
+                                            </p>
+                                          </div>
+                                          <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button 
+                                              onClick={() => handleEditGoal(goal)}
+                                              className="p-1.5 hover:bg-[#F2F2F2] rounded-lg text-[#0D0D0D]/30 hover:text-[#9FD923] transition-all"
+                                            >
+                                              <Pencil className="w-3.5 h-3.5" />
+                                            </button>
+                                            <button 
+                                              onClick={() => handleDeleteGoal(goal.id)}
+                                              className="p-1.5 hover:bg-red-50 rounded-lg text-red-100 hover:text-red-500 transition-all"
+                                            >
+                                              <Trash2 className="w-3.5 h-3.5" />
+                                            </button>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ))
+                                )}
+                              </div>
+                            </div>
+                          </motion.div>
+                        ) : (
+                          <motion.div
+                            key="goal-form"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            className="flex-1 flex flex-col min-h-0"
+                          >
+                            <div className="flex items-center gap-4 mb-6">
+                              <button
+                                onClick={() => {
+                                  setIsAddingGoal(false);
+                                  setEditingGoalId(null);
+                                }}
+                                className="p-2 bg-[#F2F2F2] hover:bg-white rounded-xl border border-transparent hover:border-[#0D0D0D]/5 transition-all"
+                              >
+                                <ArrowLeft className="w-5 h-5 text-[#0D0D0D]" />
+                              </button>
+                              <div>
+                                <h3 className="text-[18px] font-black text-[#0D0D0D]">
+                                  {editingGoalId ? "Update Goal" : "New Nutrition Goal"}
+                                </h3>
+                                <p className="text-[12px] text-[#0D0D0D]/40 font-bold">
+                                  Define your next milestone
                                 </p>
                               </div>
                             </div>
-                          ))}
-                        </div>
-                      </div>
+
+                            <div className="flex-1 overflow-y-auto pr-3 -mr-3 custom-scrollbar space-y-6 pb-6">
+                              {/* Goal Type & Target Weight */}
+                              <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                  <label className="text-[11px] font-black text-[#0D0D0D]/30 uppercase tracking-[0.2em] ml-1">
+                                    Type
+                                  </label>
+                                  <select
+                                    name="goalType"
+                                    value={goalForm.goalType}
+                                    onChange={handleGoalFormChange}
+                                    className="w-full bg-[#F2F2F2]/50 border border-[#0D0D0D]/5 rounded-2xl px-4 py-3.5 text-[14px] font-bold outline-none focus:bg-white focus:border-[#9FD923] transition-all appearance-none cursor-pointer"
+                                  >
+                                    <option value={GoalType.GOAL_LOSS}>Weight Loss</option>
+                                    <option value={GoalType.GOAL_GAIN}>Weight Gain</option>
+                                    <option value={GoalType.GOAL_MAINTAIN}>Maintenance</option>
+                                    <option value={GoalType.GOAL_STRICT}>Strict Diet</option>
+                                  </select>
+                                </div>
+                                <div className="space-y-2">
+                                  <label className="text-[11px] font-black text-[#0D0D0D]/30 uppercase tracking-[0.2em] ml-1">
+                                    Target Weight (kg)
+                                  </label>
+                                  <input
+                                    type="number"
+                                    name="targetWeight"
+                                    value={goalForm.targetWeight}
+                                    onChange={handleGoalFormChange}
+                                    className="w-full bg-[#F2F2F2]/50 border border-[#0D0D0D]/5 rounded-2xl px-4 py-3.5 text-[14px] font-bold outline-none focus:bg-white focus:border-[#9FD923] transition-all"
+                                  />
+                                </div>
+                              </div>
+
+                              {/* Calories & Status */}
+                              <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                  <label className="text-[11px] font-black text-[#0D0D0D]/30 uppercase tracking-[0.2em] ml-1">
+                                    Daily Calories (kcal)
+                                  </label>
+                                  <input
+                                    type="number"
+                                    name="targetCalories"
+                                    value={goalForm.targetCalories}
+                                    onChange={handleGoalFormChange}
+                                    className="w-full bg-[#F2F2F2]/50 border border-[#0D0D0D]/5 rounded-2xl px-4 py-3.5 text-[14px] font-bold outline-none focus:bg-white focus:border-[#9FD923] transition-all"
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <label className="text-[11px] font-black text-[#0D0D0D]/30 uppercase tracking-[0.2em] ml-1">
+                                    Status
+                                  </label>
+                                  <select
+                                    name="status"
+                                    value={goalForm.status}
+                                    onChange={handleGoalFormChange}
+                                    className="w-full bg-[#F2F2F2]/50 border border-[#0D0D0D]/5 rounded-2xl px-4 py-3.5 text-[14px] font-bold outline-none focus:bg-white focus:border-[#9FD923] transition-all appearance-none cursor-pointer"
+                                  >
+                                    <option value={NutritionGoalStatus.NUTR_GOAL_ONGOING}>Ongoing</option>
+                                    <option value={NutritionGoalStatus.NUTR_GOAL_COMPLETED}>Completed</option>
+                                    <option value={NutritionGoalStatus.NUTR_GOAL_PAUSED}>Paused</option>
+                                    <option value={NutritionGoalStatus.NUTR_GOAL_FAILED}>Failed</option>
+                                  </select>
+                                </div>
+                              </div>
+
+                              {/* Macros Grid */}
+                              <div className="space-y-3">
+                                <label className="text-[11px] font-black text-[#0D0D0D]/30 uppercase tracking-[0.2em] ml-1">
+                                  Macros Targets (grams)
+                                </label>
+                                <div className="grid grid-cols-4 gap-3">
+                                  {[
+                                    { name: "targetProtein", label: "Protein", color: "border-blue-100" },
+                                    { name: "targetCarbs", label: "Carbs", color: "border-green-100" },
+                                    { name: "targetFat", label: "Fat", color: "border-yellow-100" },
+                                    { name: "targetFiber", label: "Fiber", color: "border-orange-100" },
+                                  ].map((macro) => (
+                                    <div key={macro.name} className="space-y-1.5">
+                                      <span className="text-[9px] font-black text-[#0D0D0D]/40 uppercase tracking-tighter block ml-1">{macro.label}</span>
+                                      <input
+                                        type="number"
+                                        name={macro.name}
+                                        value={(goalForm as any)[macro.name]}
+                                        onChange={handleGoalFormChange}
+                                        className={cn(
+                                          "w-full bg-[#F2F2F2]/50 border rounded-xl px-2 py-2.5 text-[13px] font-black text-center outline-none focus:bg-white focus:border-[#9FD923] transition-all",
+                                          macro.color
+                                        )}
+                                      />
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+
+                              {/* Dates */}
+                              <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                  <label className="text-[11px] font-black text-[#0D0D0D]/30 uppercase tracking-[0.2em] ml-1">
+                                    Start Date
+                                  </label>
+                                  <input
+                                    type="date"
+                                    name="startDate"
+                                    value={goalForm.startDate}
+                                    onChange={handleGoalFormChange}
+                                    className="w-full bg-[#F2F2F2]/50 border border-[#0D0D0D]/5 rounded-2xl px-4 py-3.5 text-[14px] font-bold outline-none focus:bg-white focus:border-[#9FD923] transition-all"
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <label className="text-[11px] font-black text-[#0D0D0D]/30 uppercase tracking-[0.2em] ml-1">
+                                    End Date
+                                  </label>
+                                  <input
+                                    type="date"
+                                    name="endDate"
+                                    value={goalForm.endDate}
+                                    onChange={handleGoalFormChange}
+                                    className="w-full bg-[#F2F2F2]/50 border border-[#0D0D0D]/5 rounded-2xl px-4 py-3.5 text-[14px] font-bold outline-none focus:bg-white focus:border-[#9FD923] transition-all"
+                                  />
+                                </div>
+                              </div>
+
+                              <button
+                                onClick={editingGoalId ? handleUpdateGoal : handleAddGoal}
+                                disabled={isLoadingGoals}
+                                className="w-full py-4 bg-[#0D0D0D] text-white rounded-2xl font-black text-[12px] uppercase tracking-[0.2em] hover:bg-[#9FD923] hover:text-[#0D0D0D] transition-all shadow-xl shadow-[#9FD923]/10 flex items-center justify-center gap-3 disabled:opacity-50"
+                              >
+                                {isLoadingGoals ? "Processing..." : editingGoalId ? "Save Changes" : "Create Goal"}
+                                <Zap className="w-4 h-4 text-[#9FD923] group-hover:text-[#0D0D0D]" />
+                              </button>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </motion.div>
+                  )}
+
+                  {/* ── Allergies Tab ── */}
+                  {profileTab === "Allergies" && (
+                    <motion.div
+                      key="allergies"
+                      initial={{ opacity: 0, x: 15 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -15 }}
+                      transition={{ duration: 0.2, ease: "easeOut" }}
+                      className="h-full flex flex-col pt-2"
+                    >
+                      <AnimatePresence mode="wait">
+                        {!isAddingAllergy ? (
+                          <motion.div
+                            key="allergy-list"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            className="flex-1 flex flex-col min-h-0"
+                          >
+                            <div className="flex items-center justify-between mb-6 ml-2">
+                              <div>
+                                <h4 className="text-[11px] font-black text-[#0D0D0D]/30 uppercase tracking-[0.2em] mb-1">
+                                  Your Profile
+                                </h4>
+                                <h3 className="text-[18px] font-black text-[#0D0D0D]">
+                                  Known Allergies
+                                </h3>
+                              </div>
+                              <button
+                                onClick={() => setIsAddingAllergy(true)}
+                                className="flex items-center gap-2 px-4 py-2.5 bg-[#0D0D0D] text-white rounded-xl text-[11px] font-black uppercase tracking-[0.1em] hover:bg-[#9FD923] hover:text-[#0D0D0D] transition-all shadow-lg shadow-[#9FD923]/10"
+                              >
+                                <Plus className="w-4 h-4" />
+                                Add Allergy
+                              </button>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto pr-3 -mr-3 custom-scrollbar pb-6">
+                              {userAllergies.length === 0 ? (
+                                <div className="h-40 flex flex-col items-center justify-center bg-[#F2F2F2]/50 rounded-3xl border border-dashed border-[#0D0D0D]/10">
+                                  <AlertTriangle className="w-8 h-8 text-[#0D0D0D]/20 mb-2" />
+                                  <p className="text-[13px] text-[#0D0D0D]/40 font-bold">No allergies recorded.</p>
+                                </div>
+                              ) : (
+                                <div className="grid grid-cols-1 gap-3">
+                                  {userAllergies.map((item) => (
+                                    <div
+                                      key={item.id}
+                                      className="p-4 bg-white rounded-2xl border border-[#0D0D0D]/5 flex items-center justify-between group hover:border-[#9FD923]/30 transition-all shadow-sm"
+                                    >
+                                      <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 bg-[#F2F2F2] rounded-xl flex items-center justify-center text-[#0D0D0D]/40">
+                                          <AlertTriangle className="w-6 h-6" />
+                                        </div>
+                                        <div>
+                                          <h4 className="text-[15px] font-black text-[#0D0D0D]">
+                                            {item.allergen?.name}
+                                          </h4>
+                                          <div className="flex items-center gap-2 mt-1">
+                                            <span className={cn(
+                                              "px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider border",
+                                              getSeverityColor(item.severity)
+                                            )}>
+                                              {item.severity.replace("SEV_", "")}
+                                            </span>
+                                            {item.note && (
+                                              <p className="text-[11px] text-[#0D0D0D]/40 font-bold italic line-clamp-1 max-w-[200px]">
+                                                "{item.note}"
+                                              </p>
+                                            )}
+                                          </div>
+                                        </div>
+                                      </div>
+                                      <div className="flex items-center gap-1">
+                                        <button 
+                                          onClick={() => handleEditAllergy(item)}
+                                          className="p-2.5 text-[#0D0D0D]/30 hover:text-[#9FD923] hover:bg-[#9FD923]/10 rounded-xl transition-all"
+                                        >
+                                          <Pencil className="w-5 h-5" />
+                                        </button>
+                                        <button 
+                                          onClick={() => handleDeleteAllergy(item.id)}
+                                          className="p-2.5 text-red-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                                        >
+                                          <Trash2 className="w-5 h-5" />
+                                        </button>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </motion.div>
+                        ) : (
+                          <motion.div
+                            key="allergy-form"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            className="flex-1 flex flex-col min-h-0"
+                          >
+                            <div className="flex items-center gap-4 mb-8">
+                              <button
+                                onClick={() => {
+                                  setIsAddingAllergy(false);
+                                  setEditingAllergyId(null);
+                                }}
+                                className="p-2 bg-[#F2F2F2] hover:bg-white rounded-xl border border-transparent hover:border-[#0D0D0D]/5 transition-all"
+                              >
+                                <ArrowLeft className="w-5 h-5 text-[#0D0D0D]" />
+                              </button>
+                              <div>
+                                <h3 className="text-[18px] font-black text-[#0D0D0D]">
+                                  {editingAllergyId ? "Update Allergy" : "Add New Allergy"}
+                                </h3>
+                                <p className="text-[12px] text-[#0D0D0D]/40 font-bold">
+                                  {editingAllergyId ? "Modify your allergy status" : "Select substance and severity"}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="space-y-6">
+                              {/* Search & Select - Hidden when editing */}
+                              {!editingAllergyId && (
+                                <div className="space-y-3">
+                                  <label className="text-[11px] font-black text-[#0D0D0D]/30 uppercase tracking-[0.2em] ml-1">
+                                    Step 1: Find Allergen
+                                  </label>
+                                  <div className="relative">
+                                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-[#0D0D0D]/30" />
+                                    <input
+                                      type="text"
+                                      placeholder="Search (e.g. Peanuts, Milk...)"
+                                      value={allergenSearch}
+                                      onChange={(e) => setAllergenSearch(e.target.value)}
+                                      className="w-full bg-[#F2F2F2]/50 border border-[#0D0D0D]/5 rounded-2xl pl-12 pr-4 py-3.5 text-[14px] font-bold outline-none focus:bg-white focus:border-[#9FD923] transition-all"
+                                    />
+                                  </div>
+
+                                  <div className="max-h-[160px] overflow-y-auto pr-2 custom-scrollbar grid grid-cols-2 gap-2 mt-2">
+                                    {filteredAllergens.length > 0 ? (
+                                      filteredAllergens.map((alg) => (
+                                        <button
+                                          key={alg.id}
+                                          onClick={() => setSelectedAllergenId(alg.id)}
+                                          className={cn(
+                                            "p-3 rounded-xl border text-left transition-all",
+                                            selectedAllergenId === alg.id
+                                              ? "bg-[#9FD923] border-[#9FD923] text-[#0D0D0D] shadow-md shadow-[#9FD923]/20"
+                                              : "bg-white border-[#0D0D0D]/5 text-[#0D0D0D]/60 hover:border-[#9FD923]/30"
+                                          )}
+                                        >
+                                          <p className="text-[13px] font-black line-clamp-1">{alg.name}</p>
+                                          <p className="text-[10px] font-bold opacity-60 line-clamp-1">{alg.description || "No description"}</p>
+                                        </button>
+                                      ))
+                                    ) : (
+                                      <p className="col-span-2 text-center text-[12px] text-[#0D0D0D]/30 py-4 font-bold">No allergens found</p>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+
+                              {editingAllergyId && (
+                                <div className="p-4 bg-[#D9F2A2]/20 rounded-2xl border border-[#9FD923]/20 flex items-center gap-4">
+                                  <AlertTriangle className="w-6 h-6 text-[#9FD923]" />
+                                  <div>
+                                    <h4 className="text-[14px] font-black text-[#0D0D0D]">
+                                      Editing: {allAllergens.find(a => a.id === selectedAllergenId)?.name}
+                                    </h4>
+                                    <p className="text-[11px] text-[#0D0D0D]/40 font-bold">You are updating the severity or note for this allergen.</p>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Severity & Note */}
+                              <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                  <label className="text-[11px] font-black text-[#0D0D0D]/30 uppercase tracking-[0.2em] ml-1">
+                                    Step 2: Severity
+                                  </label>
+                                  <select
+                                    value={allergenSeverity}
+                                    onChange={(e) => setAllergenSeverity(e.target.value as SeverityType)}
+                                    className="w-full bg-[#F2F2F2]/50 border border-[#0D0D0D]/5 rounded-2xl px-4 py-3.5 text-[14px] font-bold outline-none focus:bg-white focus:border-[#9FD923] transition-all appearance-none cursor-pointer"
+                                  >
+                                    <option value={SeverityType.SEV_LOW}>Low</option>
+                                    <option value={SeverityType.SEV_MEDIUM}>Medium</option>
+                                    <option value={SeverityType.SEV_HIGH}>High</option>
+                                    <option value={SeverityType.SEV_LIFE_THREATENING}>Life Threatening</option>
+                                  </select>
+                                </div>
+                                <div className="space-y-2">
+                                  <label className="text-[11px] font-black text-[#0D0D0D]/30 uppercase tracking-[0.2em] ml-1">
+                                    Step 3: Notes
+                                  </label>
+                                  <input
+                                    type="text"
+                                    placeholder="Optional details..."
+                                    value={allergenNote}
+                                    onChange={(e) => setAllergenNote(e.target.value)}
+                                    className="w-full bg-[#F2F2F2]/50 border border-[#0D0D0D]/5 rounded-2xl px-4 py-3.5 text-[14px] font-bold outline-none focus:bg-white focus:border-[#9FD923] transition-all"
+                                  />
+                                </div>
+                              </div>
+
+                              <button
+                                onClick={editingAllergyId ? handleUpdateAllergy : handleAddAllergy}
+                                disabled={!selectedAllergenId || isLoadingAllergies}
+                                className="w-full py-4 bg-[#0D0D0D] text-white rounded-2xl font-black text-[12px] uppercase tracking-[0.2em] hover:bg-[#9FD923] hover:text-[#0D0D0D] transition-all shadow-xl shadow-[#9FD923]/10 flex items-center justify-center gap-3 disabled:opacity-50 disabled:grayscale transition-all"
+                              >
+                                {isLoadingAllergies ? "Processing..." : editingAllergyId ? "Update Allergy" : "Confirm & Save"}
+                                <Zap className="w-4 h-4 text-[#9FD923] group-hover:text-[#0D0D0D]" />
+                              </button>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </motion.div>
                   )}
 
@@ -554,9 +1321,11 @@ export const ProfileDialog = ({ trigger }: ProfileDialogProps) => {
                                 Current Password
                               </label>
                               <div className="relative">
-                                <input 
+                                <input
                                   type="password"
                                   placeholder="••••••••"
+                                  value={oldPassword}
+                                  onChange={(e) => setOldPassword(e.target.value)}
                                   className="w-full bg-white border border-[#0D0D0D]/5 rounded-2xl px-4 py-3.5 text-[14px] font-bold text-[#0D0D0D] outline-none focus:border-[#9FD923] shadow-sm transition-all"
                                 />
                               </div>
@@ -566,17 +1335,23 @@ export const ProfileDialog = ({ trigger }: ProfileDialogProps) => {
                                 New Password
                               </label>
                               <div className="relative">
-                                <input 
+                                <input
                                   type="password"
                                   placeholder="••••••••"
+                                  value={newPassword}
+                                  onChange={(e) => setNewPassword(e.target.value)}
                                   className="w-full bg-white border border-[#0D0D0D]/5 rounded-2xl px-4 py-3.5 text-[14px] font-bold text-[#0D0D0D] outline-none focus:border-[#9FD923] shadow-sm transition-all"
                                 />
                               </div>
                             </div>
-                            
+
                             <div className="flex justify-end pt-4">
-                              <button className="px-8 py-3.5 bg-[#0D0D0D] text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] hover:bg-[#9FD923] hover:text-[#0D0D0D] transition-all group shadow-xl shadow-[#9FD923]/10 flex items-center gap-2">
-                                Save Password
+                              <button
+                                onClick={handleUpdatePassword}
+                                disabled={isUpdatingPassword}
+                                className="px-8 py-3.5 bg-[#0D0D0D] text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] hover:bg-[#9FD923] hover:text-[#0D0D0D] transition-all group shadow-xl shadow-[#9FD923]/10 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                {isUpdatingPassword ? "Saving..." : "Save Password"}
                                 <ShieldCheck className="w-3.5 h-3.5 text-[#9FD923] group-hover:text-[#0D0D0D]" />
                               </button>
                             </div>

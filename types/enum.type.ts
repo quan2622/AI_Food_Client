@@ -3,10 +3,17 @@
  * ========================================================================== */
 
 export enum GoalType {
-  WEIGHT_LOSS = 'WEIGHT_LOSS',
-  WEIGHT_GAIN = 'WEIGHT_GAIN',
-  MAINTENANCE = 'MAINTENANCE',
-  STRICT_DIET = 'STRICT_DIET',
+  GOAL_LOSS = 'GOAL_LOSS',
+  GOAL_GAIN = 'GOAL_GAIN',
+  GOAL_MAINTAIN = 'GOAL_MAINTAIN',
+  GOAL_STRICT = 'GOAL_STRICT',
+}
+
+export enum NutritionGoalStatus {
+  NUTR_GOAL_ONGOING = 'NUTR_GOAL_ONGOING',
+  NUTR_GOAL_COMPLETED = 'NUTR_GOAL_COMPLETED',
+  NUTR_GOAL_PAUSED = 'NUTR_GOAL_PAUSED',
+  NUTR_GOAL_FAILED = 'NUTR_GOAL_FAILED',
 }
 
 export enum MealType {
@@ -23,10 +30,10 @@ export enum StatusType {
 }
 
 export enum SeverityType {
-  LOW = 'LOW',
-  MEDIUM = 'MEDIUM',
-  HIGH = 'HIGH',
-  LIFE_THREATENING = 'LIFE_THREATENING',
+  SEV_LOW = 'SEV_LOW',
+  SEV_MEDIUM = 'SEV_MEDIUM',
+  SEV_HIGH = 'SEV_HIGH',
+  SEV_LIFE_THREATENING = 'SEV_LIFE_THREATENING',
 }
 
 export enum ActivityLevel {

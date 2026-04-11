@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import heroImg from "@/assets/images/nutrition-hero2.png";
 import { authService } from "@/services/authService";
+import { toast } from "sonner";
 
 const SignUpPage = () => {
   const router = useRouter();
@@ -33,7 +34,7 @@ const SignUpPage = () => {
 
     // 1. Kiểm tra khớp mật khẩu
     if (formData.password !== formData.confirmPassword) {
-      alert("Mật khẩu nhập lại không khớp!");
+      toast.error("Mật khẩu nhập lại không khớp!");
       return;
     }
 
@@ -49,10 +50,10 @@ const SignUpPage = () => {
       });
 
       if (res.metadata?.EC === 0) {
-        alert("Đăng ký tài khoản thành công! Vui lòng đăng nhập.");
+        toast.success("Đăng ký tài khoản thành công! Vui lòng đăng nhập.");
         router.push("/sign-in");
       } else {
-        alert(res.metadata?.message || "Đăng ký thất bại. Vui lòng thử lại.");
+        toast.error(res.metadata?.message || "Đăng ký thất bại. Vui lòng thử lại.");
       }
     } catch (error: unknown) {
       console.error("Register failed:", error);
@@ -66,7 +67,7 @@ const SignUpPage = () => {
       ) {
         errorMsg = String((error as { message: unknown }).message);
       }
-      alert(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setIsLoading(false);
     }

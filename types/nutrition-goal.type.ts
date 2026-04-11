@@ -1,16 +1,9 @@
-/* ============================================================================
- * NUTRITION GOAL TYPES
- * APIs: /nutrition-goals
- * ========================================================================== */
-
-import { GoalType } from './enum.type';
-
-// ─── Entity ───────────────────────────────────────────────────────────────────
+import { GoalType, NutritionGoalStatus } from "./enum.type";
 
 export interface INutritionGoal {
   id: number;
-  goalType: GoalType | string;
-  status: string;
+  userId: number;
+  goalType: GoalType;
   targetWeight: number;
   targetCalories: number;
   targetProtein: number;
@@ -19,18 +12,13 @@ export interface INutritionGoal {
   targetFiber: number;
   startDate: string;
   endDate: string;
-  userId: number;
+  status: NutritionGoalStatus;
   createdAt: string;
   updatedAt: string;
-  goalTypeInfo?: Record<string, unknown> | null;
-  statusInfo?: Record<string, unknown> | null;
 }
 
-// ─── Request Bodies ───────────────────────────────────────────────────────────
-
 export interface ICreateNutritionGoalRequest {
-  goalType: GoalType | string;
-  status?: string;
+  goalType: GoalType;
   targetWeight: number;
   targetCalories: number;
   targetProtein: number;
@@ -39,20 +27,10 @@ export interface ICreateNutritionGoalRequest {
   targetFiber: number;
   startDate: string;
   endDate: string;
+  status?: NutritionGoalStatus;
 }
 
-export interface IUpdateNutritionGoalRequest {
-  goalType?: GoalType | string;
-  status?: string;
-  targetWeight?: number;
-  targetCalories?: number;
-  targetProtein?: number;
-  targetCarbs?: number;
-  targetFat?: number;
-  targetFiber?: number;
-  startDate?: string;
-  endDate?: string;
-}
+export interface IUpdateNutritionGoalRequest extends Partial<ICreateNutritionGoalRequest> {}
 
 export interface IBulkDeleteNutritionGoalRequest {
   ids: number[];

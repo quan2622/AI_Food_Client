@@ -1,6 +1,6 @@
 import publicAxios from "@/lib/publicAxios";
 import privateAxios from "@/lib/privateAxios";
-import { ILoginRequest, IUser, ICreateUserRequest } from "@/types/authen.type";
+import { ILoginRequest, IUser, ICreateUserRequest, IChangePasswordRequest } from "@/types/authen.type";
 import { ApiResponse } from "@/types/backend.type";
 
 interface LoginResponse {
@@ -50,5 +50,21 @@ export const authService = {
   getMe: async (): Promise<ApiResponse<IUser>> => {
     const res = await privateAxios.get<ApiResponse<IUser>>("/users/me");
     return res as unknown as ApiResponse<IUser>;
+  },
+
+  /**
+   * Cập nhật mật khẩu người dùng
+   * @param id ID người dùng
+   * @param data { oldPassword, newPassword }
+   */
+  updatePassword: async (
+    id: number,
+    data: IChangePasswordRequest
+  ): Promise<ApiResponse<null>> => {
+    const res = await privateAxios.patch<ApiResponse<null>>(
+      `/users/${id}/password`,
+      data
+    );
+    return res as unknown as ApiResponse<null>;
   },
 };

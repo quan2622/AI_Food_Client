@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import heroImg from "@/assets/images/nutrition-hero1.png";
 import { authService } from "@/services/authService";
 import { useAuthStore } from "@/stores/authStore";
+import { toast } from "sonner";
 
 const SignInPage = () => {
   const router = useRouter();
@@ -45,9 +46,10 @@ const SignInPage = () => {
         }
 
         router.push("/");
+        toast.success("Đăng nhập thành công!");
       } else {
         // Handle custom error message from backend
-        alert(res.metadata?.message || "Đăng nhập thất bại. Vui lòng thử lại.");
+        toast.error(res.metadata?.message || "Đăng nhập thất bại. Vui lòng thử lại.");
       }
     } catch (error: unknown) {
       console.error("Login failed:", error);
@@ -61,7 +63,7 @@ const SignInPage = () => {
       ) {
         errorMsg = String((error as { message: unknown }).message);
       }
-      alert(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setIsLoading(false);
     }

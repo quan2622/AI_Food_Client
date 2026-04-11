@@ -65,6 +65,11 @@ export interface IUpdatePasswordRequest {
   newPassword: string;
 }
 
+export interface IChangePasswordRequest {
+  oldPassword: string;
+  newPassword: string;
+}
+
 export interface IUpdateStatusRequest {
   status: boolean;
 }
