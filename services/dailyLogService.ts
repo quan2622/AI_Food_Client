@@ -86,4 +86,28 @@ export const dailyLogService = {
     const res = await privateAxios.get<ApiResponse<DashboardDailyLogResponse>>(`/daily-logs/${date}`);
     return res as unknown as ApiResponse<DashboardDailyLogResponse>;
   },
+
+  /**
+   * Create daily log
+   */
+  createDailyLog: async (data: { logDate: string }): Promise<ApiResponse<any>> => {
+    const res = await privateAxios.post<ApiResponse<any>>(`/daily-logs`, data);
+    return res as unknown as ApiResponse<any>;
+  },
+
+  /**
+   * Create meal
+   */
+  createMeal: async (data: { dailyLogId: number; mealType: string; mealDateTime?: string }): Promise<ApiResponse<any>> => {
+    const res = await privateAxios.post<ApiResponse<any>>(`/meals`, data);
+    return res as unknown as ApiResponse<any>;
+  },
+
+  /**
+   * Create meal item
+   */
+  createMealItem: async (data: { mealId: number; foodId: number; quantity: number; grams: number }): Promise<ApiResponse<any>> => {
+    const res = await privateAxios.post<ApiResponse<any>>(`/meal-items`, data);
+    return res as unknown as ApiResponse<any>;
+  },
 };

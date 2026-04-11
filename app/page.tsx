@@ -21,10 +21,14 @@ import {
   Target,
 } from "lucide-react";
 import ImageUploadDialog from "@/components/dashboard/ImageUploadDialog";
+import { ProfileDialog } from "@/components/common/ProfileDialog";
 import { cn } from "@/lib/utils";
 import { dailyLogService, DashboardDailyLogResponse } from "@/services/dailyLogService";
 import { nutritionGoalService, NutritionGoal } from "@/services/nutritionGoalService";
 import { useAuthStore } from "@/stores/authStore";
+import { toast } from "sonner";
+import { foodRecognitionService } from "@/services/foodRecognitionService";
+import { foodService } from "@/services/foodService";
 
 export enum GoalType {
   WEIGHT_LOSS = "WEIGHT_LOSS",
@@ -77,20 +81,22 @@ export default function Home() {
   const [dailyLog, setDailyLog] = React.useState<DashboardDailyLogResponse | null>(null);
   const [activeGoal, setActiveGoal] = React.useState<NutritionGoal | null>(null);
   const [isScanDialogOpen, setIsScanDialogOpen] = React.useState(false);
+  const [waterIntake, setWaterIntake] = React.useState(0);
+  const targetWater = 2500; // 2.5 Lít in ml
   const { user } = useAuthStore();
 
-  React.useEffect(() => {
-    const fetchLog = async () => {
-      try {
-        const res = await dailyLogService.getDailyLogToday();
-        if (res.data) {
-          setDailyLog(res.data);
-        }
-      } catch (err) {
-        console.error("Failed to fetch daily log:", err);
+  const fetchLog = async () => {
+    try {
+      const res = await dailyLogService.getDailyLogToday();
+      if (res.data) {
+        setDailyLog(res.data);
       }
-    };
+    } catch (err) {
+      console.error("Failed to fetch daily log:", err);
+    }
+  };
 
+  React.useEffect(() => {
     const fetchGoals = async () => {
       try {
         const res = await nutritionGoalService.getCurrentGoal();
@@ -102,9 +108,34 @@ export default function Home() {
       }
     };
 
+    const loadWaterIntake = () => {
+      const storedDate = localStorage.getItem('waterDate');
+      const today = new Date().toDateString();
+      
+      if (storedDate === today) {
+        const storedWater = localStorage.getItem('waterIntake');
+        if (storedWater) {
+          setWaterIntake(parseInt(storedWater, 10));
+        }
+      } else {
+        localStorage.setItem('waterDate', today);
+        localStorage.setItem('waterIntake', '0');
+        setWaterIntake(0);
+      }
+    };
+
     fetchLog();
     fetchGoals();
+    loadWaterIntake();
   }, []);
+
+  const handleAddWater = (amount: number) => {
+    setWaterIntake((prev) => {
+      const newValue = prev + amount;
+      localStorage.setItem('waterIntake', newValue.toString());
+      return newValue;
+    });
+  };
 
   const currentGoalType = (activeGoal?.goalTypeInfo?.value as GoalType) || (dailyLog?.nutritionGoal?.goalType as GoalType) || GoalType.MAINTENANCE;
   const goalUI = GOAL_CONFIG[currentGoalType] || GOAL_CONFIG[GoalType.MAINTENANCE];
@@ -413,7 +444,7 @@ export default function Home() {
                     Lượng nước uống
                   </h3>
                   <p className="text-carbs font-bold text-lg leading-tight">
-                    1.8{" "}
+                    {waterIntake / 1000}{" "}
                     <span className="text-sm font-normal text-on-surface-variant">
                       / 2.5 Lít
                     </span>
@@ -422,7 +453,7 @@ export default function Home() {
               </div>
 
               <div className="h-2 w-full bg-dash-surface-container-highest rounded-full overflow-hidden mb-6">
-                <div className="h-full bg-carbs w-[72%] rounded-full"></div>
+                <div className="h-full bg-carbs rounded-full transition-all duration-500" style={{ width: `${Math.min(100, (waterIntake / targetWater) * 100)}%` }}></div>
               </div>
 
               <div className="flex gap-2 items-center justify-between mb-6">
@@ -431,7 +462,7 @@ export default function Home() {
                     key={i}
                     className={cn(
                       "w-4 h-4 rounded-full border-2 transition-all duration-300",
-                      i <= 6
+                      i <= Math.floor((waterIntake / targetWater) * 8)
                         ? "bg-carbs border-carbs"
                         : "border-dash-surface-container-highest",
                     )}
@@ -440,10 +471,16 @@ export default function Home() {
               </div>
 
               <div className="flex gap-2 mt-auto">
-                <button className="flex-1 bg-carbs/10 text-carbs py-2.5 rounded-xl text-xs font-bold hover:bg-carbs hover:text-white cursor-pointer transition-all active:scale-95">
+                <button 
+                  onClick={() => handleAddWater(250)}
+                  className="flex-1 bg-carbs/10 text-carbs py-2.5 rounded-xl text-xs font-bold hover:bg-carbs hover:text-white cursor-pointer transition-all active:scale-95"
+                >
                   + 250ml
                 </button>
-                <button className="flex-1 bg-carbs/10 text-carbs py-2.5 rounded-xl text-xs font-bold hover:bg-carbs hover:text-white cursor-pointer transition-all active:scale-95">
+                <button 
+                  onClick={() => handleAddWater(500)}
+                  className="flex-1 bg-carbs/10 text-carbs py-2.5 rounded-xl text-xs font-bold hover:bg-carbs hover:text-white cursor-pointer transition-all active:scale-95"
+                >
                   + 500ml
                 </button>
               </div>
@@ -535,10 +572,15 @@ export default function Home() {
               </div>
 
               {/* View Details Button */}
-              <button className="group w-full py-3.5 rounded-xl border border-dash-primary/20 bg-dash-primary/5 text-sm font-bold text-dash-primary hover:bg-dash-primary hover:text-white transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer shadow-sm hover:shadow-[0_4px_20px_rgba(0,110,28,0.3)] active:scale-[0.98]">
-                Xem chi tiết
-                <ArrowRight className="w-4 h-4 text-dash-primary group-hover:text-white transition-all duration-300 group-hover:translate-x-1" />
-              </button>
+              <ProfileDialog
+                defaultTab="Goals"
+                trigger={
+                  <button className="group w-full py-3.5 rounded-xl border border-dash-primary/20 bg-dash-primary/5 text-sm font-bold text-dash-primary hover:bg-dash-primary hover:text-white transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer shadow-sm hover:shadow-[0_4px_20px_rgba(0,110,28,0.3)] active:scale-[0.98]">
+                    Xem chi tiết
+                    <ArrowRight className="w-4 h-4 text-dash-primary group-hover:text-white transition-all duration-300 group-hover:translate-x-1" />
+                  </button>
+                }
+              />
             </div>
           </div>
         </div>
@@ -549,10 +591,7 @@ export default function Home() {
       <ImageUploadDialog
         isOpen={isScanDialogOpen}
         onClose={() => setIsScanDialogOpen(false)}
-        onUpload={(files) => {
-          console.log("Uploading files in dashboard:", files);
-          // Handle upload logic here if needed
-        }}
+        onSuccess={() => fetchLog()}
       />
     </ScrollArea>
   );

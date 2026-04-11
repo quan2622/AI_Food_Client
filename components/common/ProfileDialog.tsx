@@ -23,6 +23,7 @@ import {
   Trash2,
   Plus,
   Pencil,
+  Eye,
 } from "lucide-react";
 import { cn, formatDate, formatNumber } from "@/lib/utils";
 import { useAuthStore } from "@/stores/authStore";
@@ -43,12 +44,13 @@ import {
 
 interface ProfileDialogProps {
   trigger?: React.ReactNode;
+  defaultTab?: string;
 }
 
-export const ProfileDialog = ({ trigger }: ProfileDialogProps) => {
+export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialogProps) => {
   const { user, logoutAction } = useAuthStore();
   const router = useRouter();
-  const [profileTab, setProfileTab] = useState("Profile");
+  const [profileTab, setProfileTab] = useState(defaultTab);
   const [isEditing, setIsEditing] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -408,7 +410,7 @@ export const ProfileDialog = ({ trigger }: ProfileDialogProps) => {
       open={isOpen}
       onOpenChange={(open) => {
         setIsOpen(open);
-        if (open) setProfileTab("Profile");
+        if (open) setProfileTab(defaultTab);
       }}
     >
       <DialogTrigger asChild>
@@ -808,9 +810,10 @@ export const ProfileDialog = ({ trigger }: ProfileDialogProps) => {
                                   <div className="flex items-center gap-2">
                                      <button 
                                       onClick={() => handleEditGoal(currentGoal)}
-                                      className="p-2.5 bg-white text-[#0D0D0D] rounded-xl border border-[#0D0D0D]/5 hover:border-[#9FD923] transition-all shadow-sm"
+                                      className="p-2.5 bg-white text-[#0D0D0D] rounded-xl border border-[#0D0D0D]/5 hover:border-[#9FD923] transition-all shadow-sm group/eye"
+                                      title="Xem chi tiết"
                                     >
-                                      <Pencil className="w-4 h-4" />
+                                      <Eye className="w-4 h-4 group-hover/eye:text-[#9FD923]" />
                                     </button>
                                   </div>
                                 </div>
@@ -890,8 +893,9 @@ export const ProfileDialog = ({ trigger }: ProfileDialogProps) => {
                                             <button 
                                               onClick={() => handleEditGoal(goal)}
                                               className="p-1.5 hover:bg-[#F2F2F2] rounded-lg text-[#0D0D0D]/30 hover:text-[#9FD923] transition-all"
+                                              title="Xem chi tiết"
                                             >
-                                              <Pencil className="w-3.5 h-3.5" />
+                                              <Eye className="w-3.5 h-3.5" />
                                             </button>
                                             <button 
                                               onClick={() => handleDeleteGoal(goal.id)}
@@ -927,10 +931,10 @@ export const ProfileDialog = ({ trigger }: ProfileDialogProps) => {
                               </button>
                               <div>
                                 <h3 className="text-[18px] font-black text-[#0D0D0D]">
-                                  {editingGoalId ? "Update Goal" : "New Nutrition Goal"}
+                                  {editingGoalId ? "View / Edit Goal Details" : "New Nutrition Goal"}
                                 </h3>
                                 <p className="text-[12px] text-[#0D0D0D]/40 font-bold">
-                                  Define your next milestone
+                                  {editingGoalId ? "Xem và cập nhật chi tiết mục tiêu của bạn" : "Define your next milestone"}
                                 </p>
                               </div>
                             </div>
