@@ -10,7 +10,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Upload, X, Image as ImageIcon, CheckCircle2, ArrowRight, Loader2, Utensils } from "lucide-react";
+import { Upload, X, Image as ImageIcon, CheckCircle2, ArrowRight, Loader2, Utensils, AlertTriangle } from "lucide-react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -18,6 +18,8 @@ import { toast } from "sonner";
 import { foodRecognitionService } from "@/services/foodRecognitionService";
 import { foodService } from "@/services/foodService";
 import { dailyLogService } from "@/services/dailyLogService";
+import { userSubmissionService } from "@/services/userSubmissionService";
+import { SubmissionType, SubmissionCategory, ICreateSubmissionRequest } from "@/types/user-submission.type";
 
 interface ImageUploadDialogProps {
   isOpen: boolean;
@@ -58,6 +60,15 @@ const ImageUploadDialog: React.FC<ImageUploadDialogProps> = ({
   const [mealType, setMealType] = useState<string>("MEAL_SNACK");
   const [quantity, setQuantity] = useState<number>(1);
   const [grams, setGrams] = useState<number>(450);
+
+  // Report State
+  const [isReportOpen, setIsReportOpen] = useState(false);
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
+  const [reportForm, setReportForm] = useState<ICreateSubmissionRequest>({
+    type: SubmissionType.REPORT,
+    category: SubmissionCategory.WRONG_INFO,
+    description: "",
+  });
 
   useEffect(() => {
     if (isOpen) {
@@ -204,6 +215,33 @@ const ImageUploadDialog: React.FC<ImageUploadDialogProps> = ({
     } catch (err: any) {
       console.error(err);
       toast.error(err?.response?.data?.message || "Lỗi khi lưu dữ liệu.", { id: loadingId });
+    }
+  };
+
+  const handleReportSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (reportForm.description.trim() === "") {
+      toast.error("Vui lòng nhập chi tiết báo cáo");
+      return;
+    }
+    
+    setIsSubmittingReport(true);
+    try {
+      const res = await userSubmissionService.createSubmission({
+        ...reportForm,
+        targetFoodId: detectedFood?.id
+      });
+      if (res.metadata?.EC === 0 || !res.metadata) {
+        toast.success("Báo cáo của bạn đã được gửi thành công!");
+        setIsReportOpen(false);
+        setReportForm({ ...reportForm, description: "" });
+      } else {
+        toast.error("Gửi báo cáo thất bại");
+      }
+    } catch (err: any) {
+      toast.error(err?.response?.data?.metadata?.message || "Đã xảy ra lỗi");
+    } finally {
+      setIsSubmittingReport(false);
     }
   };
 
@@ -477,16 +515,74 @@ const ImageUploadDialog: React.FC<ImageUploadDialogProps> = ({
           )}
 
           {step === "FORM" && (
-            <Button
-              onClick={handleConfirmForm}
-              className="bg-[#CAFD00] text-[#0F172A] hover:bg-[#b0dc00] font-bold px-8 rounded-xl h-11 transition-all active:scale-95"
-            >
-              Lưu vào nhật ký
-              <ArrowRight className="ml-2 w-4 h-4" />
-            </Button>
+            <div className="flex gap-2">
+                <Button
+                  onClick={() => setIsReportOpen(true)}
+                  className="bg-transparent border border-[#CAFD00]/30 text-[#CAFD00] hover:bg-[#CAFD00]/10 font-bold px-4 rounded-xl h-11 transition-all"
+                >
+                  Báo lỗi dự đoán
+                </Button>
+                <Button
+                  onClick={handleConfirmForm}
+                  className="bg-[#CAFD00] text-[#0F172A] hover:bg-[#b0dc00] font-bold px-8 rounded-xl h-11 transition-all active:scale-95"
+                >
+                  Lưu vào nhật ký
+                  <ArrowRight className="ml-2 w-4 h-4" />
+                </Button>
+            </div>
           )}
         </DialogFooter>
       </DialogContent>
+
+      <Dialog open={isReportOpen} onOpenChange={setIsReportOpen}>
+        <DialogContent className="sm:max-w-[425px] bg-[#0F172A] text-white border-[#CAFD00]/20 rounded-3xl p-6 shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold flex items-center gap-2 text-white">
+              <span className="p-2 rounded-lg bg-orange-500/10 text-orange-400">
+                <AlertTriangle className="h-5 w-5" />
+              </span>
+              Báo cáo sai sót
+            </DialogTitle>
+            <DialogDescription className="text-slate-400">
+              Giúp chúng tôi sửa lại thông tin món {detectedFood?.foodName || detectedFood?.name || detectedFood?.recognizedName} nếu AI nhận diện chưa đúng.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleReportSubmit} className="space-y-5 mt-4">
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-slate-300">Phân loại lỗi</label>
+              <select
+                value={reportForm.category}
+                onChange={(e) => setReportForm({ ...reportForm, category: e.target.value as SubmissionCategory })}
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white font-bold outline-none focus:border-[#CAFD00] transition-colors appearance-none"
+              >
+                <option value={SubmissionCategory.WRONG_INFO} className="bg-[#0F172A]">Thông tin dinh dưỡng sai</option>
+                <option value={SubmissionCategory.BAD_IMAGE} className="bg-[#0F172A]">Ảnh không đúng / Chất lượng kém</option>
+                <option value={SubmissionCategory.DUPLICATE} className="bg-[#0F172A]">Bị trùng lặp</option>
+                <option value={SubmissionCategory.NEW_FOOD} className="bg-[#0F172A]">Đây là món ăn mới</option>
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-slate-300">Chi tiết lỗi sai</label>
+              <textarea
+                required
+                placeholder="VD: Món này là Bún Bò chứ không phải Phở..."
+                maxLength={2000}
+                rows={4}
+                value={reportForm.description}
+                onChange={(e) => setReportForm({ ...reportForm, description: e.target.value })}
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white font-medium outline-none focus:border-[#CAFD00] transition-colors resize-none scrollbar-hide"
+              />
+            </div>
+            <Button
+              type="submit"
+              disabled={isSubmittingReport}
+              className="w-full bg-[#CAFD00] text-[#0F172A] hover:bg-[#b0dc00] font-bold h-11 rounded-xl transition-all"
+            >
+              {isSubmittingReport ? "Đang gửi..." : "Gửi Báo Cáo"}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 };

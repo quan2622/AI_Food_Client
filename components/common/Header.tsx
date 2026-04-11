@@ -13,7 +13,7 @@ const NAV_ITEMS = [
   { label: "Trang chủ", href: "/" },
   { label: "Gợi ý", href: "/suggestions" },
   { label: "Nhật ký", href: "/diary" },
-  { label: "Báo cáo", href: "/report" },
+  { label: "Thống kê", href: "/report" },
 ];
 
 const NOTIFICATIONS = [
