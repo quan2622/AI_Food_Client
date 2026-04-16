@@ -54,7 +54,7 @@ export default function ReportPage() {
             className="grid grid-cols-1 md:grid-cols-[7fr_3fr] gap-4 md:gap-6 mb-4 md:mb-6"
           >
             {/* Left: line chart */}
-            <div className="bg-white rounded-2xl md:rounded-3xl border border-gray-100 shadow-sm overflow-hidden min-h-[300px] md:min-h-[450px]">
+            <div className="min-w-0 bg-white rounded-2xl md:rounded-3xl border border-gray-100 shadow-sm overflow-hidden min-h-[300px] md:min-h-[450px]">
               <NutritionTrendChart
                 data={trendData}
                 loading={loading}
@@ -64,7 +64,7 @@ export default function ReportPage() {
             </div>
 
             {/* Right: pie chart — synced to same data & period */}
-            <div className="bg-white rounded-2xl md:rounded-3xl border border-gray-100 shadow-sm overflow-hidden min-h-[350px] md:min-h-[450px]">
+            <div className="min-w-0 bg-white rounded-2xl md:rounded-3xl border border-gray-100 shadow-sm overflow-hidden min-h-[350px] md:min-h-[450px]">
               <NutritionPieChart
                 data={trendData}
                 loading={loading}
@@ -80,10 +80,10 @@ export default function ReportPage() {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 pb-6"
           >
-            <div className="bg-white rounded-2xl md:rounded-3xl border border-gray-100 shadow-sm overflow-hidden min-h-[300px] md:min-h-[380px]">
+            <div className="min-w-0 bg-white rounded-2xl md:rounded-3xl border border-gray-100 shadow-sm overflow-hidden min-h-[300px] md:min-h-[380px]">
               <CaloriesTrendChart />
             </div>
-            <div className="bg-white rounded-2xl md:rounded-3xl border border-gray-100 shadow-sm overflow-hidden min-h-[300px] md:min-h-[380px]">
+            <div className="min-w-0 bg-white rounded-2xl md:rounded-3xl border border-gray-100 shadow-sm overflow-hidden min-h-[300px] md:min-h-[380px]">
               <BodyMetrics />
             </div>
           </motion.div>

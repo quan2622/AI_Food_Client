@@ -446,10 +446,13 @@ export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialog
               className="flex flex-col md:flex-row h-[100dvh] md:h-[650px] w-screen md:w-[900px] overflow-hidden rounded-none md:rounded-3xl bg-white shadow-2xl transform-gpu relative"
             >
               {/* ──────────── Sidebar (Desktop: vertical, Mobile: horizontal tab bar) ──────────── */}
-              <div className="md:w-[240px] bg-[#F2F2F2]/50 border-b md:border-b-0 md:border-r border-[#0D0D0D]/5 px-2 py-2 md:p-6 flex md:flex-col gap-1 md:gap-2 shrink-0 overflow-x-auto md:overflow-x-visible scrollbar-hide">
+              <div className="md:w-[240px] bg-[#F2F2F2]/50 border-b md:border-b-0 md:border-r border-[#0D0D0D]/5 px-2 py-2 md:p-6 flex md:flex-col gap-1 md:gap-2 shrink-0 overflow-x-auto md:overflow-x-visible scrollbar-hide relative">
+                {/* Scroll Hint Gradient (Mobile only) */}
+                <div className="md:hidden absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[#F2F2F2]/80 to-transparent pointer-events-none z-10" />
+                
                 <div className="hidden md:block mb-8 px-2">
                   <h2 className="text-[20px] font-bold text-[#0D0D0D]">Settings</h2>
-                  <p className="text-[12px] text-[#0D0D0D]/40 font-medium uppercase tracking-widest mt-1">
+                  <p className="text-[12px] text-[#0D0D0D]/60 font-medium uppercase tracking-widest mt-1">
                     User Management
                   </p>
                 </div>
@@ -483,8 +486,8 @@ export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialog
                           ? "bg-red-50 text-red-500"
                           : "bg-[#9FD923] text-[#0D0D0D] shadow-lg shadow-[#9FD923]/20 scale-[1.02]"
                         : tab.variant === "danger"
-                        ? "text-red-400 hover:bg-red-50"
-                        : "text-[#0D0D0D]/60 hover:bg-white hover:text-[#0D0D0D]",
+                        ? "text-red-500 hover:bg-red-50"
+                        : "text-[#0D0D0D]/70 hover:bg-white hover:text-[#0D0D0D]",
                     )}
                   >
                     <tab.icon className="h-4 w-4 md:h-5 md:w-5 shrink-0" />
@@ -493,8 +496,8 @@ export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialog
                 ))}
                 </div>
 
-                <div className="hidden md:block mt-auto p-4 bg-[#D9F2A2]/30 rounded-2xl border border-[#9FD923]/10">
-                  <p className="text-[11px] text-[#0D0D0D]/60 font-medium leading-relaxed">
+                <div className="hidden md:block mt-auto p-4 bg-[#D9F2A2]/40 rounded-2xl border border-[#9FD923]/20">
+                  <p className="text-[11px] text-[#0D0D0D]/70 font-medium leading-relaxed">
                     Need help with your account? Contact support.
                   </p>
                 </div>

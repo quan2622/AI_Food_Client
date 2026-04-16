@@ -42,8 +42,8 @@ export function SuggestionFilter({ selectedMeal, onMealChange, selectedPriority,
             <div key={idx} className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border border-white shadow-sm ${item.bg}`}>
               <item.icon className={`w-3.5 h-3.5 ${item.color}`} />
               <div className="flex items-baseline gap-0.5 whitespace-nowrap">
-                <span className="text-xs font-black text-[#0F172A]">{item.current}</span>
-                <span className="text-[10px] font-bold text-slate-400">/{item.target}{item.unit === "kcal" ? "k" : "g"}</span>
+                <span className="text-xs font-black text-[#0F172A]">{Intl.NumberFormat('en-US').format(item.current)}</span>
+                <span className="text-[10px] font-bold text-slate-500">/{Intl.NumberFormat('en-US').format(item.target)} {item.unit}</span>
               </div>
             </div>
           ))}
@@ -118,10 +118,18 @@ export function SuggestionFilter({ selectedMeal, onMealChange, selectedPriority,
               <SlidersHorizontal className="w-4 h-4 text-[#86a800]" />
             </div>
             <div className="text-left">
-              <span className="text-sm font-black text-[#0F172A] block leading-tight">Bộ lọc</span>
-              <span className="text-[11px] text-[#64748B] font-semibold">
-                {selectedMeal} · {selectedPriority}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-black text-[#0F172A] leading-tight">Bộ lọc</span>
+                {!isOpen && (
+                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#0F172A] text-[10px] font-black text-[#CAFD00]">
+                    2
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-1.5 mt-1">
+                <span className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-bold">{selectedMeal}</span>
+                <span className="text-[10px] bg-[#CAFD00]/20 text-[#6a8500] px-1.5 py-0.5 rounded font-bold">{selectedPriority}</span>
+              </div>
             </div>
           </div>
           <motion.div

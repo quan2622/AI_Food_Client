@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, ChevronDown, Utensils, Menu, X } from "lucide-react";
+import { Bell, ChevronDown, Utensils, Menu, X, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ProfileDialog } from "@/components/common/ProfileDialog";
 import { useAuthStore } from "@/stores/authStore";
@@ -62,10 +62,11 @@ const Header = () => {
   }, [showNotifications]);
 
   // Close mobile menu on route change
-  useEffect(() => {
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (pathname !== prevPathname) {
+    setPrevPathname(pathname);
     setMobileMenuOpen(false);
-  }, [pathname]);
-
+  }
   if (pathname === "/sign-in" || pathname === "/sign-up") return null;
 
   return (
@@ -231,6 +232,21 @@ const Header = () => {
           </>
         )}
       </AnimatePresence>
+      {/* ═══════════ MOBILE: Floating Action Button (FAB) ═══════════ */}
+      <div className="md:hidden fixed bottom-6 right-6 z-50">
+        <Link href="/diary">
+          <motion.div
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="flex h-14 w-14 items-center justify-center rounded-full bg-[#CAFD00] text-[#0F172A] shadow-xl shadow-[#CAFD00]/30 border-2 border-[#86a800]/20"
+          >
+            <Plus className="h-6 w-6 font-black" />
+          </motion.div>
+        </Link>
+      </div>
+
     </header>
   );
 };

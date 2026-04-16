@@ -165,9 +165,10 @@ export default function CaloriesTrendChart() {
             <YAxis
               axisLine={false}
               tickLine={false}
-              tickMargin={10}
+              tickMargin={5}
+              tick={{ fontSize: 10 }}
               unit=" kcal"
-              width={65}
+              width={45}
             />
             <ChartTooltip content={<ChartTooltipContent />} />
             <Area

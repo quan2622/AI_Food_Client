@@ -134,11 +134,11 @@ export default function BodyMetrics() {
             <Loader2 className="h-8 w-8 animate-spin text-gray-300" />
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 h-full">
+          <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 gap-2 sm:gap-4 h-full">
             {metrics.map((m) => (
               <div
                 key={m.label}
-                className="group p-3 sm:p-4 rounded-2xl border border-gray-50 bg-gray-50/50 hover:bg-white hover:border-[#9fd923] hover:shadow-md transition-all duration-300 flex flex-col justify-center"
+                className="group p-2.5 sm:p-4 rounded-2xl border border-gray-50 bg-gray-50/50 hover:bg-white hover:border-[#9fd923] hover:shadow-md transition-all duration-300 flex flex-col justify-center min-w-0"
               >
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">{m.label}</span>
