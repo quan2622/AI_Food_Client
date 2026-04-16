@@ -5,6 +5,7 @@ import { SuggestionFilter } from "./_components/SuggestionFilter";
 import { SuggestionList } from "./_components/SuggestionList";
 import { dailyLogService, DashboardDailyLogResponse } from "@/services/dailyLogService";
 import { nutritionGoalService, NutritionGoal } from "@/services/nutritionGoalService";
+import { toast } from "sonner";
 
 export interface FoodItem {
   id: string;
@@ -40,15 +41,16 @@ export default function SuggestionsPage() {
 
   const [displayFoods, setDisplayFoods] = useState<FoodItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [filterOpen, setFilterOpen] = useState(false);
 
   useEffect(() => {
     dailyLogService.getDailyLogToday().then(res => {
       if (res.data) setDailyLog(res.data);
-    }).catch(console.error);
+    }).catch(() => {});
 
     nutritionGoalService.getCurrentGoal().then(res => {
       if (res.data) setActiveGoal(res.data);
-    }).catch(console.error);
+    }).catch(() => {});
   }, []);
 
   const fetchRecommendations = async (meal: string, priority: string) => {
@@ -71,8 +73,20 @@ export default function SuggestionsPage() {
       } else {
         setDisplayFoods([]);
       }
-    } catch (error) {
-      console.error(error);
+    } catch (error: any) {
+      const errMsg = error?.response?.data?.metadata?.message 
+        || error?.response?.data?.message 
+        || error?.message 
+        || "Không thể tải gợi ý món ăn";
+      
+      // Chỉ log warning thay vì error khi service chưa chạy
+      if (errMsg.includes("not available") || errMsg.includes("ECONNREFUSED")) {
+        console.warn("Recommendation service chưa khả dụng:", errMsg);
+        toast.warning("Dịch vụ gợi ý đang không khả dụng. Vui lòng thử lại sau.");
+      } else {
+        console.error("Fetch recommendations failed:", errMsg);
+        toast.error(errMsg);
+      }
       setDisplayFoods([]);
     } finally {
       setIsLoading(false);
@@ -95,6 +109,7 @@ export default function SuggestionsPage() {
   }, []);
 
   const handleApplyFilter = () => {
+    setFilterOpen(false); // Tự động thu gọn bộ lọc trên mobile
     fetchRecommendations(selectedMeal, selectedPriority);
   };
 
@@ -102,9 +117,8 @@ export default function SuggestionsPage() {
   const totals = dailyLog?.totals || { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 }; 
 
   return (
-    <div className="h-screen w-full flex flex-col pt-28 px-10 pb-6 overflow-hidden">
-      {/* Container chính chia 3:7 theo yêu cầu */}
-      <div className="flex-1 grid grid-cols-10 gap-6 overflow-hidden max-w-[1600px] w-full mx-auto">
+    <div className="h-screen w-full flex flex-col pt-20 md:pt-28 px-4 sm:px-6 md:px-10 pb-4 md:pb-6 overflow-hidden">
+      <div className="flex-1 grid grid-cols-1 md:grid-cols-10 gap-4 md:gap-6 overflow-hidden max-w-[1600px] w-full mx-auto">
         
         {/* KHỐI BÊN TRÁI: FORM CHỌN TIÊU CHÍ (3/10) */}
         <SuggestionFilter 
@@ -115,6 +129,8 @@ export default function SuggestionsPage() {
           totals={totals}
           target={target}
           onApplyFilter={handleApplyFilter}
+          isOpen={filterOpen}
+          onToggle={() => setFilterOpen(!filterOpen)}
         />
 
         {/* KHỐI BÊN PHẢI: DANH SÁCH MÓN ĂN (7/10) */}

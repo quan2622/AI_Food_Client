@@ -1,0 +1,47 @@
+@startuml logout_activity_diagram
+skinparam monochrome false
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ParticipantPadding 20
+skinparam BoxPadding 10
+
+title Activity Diagram: User Logout Flow (FE & BE Integration)
+
+|Người Dùng|
+start
+:Mở Cài đặt (ProfileDialog);
+:Nhấn nút "Sign Out";
+:Xác nhận Đăng xuất (Hiển thị form Confirm);
+:Đồng ý Đăng xuất;
+
+|Frontend (Next.js)|
+:Kích hoạt hàm handleLogout();
+:Gửi yêu cầu API Đăng xuất\n(POST /auth/logout kèm Access Token);
+
+|Backend (NestJS)|
+:Nhận yêu cầu;
+:Kiểm tra xác thực Access Token\n(JwtAuthGuard);
+
+if (Token hợp lệ?) then (Không)
+  :Báo lỗi 401 Unauthorized;
+  |Frontend (Next.js)|
+  :Nhận phản hồi lỗi tải (catch error);
+else (Có)
+  |Backend (NestJS)|
+  :Trích xuất userId từ Token;
+  :Xóa Access & Refresh Token trong Database\n(usersService.clearTokens);
+  :Xóa HTTP-only Cookie chứa Refresh Token\n(res.clearCookie);
+  :Trả về trạng thái thành công (EC=0);
+  
+  |Frontend (Next.js)|
+  :Thực thi khối Finally;
+endif
+
+|Frontend (Next.js)|
+:Xóa sạch thông tin Access Token & User\ntrong Local Store (authStore.logoutAction);
+:Chuyển hướng (Redirect)\nvề trang Đăng nhập (/sign-in);
+
+|Người Dùng|
+:Truy cập thành công về màn hình Đăng nhập;
+stop
+@enduml

@@ -1,0 +1,77 @@
+@startuml login_activity_diagram
+skinparam monochrome false
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ParticipantPadding 20
+skinparam BoxPadding 10
+
+title Activity Diagram: User Login Flow (FE & BE Integration)
+
+|Người Dùng|
+start
+:Mở trang đăng nhập (/sign-in);
+:Nhập Email và Mật khẩu;
+:Nhấn nút "Đăng nhập";
+
+|Frontend (Next.js)|
+:Kích hoạt trạng thái loading (isLoading = true);
+:Gửi yêu cầu đăng nhập\n(POST /auth/login);
+
+|Backend (NestJS)|
+:Nhận yêu cầu đăng nhập;
+:Tìm thông tin User theo Email\n(usersService.findByEmail);
+
+if (User tồn tại và trạng thái Active?) then (Không)
+  :Trả về lỗi ngoại lệ 401\n(UnauthorizedException);
+  
+  |Frontend (Next.js)|
+  :Nhận phản hồi lỗi từ API;
+  :Hiển thị thông báo lỗi (Toast error);
+  :Tắt trạng thái loading;
+  |Người Dùng|
+  stop
+
+else (Có)
+  |Backend (NestJS)|
+  :Kiểm tra mật khẩu (bcrypt.compare);
+  
+  if (Mật khẩu trùng khớp?) then (Không)
+    :Trả về lỗi ngoại lệ 401\n(UnauthorizedException);
+    
+    |Frontend (Next.js)|
+    :Nhận phản hồi lỗi từ API;
+    :Hiển thị thông báo lỗi (Toast error);
+    :Tắt trạng thái loading;
+    |Người Dùng|
+    stop
+    
+  else (Có)
+    |Backend (NestJS)|
+    :Tạo Access Token & Refresh Token (jwtService);
+    :Lưu Tokens vào Database\n(usersService.updateTokens);
+    :Gắn Refresh Token vào HTTP-only Cookie;
+    :Trả về dữ liệu Access Token kèm mã EC=0;
+    
+    |Frontend (Next.js)|
+    :Nhận phản hồi thành công;
+    :Lưu tạm Access Token vào AuthStore\n(loginAction);
+    :Gọi hàm lấy thông tin User chi tiết\n(GET /users/me);
+    
+    |Backend (NestJS)|
+    :Xác thực Access Token (JwtAuthGuard);
+    :Lấy thông tin User hiện tại từ DB;
+    :Trả về toàn bộ thông tin User Profile;
+    
+    |Frontend (Next.js)|
+    :Nhận dữ liệu chi tiết User;
+    :Cập nhật AuthStore (Token mới + Toàn bộ Infor);
+    :Hiển thị thông báo "Đăng nhập thành công";
+    :Tắt trạng thái loading;
+    :Chuyển hướng (Redirect) về Trang chủ (/);
+    
+    |Người Dùng|
+    :Truy cập thành công vào hệ thống;
+    stop
+  endif
+endif
+@enduml

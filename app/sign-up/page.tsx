@@ -75,7 +75,7 @@ const SignUpPage = () => {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4 font-sans">
-      <div className="flex h-[630px] w-full max-w-[1000px] overflow-hidden rounded-3xl bg-card shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-border/50">
+      <div className="flex flex-col md:flex-row h-auto md:h-[630px] w-full max-w-[1000px] overflow-hidden rounded-3xl bg-card shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-border/50">
         {/* Left Panel - Hero Section */}
         <div
           className="hidden md:flex md:w-1/2 flex-col justify-between p-10 relative overflow-hidden rounded-r-3xl"
@@ -118,19 +118,19 @@ const SignUpPage = () => {
         </div>
 
         {/* Right Panel - Sign Up Form */}
-        <div className="flex w-full flex-col items-center justify-start p-6 md:w-1/2 md:p-8 lg:p-10 pt-16">
+        <div className="flex w-full flex-col items-center justify-start p-5 sm:p-6 md:w-1/2 md:p-8 lg:p-10 pt-10 sm:pt-12 md:pt-16">
           {/* Logo */}
           <Link href="/">
             <motion.div
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="mb-8 flex items-center gap-3 group cursor-pointer"
+              className="mb-5 sm:mb-8 flex items-center gap-2 sm:gap-3 group cursor-pointer"
             >
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/20 transition-transform group-hover:rotate-12">
-                <Utensils className="h-6 w-6 text-primary-foreground" />
+              <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/20 transition-transform group-hover:rotate-12">
+                <Utensils className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
               </div>
               <div className="flex flex-col">
-                <span className="text-2xl font-black text-card-foreground tracking-tighter leading-tight">
+                <span className="text-xl sm:text-2xl font-black text-card-foreground tracking-tighter leading-tight">
                   Nutri<span className="text-primary font-extrabold italic">Life</span>
                 </span>
                 <span className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-[0.2em] mt-0.5 ml-0.5">
@@ -140,8 +140,8 @@ const SignUpPage = () => {
             </motion.div>
           </Link>
 
-          <div className="w-full space-y-1 mb-6 text-center md:text-left">
-            <h1 className="text-2xl font-bold text-card-foreground tracking-tight">
+          <div className="w-full space-y-1 mb-4 sm:mb-6 text-center md:text-left">
+            <h1 className="text-xl sm:text-2xl font-bold text-card-foreground tracking-tight">
               Tạo tài khoản mới
             </h1>
             <p className="text-sm text-muted-foreground">

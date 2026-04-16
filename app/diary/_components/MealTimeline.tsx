@@ -85,7 +85,7 @@ const MealTimeline = ({ meals = [] }: MealTimelineProps) => {
   }
 
   return (
-    <div className="px-6 pb-8 space-y-8">
+    <div className="px-2 sm:px-4 md:px-6 pb-8 space-y-6 md:space-y-8">
       {meals.map((meal) => {
         const details = getMealDetails(meal.mealType);
 
@@ -101,7 +101,7 @@ const MealTimeline = ({ meals = [] }: MealTimelineProps) => {
             </div>
 
             {/* Timeline */}
-            <div className="relative ml-[52px]">
+            <div className="relative ml-[40px] sm:ml-[52px]">
               {/* Vertical line */}
               <div className="absolute left-0 top-4 bottom-4 w-px bg-border/60" />
 
@@ -116,7 +116,7 @@ const MealTimeline = ({ meals = [] }: MealTimelineProps) => {
                       className="flex items-start gap-0"
                     >
                       {/* Time label - left of timeline */}
-                      <span className="text-xs font-black text-[#9FD923] w-[52px] -ml-[52px] text-right pr-3 pt-4 flex-shrink-0">
+                      <span className="text-xs font-black text-[#9FD923] w-[40px] sm:w-[52px] -ml-[40px] sm:-ml-[52px] text-right pr-2 sm:pr-3 pt-4 flex-shrink-0">
                         {time}
                       </span>
 
@@ -126,9 +126,9 @@ const MealTimeline = ({ meals = [] }: MealTimelineProps) => {
                       </div>
 
                       {/* Meal card */}
-                      <div className="flex-1 ml-5 bg-white border border-border/60 rounded-xl overflow-hidden hover:shadow-md transition-all duration-300 hover:border-[#9FD923]/30 cursor-pointer group hover:-translate-y-0.5 flex items-stretch gap-3 p-2">
+                      <div className="flex-1 ml-3 sm:ml-5 bg-white border border-border/60 rounded-xl overflow-hidden hover:shadow-md transition-all duration-300 hover:border-[#9FD923]/30 cursor-pointer group hover:-translate-y-0.5 flex items-stretch gap-2 sm:gap-3 p-1.5 sm:p-2">
                         {/* Image */}
-                        <div className="w-20 h-20 shrink-0 overflow-hidden relative rounded-lg">
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 overflow-hidden relative rounded-lg">
                           <img
                             src={item.food?.imageUrl || fallbackImage}
                             alt={item.food?.foodName || "Food Image"}

@@ -177,44 +177,44 @@ export default function Home() {
 
   return (
     <ScrollArea className="h-screen w-full">
-      <main className="max-w-[1600px] mx-auto px-10 pt-28 pb-24">
+      <main className="max-w-[1600px] mx-auto px-4 sm:px-6 md:px-10 pt-20 md:pt-28 pb-16 md:pb-24">
         {/* Personalized Greeting Section */}
-        <section className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <section className="mb-6 md:mb-12 flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6">
           <div>
-            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-on-surface mb-2 font-headline">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight text-on-surface mb-1 md:mb-2 font-headline">
               Chào buổi sáng, Minh! ☀️
             </h1>
-            <p className="text-lg text-on-surface-variant font-medium">
+            <p className="text-sm md:text-lg text-on-surface-variant font-medium">
               Bạn đã duy trì chuỗi{" "}
               <span className="text-dash-primary font-bold">12 ngày</span> sống
               khỏe. Cố gắng lên!
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-2 sm:gap-3">
             <button
               onClick={() => setIsScanDialogOpen(true)}
-              className="bg-linear-to-br from-dash-primary to-dash-primary-container text-on-primary px-6 py-3 rounded-xl font-bold flex items-center gap-2 active:scale-95 transition-transform cursor-pointer shadow-sm"
+              className="bg-linear-to-br from-dash-primary to-dash-primary-container text-on-primary px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-bold flex items-center gap-2 active:scale-95 transition-transform cursor-pointer shadow-sm text-sm sm:text-base"
             >
-              <Scan className="w-5 h-5" />
+              <Scan className="w-4 h-4 sm:w-5 sm:h-5" />
               Quét món ăn
             </button>
-            <button className="bg-dash-secondary-container text-on-secondary-container px-6 py-3 rounded-xl font-bold flex items-center gap-2 active:scale-95 transition-transform cursor-pointer shadow-sm">
-              <Plus className="w-5 h-5" />
+            <button className="bg-dash-secondary-container text-on-secondary-container px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-bold flex items-center gap-2 active:scale-95 transition-transform cursor-pointer shadow-sm text-sm sm:text-base">
+              <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
               Thêm bằng tay
             </button>
           </div>
         </section>
 
         {/* Bento Grid Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6">
           {/* Left Column: Calorie & Macros */}
-          <div className="md:col-span-4 flex flex-col gap-6">
+          <div className="md:col-span-4 flex flex-col gap-4 md:gap-6">
             {/* Daily Calorie Progress */}
-            <div className="bg-dash-surface-container-lowest p-8 rounded-xl shadow-[0_4px_24px_rgba(0,110,28,0.04)] flex flex-col items-center text-center">
-              <h3 className="text-on-surface-variant font-bold uppercase tracking-widest text-xs mb-8">
+            <div className="bg-dash-surface-container-lowest p-5 sm:p-6 md:p-8 rounded-xl shadow-[0_4px_24px_rgba(0,110,28,0.04)] flex flex-col items-center text-center">
+              <h3 className="text-on-surface-variant font-bold uppercase tracking-widest text-xs mb-4 md:mb-8">
                 Calories hằng ngày
               </h3>
-              <div className="relative w-48 h-48 flex items-center justify-center mb-6">
+              <div className="relative w-36 h-36 sm:w-40 sm:h-40 md:w-48 md:h-48 flex items-center justify-center mb-4 md:mb-6">
                 {/* Progress Ring (SVG) */}
                 <svg className="w-full h-full -rotate-90">
                   <circle
@@ -240,7 +240,7 @@ export default function Home() {
                   ></circle>
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-4xl font-extrabold font-headline leading-none">
+                  <span className="text-2xl sm:text-3xl md:text-4xl font-extrabold font-headline leading-none">
                     {totals.calories.toLocaleString()}
                   </span>
                   <span className="text-on-surface-variant font-bold text-sm">
@@ -258,7 +258,7 @@ export default function Home() {
             </div>
 
             {/* Macros Breakdown */}
-            <div className="bg-dash-surface-container-low p-6 rounded-xl flex flex-col gap-5 border border-dash-surface-container-highest/50">
+            <div className="bg-dash-surface-container-low p-4 sm:p-5 md:p-6 rounded-xl flex flex-col gap-4 md:gap-5 border border-dash-surface-container-highest/50">
               <h3 className="text-on-surface font-bold text-lg mb-2">
                 Chỉ số dưỡng chất
               </h3>
@@ -316,7 +316,7 @@ export default function Home() {
           </div>
 
           {/* Middle Column: Meal Log & Insights */}
-          <div className="md:col-span-5 flex flex-col gap-6">
+          <div className="md:col-span-5 flex flex-col gap-4 md:gap-6">
             {/* Smart Insights */}
             <div className="bg-dash-tertiary-fixed text-on-tertiary-fixed-variant p-5 rounded-xl flex items-start gap-4 shadow-sm border border-dash-tertiary-fixed-dim/20">
               <Lightbulb className="w-5 h-5 text-dash-tertiary shrink-0 fill-dash-tertiary/20" />
@@ -332,9 +332,9 @@ export default function Home() {
             </div>
 
             {/* Meal Log Timeline */}
-            <div className="bg-dash-surface-container-lowest p-6 rounded-xl shadow-[0_4px_24px_rgba(0,110,28,0.04)] grow border border-dash-surface-container-highest/20">
-              <div className="flex justify-between items-center mb-8">
-                <h3 className="text-xl font-bold font-headline">
+            <div className="bg-dash-surface-container-lowest p-4 sm:p-5 md:p-6 rounded-xl shadow-[0_4px_24px_rgba(0,110,28,0.04)] grow border border-dash-surface-container-highest/20">
+              <div className="flex justify-between items-center mb-4 md:mb-8">
+                <h3 className="text-lg md:text-xl font-bold font-headline">
                   Nhật ký ăn uống
                 </h3>
                 <span className="text-xs font-bold text-on-surface-variant bg-dash-surface-container px-2 py-1 rounded">
@@ -342,7 +342,7 @@ export default function Home() {
                 </span>
               </div>
 
-              <div className="space-y-8 relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-dash-surface-container-high">
+              <div className="space-y-5 md:space-y-8 relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-dash-surface-container-high">
                 {/* Breakfast */}
                 <div className={cn("relative pl-10", breakfast.empty && "opacity-50")}>
                   <div className={cn("absolute left-0 top-1 w-6 h-6 rounded-full flex items-center justify-center z-10 transition-colors", breakfast.empty ? "bg-dash-surface-container-highest border-2 border-dash-primary" : "bg-dash-primary shadow-sm shadow-dash-primary/30")}>
@@ -432,9 +432,9 @@ export default function Home() {
           </div>
 
           {/* Right Column: Micro-nutrients, Water, Weight */}
-          <div className="md:col-span-3 flex flex-col gap-6">
+          <div className="md:col-span-3 flex flex-col gap-4 md:gap-6">
             {/* Water Intake Tracking */}
-            <div className="bg-dash-surface-container-low p-6 rounded-xl shadow-sm border border-dash-surface-container-highest/50 flex flex-col h-full">
+            <div className="bg-dash-surface-container-low p-4 sm:p-5 md:p-6 rounded-xl shadow-sm border border-dash-surface-container-highest/50 flex flex-col h-full">
               <div className="flex items-center gap-4 mb-4">
                 <div className="w-12 h-12 rounded-full bg-carbs/10 flex items-center justify-center shadow-sm">
                   <Droplets className="w-6 h-6 text-carbs" />
@@ -487,7 +487,7 @@ export default function Home() {
             </div>
 
             {/* Consolidated Nutrition & Weight Goal Box */}
-            <div className="bg-dash-surface-container-low p-6 rounded-xl border border-dash-surface-container-highest/50 flex flex-col gap-6 shadow-sm">
+            <div className="bg-dash-surface-container-low p-4 sm:p-5 md:p-6 rounded-xl border border-dash-surface-container-highest/50 flex flex-col gap-4 md:gap-6 shadow-sm">
               {/* Header section */}
               <div>
                 <div className="flex items-start justify-between gap-4">
@@ -496,7 +496,7 @@ export default function Home() {
                       <Target className={cn("w-3.5 h-3.5", goalUI.textColor)} /> Mục
                       tiêu hiện tại
                     </p>
-                    <h3 className="text-2xl font-extrabold tracking-tight text-on-surface flex items-center gap-2">
+                    <h3 className="text-xl md:text-2xl font-extrabold tracking-tight text-on-surface flex items-center gap-2">
                       {goalUI.title}
                     </h3>
                   </div>
@@ -515,13 +515,13 @@ export default function Home() {
                 </div>
               </div>
               {/* Current Weight Status Bar */}
-              <div className="bg-dash-surface-container-lowest p-4 rounded-xl border border-dash-surface-container-highest/30 flex flex-col gap-3">
+              <div className="bg-dash-surface-container-lowest p-3 sm:p-4 rounded-xl border border-dash-surface-container-highest/30 flex flex-col gap-3">
                 <div className="flex justify-between items-end">
                   <div>
                     <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">
                       Cân nặng hiện tại
                     </p>
-                    <div className="text-2xl font-extrabold font-headline">
+                    <div className="text-xl md:text-2xl font-extrabold font-headline">
                       {currentWeight}{" "}
                       <span className="text-sm font-medium text-on-surface-variant">
                         kg

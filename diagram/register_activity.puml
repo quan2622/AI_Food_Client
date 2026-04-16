@@ -1,0 +1,41 @@
+@startuml
+skinparam wrapWidth 250
+skinparam ActivityBackgroundColor #f9f9f9
+skinparam ActivityBorderColor #333333
+
+|Người dùng|
+start
+
+repeat
+  :Nhập thông tin đăng ký\n(Email, Mật khẩu, Xác nhận);
+  :Nhấn nút "Đăng ký tài khoản";
+
+  |Hệ thống (Web)|
+  if (Mật khẩu xác nhận khớp?) then (Không khớp)
+    :Hiển thị lỗi\n"Mật khẩu nhập lại không khớp!";
+  else (Khớp)
+    :Tự động tạo Tên hiển thị\ntừ tiền tố Email;
+    :Gửi yêu cầu đăng ký\nđến Server;
+
+    |Hệ thống (Server)|
+    :Kiểm tra dữ liệu và\nEmail trong CSDL;
+    
+    if (Email đã tồn tại / Hợp lệ?) then (Có lỗi)
+      :Trả về phản hồi lỗi;
+      
+      |Hệ thống (Web)|
+      :Hiển thị lỗi đăng ký thất bại;
+    else (Thành công)
+      |Hệ thống (Server)|
+      :Mã hóa mật khẩu & Lưu CSDL;
+      :Trả về thông tin\nđăng ký thành công;
+      
+      |Hệ thống (Web)|
+      :Hiển thị thông báo thành công;
+      :Chuyển hướng người dùng\nđến trang Đăng nhập (/sign-in);
+      stop
+    endif
+  endif
+repeat while (Yêu cầu nhập lại form?)
+
+@enduml

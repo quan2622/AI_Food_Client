@@ -1,0 +1,85 @@
+@startuml meal_logging_activity
+skinparam monochrome false
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ParticipantPadding 20
+skinparam BoxPadding 10
+
+title Sơ đồ Activity: Chức năng Ghi nhận bữa ăn (3 Làn tương tác)
+
+|Người dùng|
+|Giao diện|
+|Hệ thống|
+
+|Người dùng|
+start
+:Mở chức năng Ghi nhận bữa ăn;
+:Chọn Bữa ăn muốn ghi nhận\n(Sáng, Trưa, Tối, Ăn nhẹ...);
+
+|Giao diện|
+:Nghe sự kiện và hiển thị\nbiểu mẫu ghi nhận;
+
+|Người dùng|
+repeat :Lựa chọn phương pháp định danh món ăn;
+  
+  if (Phương thức nhập liệu là gì?) then (Cung cấp ảnh chụp)
+    :Tải lên hoặc chụp hình ảnh bữa ăn;
+    
+    |Giao diện|
+    :Thực hiện tiền xử lý (Client-side Resizing);\n(Nén ảnh để giảm tải băng thông);
+    :Gửi dữ liệu ảnh (FormData) lên API;
+    
+    |Hệ thống|
+    :Tiếp nhận file ảnh và điều hướng\nyêu cầu tới AI Service;
+    :Mô hình Computer Vision phân tích\nvà nhận diện các đối tượng món ăn;
+    :So khớp nhãn (Label) trích xuất\nvới kho dữ liệu gốc (Food DB);
+    :Trả dữ liệu món ăn dự đoán kèm\ntỷ lệ chính xác (Confidence) về Frontend;
+    
+  else (Tìm kiếm thủ công)
+    |Người dùng|
+    :Nhập từ khóa món ăn vào ô tìm kiếm;
+    
+    |Giao diện|
+    :Bắt sự kiện (Debounce search)\nvà gửi yêu cầu tìm kiếm API;
+    
+    |Hệ thống|
+    :Thực hiện truy vấn (Full-text Search)\ntrong cơ sở dữ liệu gốc;
+    :Kết xuất danh sách món ăn phù hợp\nvà trả kết quả về Frontend;
+  endif
+
+  |Giao diện|
+  :Xử lý dữ liệu và render hiển thị\ndanh sách món ăn kết quả gợi ý;
+
+  |Người dùng|
+  :Kiểm tra danh sách kết quả trả về;
+  
+  backward:Chỉnh sửa lại từ khóa hoặc tải\nlên một hình ảnh mới rõ nét hơn;
+repeat while (Danh sách trả ra có đúng món ăn\nnhư thực tế không?) is (Sai / Thiếu)
+-> Chính xác;
+
+|Người dùng|
+:Chỉnh sửa thiết lập định lượng cho từng món\n(Ví dụ: Nhập lại số Grams, số phần...);
+
+|Giao diện|
+:Lập tức cập nhật và tính toán lại\nchỉ số Calo, Protein, Carbs, Fat... trên UI;
+
+|Người dùng|
+:Xác nhận toàn bộ thông số\nvà nhấn "Lưu bữa ăn";
+
+|Giao diện|
+:Bật trạng thái Loading chặn thao tác;
+:Đóng gói toàn bộ Payload danh sách\nmón ăn gửi yêu cầu Ghi nhận;
+
+|Hệ thống|
+:Chuẩn hóa kỹ thuật và kiểm tra\ntính hợp lệ dữ liệu trọn vẹn tuyến;
+:Mở Transaction lưu đối tượng Bữa ăn (Meal)\nvà danh sách món (Meal Items) vào CSDL;
+:Trả tín hiệu lưu thành công về Frontend;
+
+|Giao diện|
+:Tắt Loading và hiển thị\nthông báo Cập nhật thành công;
+:Chuyển hướng (Redirect) trở về\ntrang Tổng quan nhật ký dinh dưỡng;
+
+|Người dùng|
+:Quan sát nhật ký mới cập nhật\nvà kết thúc trải nghiệm;
+stop
+@enduml

@@ -42,15 +42,15 @@ const CalendarBar = ({ onDateChange }: CalendarBarProps) => {
   const handleNextYear = () => setActiveYear((prev) => prev + 1);
 
   return (
-    <div className="px-6 py-4 space-y-4">
+    <div className="px-2 sm:px-4 md:px-6 py-3 md:py-4 space-y-3 md:space-y-4">
       {/* Year & months */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3">
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold text-foreground w-10 text-center">{activeYear}</span>
           <button onClick={handlePrevYear} className="text-muted-foreground hover:text-foreground cursor-pointer"><ChevronLeft className="w-4 h-4" /></button>
           <button onClick={handleNextYear} className="text-muted-foreground hover:text-foreground cursor-pointer"><ChevronRight className="w-4 h-4" /></button>
         </div>
-        <div className="flex items-center gap-1 ml-2 overflow-x-auto scrollbar-hide">
+        <div className="flex items-center gap-1 ml-1 sm:ml-2 overflow-x-auto scrollbar-hide">
           {months.map((m, i) => (
             <button
               key={m}

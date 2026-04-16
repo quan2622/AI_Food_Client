@@ -1,0 +1,44 @@
+@startuml smart_recommendation_activity
+skinparam monochrome false
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ParticipantPadding 20
+skinparam BoxPadding 10
+
+title Sơ đồ Activity: Chức năng Gợi ý Món ăn Thông minh
+
+|Người dùng|
+|Hệ thống|
+
+|Người dùng|
+start
+:Truy cập chức năng Gợi ý món ăn;
+
+|Hệ thống|
+:Lấy thông tin nhật ký ăn uống hôm nay;
+:Lấy mục tiêu dinh dưỡng hiện tại và\ntính toán lượng Calo/Macro còn thiếu;
+:Khởi tạo giao diện cấu hình gợi ý;
+
+|Người dùng|
+repeat :Tùy chỉnh tiêu chí (Bữa ăn, Định mức)\nvà bấm "Áp dụng gợi ý";
+  |Hệ thống|
+  :Tiếp nhận yêu cầu từ người dùng\nvà trích xuất ngữ cảnh (Context);
+  :Gửi Context (Macro mục tiêu, dị ứng,\nsở thích, loại bữa ăn) sang AI Service;
+  :Truy vấn kho dữ liệu thức ăn nội bộ;
+  :Thực thi thuật toán AI (Scoring & Filtering)\nđể chấm điểm độ phù hợp của món ăn;
+  :Phân tích sức khỏe (Health Analysis);
+  :Lọc ra Top các món ăn có điểm số\ncao nhất và đóng gói dữ liệu;
+  
+  backward:Thông báo không tìm thấy\nmón ăn phù hợp với tiêu chí;
+repeat while (Tồn tại món ăn hợp lệ\nvà điểm số đạt chuẩn?) is (Không)
+-> Có;
+
+|Hệ thống|
+:Định dạng dữ liệu JSON trả về;
+:Hiển thị danh sách các món ăn gợi ý\nkèm theo lý do và thông số dinh dưỡng;
+
+|Người dùng|
+:Xem danh sách và lý do đề xuất;
+:Lựa chọn món ăn phù hợp\nđể thêm vào nhật ký;
+stop
+@enduml

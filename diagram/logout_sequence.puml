@@ -1,0 +1,51 @@
+@startuml logout_sequence_diagram
+skinparam monochrome false
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ParticipantPadding 20
+skinparam BoxPadding 10
+
+title Sequence Diagram: User Logout Flow (FE & BE Integration)
+
+actor "Người Dùng" as User
+participant "Frontend UI\n(Next.js)" as Client
+participant "Zustand State\n(AuthStore)" as Store
+participant "Backend API\n(NestJS)" as API
+database "Cơ Sở Dữ Liệu\n(PostgreSQL)" as DB
+
+User -> Client : 1. Chọn "Sign Out" và Xác nhận đăng xuất
+activate Client
+
+Client -> API : 2. POST /auth/logout\n(Gửi kèm Access Token ở Header)
+activate API
+
+API -> API : 3. Xác thực Token bằng JwtAuthGuard
+alt Token Không Hợp Lệ hoặc Hết Hạn
+    API --> Client : 4a. 401 Unauthorized
+else Token Hợp Lệ
+    API -> API : 4b. Phân giải payload lấy UserId
+    
+    API -> DB : 5. usersService.clearTokens(userId)
+    activate DB
+    note right of DB: Xóa cả Access và Refresh Token đang hoạt động
+    DB --> API : 6. Xóa thành công
+    deactivate DB
+    
+    API -> API : 7. Xóa Refresh Token Cookie\nres.clearCookie('refresh_token')
+    API --> Client : 8. 200 OK (EC=0, Thông báo đăng xuất thành công)
+end
+deactivate API
+
+note right of Client: Dù API thành công (try) hay lỗi (catch)\nđều thực thi khối lệnh Finally
+
+Client -> Store : 9. Thực thi logoutAction()
+activate Store
+Store -> Store : 10. Đặt Access Token & User = null
+Store --> Client : 11. Xóa trạng thái local thành công
+deactivate Store
+
+Client -> Client : 12. Điều hướng router.push('/sign-in')
+Client --> User : 13. Hiển thị màn hình Đăng nhập
+deactivate Client
+
+@enduml

@@ -119,8 +119,8 @@ export default function BodyMetrics() {
 
   return (
     <Card className="rounded-3xl border-0 shadow-sm bg-white overflow-hidden h-full">
-      <CardHeader className="flex flex-row items-center justify-between pb-3 px-6 pt-6 -mb-3">
-        <CardTitle className="text-lg font-bold">Chỉ số cơ thể</CardTitle>
+      <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 px-4 sm:px-6 pt-4 sm:pt-6 -mb-3 gap-3">
+        <CardTitle className="text-base sm:text-lg font-bold">Chỉ số cơ thể</CardTitle>
         <ProfileDialog trigger={
           <button className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-gray-50 text-gray-400 hover:bg-[#9fd923] hover:text-[#0D0D0D] transition-all duration-300 font-bold text-sm shadow-xs border border-gray-100/50">
             <Settings size={16} />
@@ -128,17 +128,17 @@ export default function BodyMetrics() {
           </button>
         } />
       </CardHeader>
-      <CardContent className="px-6 pb-6">
+      <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
         {loading ? (
           <div className="flex items-center justify-center h-[260px]">
             <Loader2 className="h-8 w-8 animate-spin text-gray-300" />
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-4 h-full">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 h-full">
             {metrics.map((m) => (
               <div
                 key={m.label}
-                className="group p-4 rounded-2xl border border-gray-50 bg-gray-50/50 hover:bg-white hover:border-[#9fd923] hover:shadow-md transition-all duration-300 flex flex-col justify-center"
+                className="group p-3 sm:p-4 rounded-2xl border border-gray-50 bg-gray-50/50 hover:bg-white hover:border-[#9fd923] hover:shadow-md transition-all duration-300 flex flex-col justify-center"
               >
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">{m.label}</span>

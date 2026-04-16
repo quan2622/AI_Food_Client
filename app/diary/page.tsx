@@ -46,7 +46,7 @@ export default function DiaryPage() {
   }, [selectedDate]);
 
   return (
-    <div className="h-screen pt-[100px] font-sans max-w-3xl mx-auto flex flex-col overflow-hidden">
+    <div className="h-screen pt-[80px] md:pt-[100px] font-sans max-w-3xl mx-auto flex flex-col overflow-hidden px-4 sm:px-6 md:px-0">
       {/* Calendar Bar */}
         <div className="shrink-0">
           <CalendarBar onDateChange={setSelectedDate} />

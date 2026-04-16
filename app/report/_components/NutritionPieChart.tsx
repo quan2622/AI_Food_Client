@@ -67,7 +67,7 @@ export default function NutritionPieChart({
   return (
     <Card className="h-full flex flex-col rounded-3xl border-0 shadow-none">
       <CardHeader className="items-center pb-0 shrink-0">
-        <CardTitle className="text-lg font-bold text-gray-800">
+        <CardTitle className="text-base sm:text-lg font-bold text-gray-800">
           Tỉ lệ dinh dưỡng
         </CardTitle>
         <CardDescription>
@@ -88,7 +88,7 @@ export default function NutritionPieChart({
         ) : (
           <ChartContainer
             config={chartConfig}
-            className="mx-auto aspect-square max-h-[240px] w-full pb-0 [&_.recharts-pie-label-text]:fill-foreground"
+            className="mx-auto aspect-square max-h-[180px] sm:max-h-[240px] w-full pb-0 [&_.recharts-pie-label-text]:fill-foreground"
           >
             <PieChart>
               <ChartTooltip
@@ -107,8 +107,8 @@ export default function NutritionPieChart({
         )}
       </CardContent>
 
-      <CardFooter className="flex-col shrink-0 px-8 pb-12 pt-8 border-t border-gray-100 bg-gray-50/20">
-        <div className="grid grid-cols-2 gap-x-16 gap-y-6 w-full">
+      <CardFooter className="flex-col shrink-0 px-4 sm:px-6 md:px-8 pb-6 sm:pb-8 md:pb-12 pt-4 sm:pt-6 md:pt-8 border-t border-gray-100 bg-gray-50/20">
+        <div className="grid grid-cols-2 gap-x-6 sm:gap-x-10 md:gap-x-16 gap-y-3 sm:gap-y-4 md:gap-y-6 w-full">
           {chartData.map((item) => {
             const config =
               chartConfig[

@@ -1,0 +1,44 @@
+@startuml daily_log_management_activity
+skinparam monochrome false
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ParticipantPadding 20
+skinparam BoxPadding 10
+
+title Sơ đồ Activity: Chức năng Quản lý Nhật ký ăn uống
+
+|Người dùng|
+|Hệ thống|
+
+|Người dùng|
+start
+:Truy cập trang Quản lý nhật ký ăn uống;
+
+|Hệ thống|
+:Lấy bản ghi nhật ký (Daily Log)\ncủa ngày hiện tại từ CSDL;
+:Truy xuất các bữa ăn (Breakfast, Lunch...)\nvà các món (Meal Items) tương ứng;
+:Tính toán tổng lượng Calo và\nMacro (Carb, Protein, Fat) đã tiêu thụ;
+:Khởi tạo và hiển thị biểu đồ/UI nhật ký;
+
+|Người dùng|
+repeat :Thực hiện thay đổi nhật ký\n(Thêm mới / Cập nhật / Xóa món ăn);
+  
+  |Hệ thống|
+  :Tiếp nhận Payload dữ liệu từ Frontend;
+  :Phân loại hành động (Create / Update / Delete);
+  :Kiểm tra tính hợp lệ của dữ liệu (Validation)\n(VD: Định lượng > 0, quyền sửa đổi, UID cấp phép);
+  :Kiểm tra tồn tại của món ăn trong hệ thống gốc;
+  
+  backward:Thông báo lỗi không thể lưu\n(Dữ liệu sai định dạng hoặc từ chối quyền);
+repeat while (Dữ liệu hợp lệ và CSDL sẵn sàng?) is (Không hợp lệ)
+-> Hợp lệ;
+
+|Hệ thống|
+:Thực thi Transaction cập nhật CSDL\n(Thêm/Sửa/Xóa vào bảng thống kê);
+:Tính toán lại tiến độ Calo & Macro tổng cộng\ndựa trên sự thay đổi mới;
+:Cập nhật các biểu đồ thống kê\nvà làm mới lại giao diện người dùng;
+
+|Người dùng|
+:Quan sát kết quả dinh dưỡng cập nhật\nvà hoàn tất thao tác;
+stop
+@enduml

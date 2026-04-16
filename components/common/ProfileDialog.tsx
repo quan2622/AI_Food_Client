@@ -416,9 +416,9 @@ export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialog
       <DialogTrigger asChild>
         {trigger || (
           <button
-            className="flex h-12 w-12 items-center justify-center rounded-full bg-white/80 backdrop-blur-xl text-[#0D0D0D] border border-[#0D0D0D]/10 transition-all duration-300 hover:border-[#9FD923]/30 shadow-sm cursor-pointer overflow-hidden group"
+            className="flex h-10 w-10 md:h-11 md:w-11 items-center justify-center rounded-xl bg-white/80 backdrop-blur-xl text-[#0D0D0D] border border-[#0D0D0D]/10 transition-all duration-300 hover:border-[#9FD923]/30 shadow-sm cursor-pointer overflow-hidden group"
           >
-            <User className="h-6 w-6 text-[#0D0D0D]/80 group-hover:text-[#9FD923] transition-colors" />
+            <User className="h-5 w-5 text-[#0D0D0D]/80 group-hover:text-[#9FD923] transition-colors" />
           </button>
         )}
       </DialogTrigger>
@@ -443,17 +443,18 @@ export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialog
                 damping: 32,
                 mass: 0.75,
               }}
-              className="flex h-[650px] w-[900px] overflow-hidden rounded-3xl bg-white shadow-2xl transform-gpu relative"
+              className="flex flex-col md:flex-row h-[100dvh] md:h-[650px] w-screen md:w-[900px] overflow-hidden rounded-none md:rounded-3xl bg-white shadow-2xl transform-gpu relative"
             >
-              {/* ──────────── Sidebar ──────────── */}
-              <div className="w-[240px] bg-[#F2F2F2]/50 border-r border-[#0D0D0D]/5 p-6 flex flex-col gap-2">
-                <div className="mb-8 px-2">
+              {/* ──────────── Sidebar (Desktop: vertical, Mobile: horizontal tab bar) ──────────── */}
+              <div className="md:w-[240px] bg-[#F2F2F2]/50 border-b md:border-b-0 md:border-r border-[#0D0D0D]/5 px-2 py-2 md:p-6 flex md:flex-col gap-1 md:gap-2 shrink-0 overflow-x-auto md:overflow-x-visible scrollbar-hide">
+                <div className="hidden md:block mb-8 px-2">
                   <h2 className="text-[20px] font-bold text-[#0D0D0D]">Settings</h2>
                   <p className="text-[12px] text-[#0D0D0D]/40 font-medium uppercase tracking-widest mt-1">
                     User Management
                   </p>
                 </div>
 
+                <div className="flex md:flex-col gap-1 md:gap-2 flex-nowrap w-full md:w-auto">
                 {[
                   { id: "Profile", icon: User, label: "Profile" },
                   { id: "Goals", icon: Target, label: "My Goals" },
@@ -476,7 +477,7 @@ export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialog
                       }
                     }}
                     className={cn(
-                      "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 font-bold text-[14px]",
+                      "flex items-center justify-center md:justify-start gap-1.5 md:gap-3 px-2.5 md:px-4 py-2 md:py-3 rounded-lg md:rounded-xl transition-all duration-300 font-bold text-[11px] md:text-[14px] whitespace-nowrap flex-1 md:flex-initial min-w-0",
                       profileTab === tab.id
                         ? tab.variant === "danger"
                           ? "bg-red-50 text-red-500"
@@ -486,12 +487,13 @@ export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialog
                         : "text-[#0D0D0D]/60 hover:bg-white hover:text-[#0D0D0D]",
                     )}
                   >
-                    <tab.icon className="h-5 w-5" />
-                    {tab.label}
+                    <tab.icon className="h-4 w-4 md:h-5 md:w-5 shrink-0" />
+                    <span className="hidden md:inline">{tab.label}</span>
                   </button>
                 ))}
+                </div>
 
-                <div className="mt-auto p-4 bg-[#D9F2A2]/30 rounded-2xl border border-[#9FD923]/10">
+                <div className="hidden md:block mt-auto p-4 bg-[#D9F2A2]/30 rounded-2xl border border-[#9FD923]/10">
                   <p className="text-[11px] text-[#0D0D0D]/60 font-medium leading-relaxed">
                     Need help with your account? Contact support.
                   </p>
@@ -503,7 +505,7 @@ export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialog
                 initial={{ opacity: 0, x: 30 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.3, ease: "easeOut", delay: 0.08 }}
-                className="flex-1 p-10 overflow-y-auto custom-scrollbar relative"
+                className="flex-1 p-4 sm:p-6 md:p-10 overflow-y-auto custom-scrollbar relative"
               >
                 <AnimatePresence mode="wait">
                   {/* ── Profile Tab ── */}
@@ -543,7 +545,7 @@ export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialog
                         </div>
 
                         {/* Uniform Groups Section */}
-                        <div className="flex gap-4">
+                        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                           {/* Box 1: Account Info */}
                           <div className="flex-1 p-4 bg-[#F2F2F2]/50 rounded-3xl border border-[#0D0D0D]/5 flex flex-col gap-3">
                             <h4 className="text-[10px] font-black text-[#0D0D0D]/20 uppercase tracking-widest pl-1">
@@ -668,7 +670,7 @@ export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialog
                         {/* Metabolic Panel Compact */}
                         <div className="p-4 bg-[#0D0D0D] rounded-3xl text-white overflow-hidden relative shadow-xl border border-white/5">
                           <div className="absolute top-0 right-0 w-32 h-32 bg-[#9FD923]/10 rounded-full blur-3xl -mr-10 -mt-10" />
-                          <div className="flex gap-4">
+                          <div className="flex flex-col sm:flex-row gap-4">
                             {[
                               {
                                 label: "BMI Ratio",

@@ -83,9 +83,9 @@ export default function CaloriesTrendChart() {
 
   return (
     <Card className="rounded-3xl border-0 shadow-sm bg-white overflow-hidden h-full flex flex-col">
-      <CardHeader className="shrink-0 flex flex-row items-center justify-between pb-4">
+      <CardHeader className="shrink-0 flex flex-col sm:flex-row sm:items-center justify-between pb-4 gap-3">
         <div>
-          <CardTitle className="text-lg font-bold text-gray-800">
+          <CardTitle className="text-base sm:text-lg font-bold text-gray-800">
             Xu hướng Calories
           </CardTitle>
           <CardDescription>{periodLabel[period]}</CardDescription>

@@ -248,8 +248,8 @@ const ImageUploadDialog: React.FC<ImageUploadDialogProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className={cn("w-[95vw] max-h-[94vh] flex flex-col overflow-hidden bg-[#0F172A] border-[#CAFD00]/20 text-white p-0 shadow-2xl rounded-3xl border transition-all duration-300", step === "FORM" ? "sm:max-w-[900px]" : "sm:max-w-[500px]")}>
-        <DialogHeader className="p-6 pb-2">
-          <DialogTitle className="text-xl font-bold flex items-center gap-2 text-white">
+        <DialogHeader className="p-4 sm:p-6 pb-2">
+          <DialogTitle className="text-lg sm:text-xl font-bold flex items-center gap-2 text-white">
             <div className="p-2 rounded-lg bg-[#CAFD00]/10">
               <ImageIcon className="h-5 w-5 text-[#CAFD00]" />
             </div>
@@ -264,7 +264,7 @@ const ImageUploadDialog: React.FC<ImageUploadDialogProps> = ({
 
         <div className="flex-1 overflow-y-auto scrollbar-hide">
           {step === "UPLOAD" && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-6 pt-2 space-y-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-4 sm:p-6 pt-2 space-y-4">
               <motion.div
                 layout="position"
                 onDragOver={handleDragOver}
@@ -272,7 +272,7 @@ const ImageUploadDialog: React.FC<ImageUploadDialogProps> = ({
                 onDrop={handleDrop}
                 onClick={() => fileInputRef.current?.click()}
                 className={cn(
-                  "relative border-2 border-dashed rounded-2xl p-6 transition-all duration-300 flex flex-col items-center justify-center gap-2 cursor-pointer outline-none",
+                  "relative border-2 border-dashed rounded-2xl p-4 sm:p-6 transition-all duration-300 flex flex-col items-center justify-center gap-2 cursor-pointer outline-none",
                   isDragging
                     ? "border-[#CAFD00] bg-[#CAFD00]/10 scale-[0.98]"
                     : "border-white/10 bg-white/5 hover:border-[#CAFD00]/40 hover:bg-white/10"
@@ -359,11 +359,11 @@ const ImageUploadDialog: React.FC<ImageUploadDialogProps> = ({
           )}
 
           {step === "FORM" && detectedFood && (
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="p-6 pt-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="p-4 sm:p-6 pt-2 grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               
               <div className="space-y-6">
-                <div className="flex gap-4 p-4 rounded-xl bg-white/5 border border-white/10">
-                  <div className="w-20 h-20 shrink-0 rounded-lg bg-slate-800 flex items-center justify-center overflow-hidden relative">
+                <div className="flex gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl bg-white/5 border border-white/10">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-lg bg-slate-800 flex items-center justify-center overflow-hidden relative">
                     {files[0] ? (
                       <Image src={files[0].preview} alt="food" fill className="object-cover" unoptimized />
                     ) : (
@@ -375,7 +375,7 @@ const ImageUploadDialog: React.FC<ImageUploadDialogProps> = ({
                       <CheckCircle2 className="w-3 h-3" />
                       Độ chính xác: {(detectedFood.confidence * 100).toFixed(1)}%
                     </p>
-                    <p className="text-xl font-bold text-white capitalize leading-tight">{detectedFood.foodName || detectedFood.name || detectedFood.recognizedName}</p>
+                    <p className="text-base sm:text-xl font-bold text-white capitalize leading-tight">{detectedFood.foodName || detectedFood.name || detectedFood.recognizedName}</p>
                     {detectedFood.foodCategory?.name && (
                       <p className="text-xs text-slate-400 mt-1">{detectedFood.foodCategory.name}</p>
                     )}
@@ -430,7 +430,7 @@ const ImageUploadDialog: React.FC<ImageUploadDialogProps> = ({
                 </div>
               </div>
 
-              <div className="space-y-4 bg-slate-900/50 p-5 rounded-2xl border border-white/5">
+              <div className="space-y-4 bg-slate-900/50 p-4 sm:p-5 rounded-2xl border border-white/5">
                 {detectedFood.nutritionProfile?.values && detectedFood.nutritionProfile.values.length > 0 && (
                   <div className="space-y-2">
                     <h4 className="text-sm font-bold text-slate-300 uppercase tracking-widest flex items-center gap-2">
@@ -486,7 +486,7 @@ const ImageUploadDialog: React.FC<ImageUploadDialogProps> = ({
 
         </div>
 
-        <DialogFooter className="m-0 p-6 pt-4 bg-white/2 border-t border-white/5 gap-3 sm:justify-end rounded-b-3xl">
+        <DialogFooter className="m-0 p-4 sm:p-6 pt-4 bg-white/2 border-t border-white/5 gap-2 sm:gap-3 sm:justify-end rounded-b-3xl flex-col sm:flex-row">
           {step !== "LOADING" && (
             <Button
               variant="ghost"
@@ -515,10 +515,10 @@ const ImageUploadDialog: React.FC<ImageUploadDialogProps> = ({
           )}
 
           {step === "FORM" && (
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
                 <Button
                   onClick={() => setIsReportOpen(true)}
-                  className="bg-transparent border border-[#CAFD00]/30 text-[#CAFD00] hover:bg-[#CAFD00]/10 font-bold px-4 rounded-xl h-11 transition-all"
+                  className="bg-transparent border border-[#CAFD00]/30 text-[#CAFD00] hover:bg-[#CAFD00]/10 font-bold px-4 rounded-xl h-11 transition-all text-xs sm:text-sm"
                 >
                   Báo lỗi dự đoán
                 </Button>

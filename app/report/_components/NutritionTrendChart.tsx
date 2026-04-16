@@ -41,9 +41,9 @@ export default function NutritionTrendChart({
 }: NutritionTrendChartProps) {
   return (
     <Card className="h-full flex flex-col rounded-3xl border-0 shadow-none">
-      <CardHeader className="shrink-0 flex flex-row items-center justify-between pb-4">
-        <div className="flex flex-col gap-1">
-          <CardTitle className="text-lg font-bold text-gray-800">
+      <CardHeader className="shrink-0 flex flex-col sm:flex-row sm:items-center justify-between pb-4 gap-3">
+        <div className="flex flex-col gap-0.5 sm:gap-1">
+          <CardTitle className="text-base sm:text-lg font-bold text-gray-800">
             Xu hướng dinh dưỡng
           </CardTitle>
           <CardDescription>
