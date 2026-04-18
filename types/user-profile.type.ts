@@ -3,7 +3,7 @@
  * APIs: GET|POST|PUT /user-profiles
  * ========================================================================== */
 
-import { ActivityLevel } from './enum.type';
+import { ActivityLevel } from "./enum.type";
 
 // ─── Entity ───────────────────────────────────────────────────────────────────
 
@@ -33,9 +33,6 @@ export interface ICreateUserProfileRequest {
 }
 
 export interface IUpdateUserProfileRequest {
-  fullName?: string;
-  avatarUrl?: string;
-  birthOfDate?: string;
   age?: number;
   height?: number;
   weight?: number;

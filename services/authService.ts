@@ -1,6 +1,11 @@
 import publicAxios from "@/lib/publicAxios";
 import privateAxios from "@/lib/privateAxios";
-import { ILoginRequest, IUser, ICreateUserRequest, IChangePasswordRequest } from "@/types/authen.type";
+import {
+  ILoginRequest,
+  IUser,
+  ICreateUserRequest,
+  IChangePasswordRequest,
+} from "@/types/authen.type";
 import { ApiResponse } from "@/types/backend.type";
 
 interface LoginResponse {
@@ -53,17 +58,32 @@ export const authService = {
   },
 
   /**
+   * Cập nhật thông tin người dùng hiện tại (avatar, fullName, email, birthOfDate)
+   * PATCH /users/me — multipart/form-data
+   */
+  updateMe: async (formData: FormData): Promise<ApiResponse<IUser>> => {
+    const res = await privateAxios.patch<ApiResponse<IUser>>(
+      "/users/me",
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+      },
+    );
+    return res as unknown as ApiResponse<IUser>;
+  },
+
+  /**
    * Cập nhật mật khẩu người dùng
    * @param id ID người dùng
    * @param data { oldPassword, newPassword }
    */
   updatePassword: async (
     id: number,
-    data: IChangePasswordRequest
+    data: IChangePasswordRequest,
   ): Promise<ApiResponse<null>> => {
     const res = await privateAxios.patch<ApiResponse<null>>(
       `/users/${id}/password`,
-      data
+      data,
     );
     return res as unknown as ApiResponse<null>;
   },
