@@ -1012,9 +1012,10 @@ export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialog
                         {!isAddingGoal ? (
                           <motion.div
                             key="goal-list"
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -10 }}
+                            initial={{ opacity: 0, x: 15 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -15 }}
+                            transition={{ duration: 0.2, ease: "easeOut" }}
                             className="flex-1 flex flex-col min-h-0 space-y-6"
                           >
                             {/* Current Goal */}
@@ -1165,9 +1166,10 @@ export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialog
                         ) : (
                           <motion.div
                             key="goal-form"
-                            initial={{ opacity: 0, x: 20 }}
+                            initial={{ opacity: 0, x: 15 }}
                             animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
+                            exit={{ opacity: 0, x: -15 }}
+                            transition={{ duration: 0.2, ease: "easeOut" }}
                             className="flex-1 flex flex-col min-h-0"
                           >
                             <div className="flex items-center gap-4 mb-6">
@@ -1347,9 +1349,10 @@ export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialog
                         {!isAddingAllergy ? (
                           <motion.div
                             key="allergy-list"
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -10 }}
+                            initial={{ opacity: 0, x: 15 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -15 }}
+                            transition={{ duration: 0.2, ease: "easeOut" }}
                             className="flex-1 flex flex-col min-h-0"
                           >
                             <div className="flex items-center justify-between mb-6 ml-2">
@@ -1429,9 +1432,10 @@ export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialog
                         ) : (
                           <motion.div
                             key="allergy-form"
-                            initial={{ opacity: 0, x: 20 }}
+                            initial={{ opacity: 0, x: 15 }}
                             animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
+                            exit={{ opacity: 0, x: -15 }}
+                            transition={{ duration: 0.2, ease: "easeOut" }}
                             className="flex-1 flex flex-col min-h-0"
                           >
                             <div className="flex items-center gap-4 mb-8">
