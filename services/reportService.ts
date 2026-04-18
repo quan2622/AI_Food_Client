@@ -63,7 +63,7 @@ export type NutritionTrendItem =
   | NutritionTrendYear;
 
 export type MetricType = "calories" | "protein" | "carbs" | "fat" | "fiber";
-export type MetricPeriod = "week" | "month";
+export type MetricPeriod = "day" | "week" | "month" | "year";
 
 export interface MetricTrendDataPoint {
   label: string;
@@ -99,10 +99,10 @@ export const reportService = {
 
   /**
    * Get metric trend (calories | protein | carbs | fat | fiber)
-   * type: "week" | "month"
+   * type: "day" | "week" | "month" | "year"
    */
   getMetricTrend: async (
-    type: "week" | "month",
+    type: MetricPeriod,
     metric: MetricType,
   ): Promise<ApiResponse<MetricTrendResponse>> => {
     const res = await privateAxios.post<ApiResponse<MetricTrendResponse>>(

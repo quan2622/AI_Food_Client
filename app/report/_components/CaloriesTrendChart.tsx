@@ -28,12 +28,14 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 const periodLabel: Record<MetricPeriod, string> = {
+  day: "Từng bữa ăn hôm nay",
   week: "Từ thứ 2 đến nay",
   month: "Từ đầu tháng đến nay",
+  year: "Từng tháng trong năm",
 };
 
 export default function CaloriesTrendChart() {
-  const [period, setPeriod] = useState<MetricPeriod>("month");
+  const [period, setPeriod] = useState<MetricPeriod>("week");
   const [chartData, setChartData] = useState<MetricTrendDataPoint[]>([]);
   const [summary, setSummary] = useState<MetricTrendResponse["summary"] | null>(
     null,
@@ -93,7 +95,7 @@ export default function CaloriesTrendChart() {
 
         {/* Period toggle */}
         <div className="flex items-center gap-1 bg-gray-100 rounded-xl p-1 w-fit">
-          {(["week", "month"] as MetricPeriod[]).map((p) => (
+          {(["day", "week", "month", "year"] as MetricPeriod[]).map((p) => (
             <button
               key={p}
               onClick={() => setPeriod(p)}
@@ -103,7 +105,13 @@ export default function CaloriesTrendChart() {
                   : "text-gray-400 hover:text-gray-600"
               }`}
             >
-              {p === "week" ? "Tuần" : "Tháng"}
+              {p === "day"
+                ? "Ngày"
+                : p === "week"
+                  ? "Tuần"
+                  : p === "month"
+                    ? "Tháng"
+                    : "Năm"}
             </button>
           ))}
         </div>
@@ -114,6 +122,18 @@ export default function CaloriesTrendChart() {
         {loading && (
           <div className="absolute inset-0 flex items-center justify-center bg-white/60 z-10 backdrop-blur-sm rounded-2xl">
             <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-[#9FD923]" />
+          </div>
+        )}
+
+        {/* Empty state */}
+        {!loading && chartData.length === 0 && (
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 text-center px-6">
+            <p className="text-sm font-semibold text-gray-500">
+              Chưa có dữ liệu xu hướng calo
+            </p>
+            <p className="text-xs text-gray-400">
+              Hãy ghi nhận bữa ăn để theo dõi lượng calo của bạn!
+            </p>
           </div>
         )}
 
@@ -145,7 +165,7 @@ export default function CaloriesTrendChart() {
           <AreaChart
             key={period}
             data={chartData}
-            margin={{ top: 20, right: 10, left: 0, bottom: 0 }}
+            margin={{ top: 20, right: 40, left: 0, bottom: 0 }}
           >
             <defs>
               <linearGradient id="colorCalories" x1="0" y1="0" x2="0" y2="1">
@@ -173,7 +193,23 @@ export default function CaloriesTrendChart() {
               unit=" kcal"
               width={45}
             />
-            <ChartTooltip content={<ChartTooltipContent />} />
+            <ChartTooltip
+              content={({ active, payload, label }) => {
+                if (!active || !payload?.length) return null;
+                return (
+                  <div className="grid min-w-[8rem] gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl">
+                    <div className="font-medium">{label}</div>
+                    <div className="flex items-center gap-2">
+                      <span className="h-2.5 w-2.5 shrink-0 rounded-[2px] bg-[#9fd923]" />
+                      <span className="flex-1 text-muted-foreground">Calo</span>
+                      <span className="font-mono font-medium tabular-nums">
+                        {Number(payload[0].value).toFixed(1)} kcal
+                      </span>
+                    </div>
+                  </div>
+                );
+              }}
+            />
             <Area
               type="monotone"
               dataKey="value"
