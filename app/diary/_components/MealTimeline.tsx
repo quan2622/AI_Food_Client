@@ -1,9 +1,14 @@
 "use client";
 
 import { Flame, Droplets, Wheat, Beef } from "lucide-react";
-import React from "react";
-import { Meal } from "@/services/dailyLogService";
+import React, { useState } from "react";
+import {
+  Meal,
+  MealItemDetail,
+  dailyLogService,
+} from "@/services/dailyLogService";
 import emptyFood from "@/assets/daily-logs/no_data_dailylog_v1.png";
+import { MealItemDetailDialog } from "./MealItemDetailDialog";
 
 // Using placeholder image URLs since local assets are unavailable
 const fallbackImage =
@@ -49,7 +54,26 @@ interface MealTimelineProps {
 }
 
 const MealTimeline = ({ meals = [] }: MealTimelineProps) => {
-  const hasAnyMealItems = meals && meals.some(meal => meal.mealItems && meal.mealItems.length > 0);
+  const [selectedItem, setSelectedItem] = useState<MealItemDetail | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [loadingId, setLoadingId] = useState<number | null>(null);
+
+  const handleItemClick = async (itemId: number) => {
+    setLoadingId(itemId);
+    setSelectedItem(null);
+    setDialogOpen(true);
+    try {
+      const res = await dailyLogService.getMealItemById(itemId);
+      setSelectedItem(res.data ?? null);
+    } catch {
+      setDialogOpen(false);
+    } finally {
+      setLoadingId(null);
+    }
+  };
+
+  const hasAnyMealItems =
+    meals && meals.some((meal) => meal.mealItems && meal.mealItems.length > 0);
 
   if (!hasAnyMealItems) {
     return (
@@ -85,107 +109,120 @@ const MealTimeline = ({ meals = [] }: MealTimelineProps) => {
   }
 
   return (
-    <div className="px-2 sm:px-4 md:px-6 pb-8 space-y-6 md:space-y-8">
-      {meals.map((meal) => {
-        const details = getMealDetails(meal.mealType);
+    <>
+      <div className="px-2 sm:px-4 md:px-6 pb-8 space-y-6 md:space-y-8">
+        {meals.map((meal) => {
+          const details = getMealDetails(meal.mealType);
 
-        return (
-          <div key={meal.id}>
-            {/* Group header */}
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-xl">{details.emoji}</span>
-              <h3 className="text-lg font-bold text-foreground">
-                {details.label}
-              </h3>
-              <div className="flex-1 h-px bg-border ml-2 opacity-50" />
-            </div>
+          return (
+            <div key={meal.id}>
+              {/* Group header */}
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-xl">{details.emoji}</span>
+                <h3 className="text-lg font-bold text-foreground">
+                  {details.label}
+                </h3>
+                <div className="flex-1 h-px bg-border ml-2 opacity-50" />
+              </div>
 
-            {/* Timeline */}
-            <div className="relative ml-[40px] sm:ml-[52px]">
-              {/* Vertical line */}
-              <div className="absolute left-0 top-4 bottom-4 w-px bg-border/60" />
+              {/* Timeline */}
+              <div className="relative ml-[40px] sm:ml-[52px]">
+                {/* Vertical line */}
+                <div className="absolute left-0 top-4 bottom-4 w-px bg-border/60" />
 
-              <div className="space-y-6">
-                {(meal.mealItems || []).map((item, idx) => {
-                  const dt = new Date(item.createdAt || meal.mealDateTime);
-                  const time = `${dt.getHours().toString().padStart(2, "0")}:${dt.getMinutes().toString().padStart(2, "0")}`;
+                <div className="space-y-6">
+                  {(meal.mealItems || []).map((item, idx) => {
+                    const dt = new Date(item.createdAt || meal.mealDateTime);
+                    const time = `${dt.getHours().toString().padStart(2, "0")}:${dt.getMinutes().toString().padStart(2, "0")}`;
 
-                  return (
-                    <div
-                      key={item.id || idx}
-                      className="flex items-start gap-0"
-                    >
-                      {/* Time label - left of timeline */}
-                      <span className="text-xs font-black text-[#9FD923] w-[40px] sm:w-[52px] -ml-[40px] sm:-ml-[52px] text-right pr-2 sm:pr-3 pt-4 flex-shrink-0">
-                        {time}
-                      </span>
+                    return (
+                      <div
+                        key={item.id || idx}
+                        className="flex items-start gap-0"
+                      >
+                        {/* Time label - left of timeline */}
+                        <span className="text-xs font-black text-[#9FD923] w-[40px] sm:w-[52px] -ml-[40px] sm:-ml-[52px] text-right pr-2 sm:pr-3 pt-4 flex-shrink-0">
+                          {time}
+                        </span>
 
-                      {/* Dot on timeline */}
-                      <div className="relative z-10 flex-shrink-0 mt-4.5 -ml-[5px]">
-                        <div className="w-2.5 h-2.5 rounded-full bg-[#9FD923] ring-4 ring-background shadow-xs" />
-                      </div>
-
-                      {/* Meal card */}
-                      <div className="flex-1 ml-3 sm:ml-5 bg-white border border-border/60 rounded-xl overflow-hidden hover:shadow-md transition-all duration-300 hover:border-[#9FD923]/30 cursor-pointer group hover:-translate-y-0.5 flex items-stretch gap-2 sm:gap-3 p-1.5 sm:p-2">
-                        {/* Image */}
-                        <div className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 overflow-hidden relative rounded-lg">
-                          <img
-                            src={item.food?.imageUrl || fallbackImage}
-                            alt={item.food?.foodName || "Food Image"}
-                            loading="lazy"
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
-                          />
+                        {/* Dot on timeline */}
+                        <div className="relative z-10 flex-shrink-0 mt-4.5 -ml-[5px]">
+                          <div className="w-2.5 h-2.5 rounded-full bg-[#9FD923] ring-4 ring-background shadow-xs" />
                         </div>
 
-                        {/* Info */}
-                        <div className="flex-1 min-w-0 flex flex-col justify-center">
-                          <h4 className="text-sm font-bold text-foreground mb-1.5 truncate">
-                            {item.food?.foodName || "Unknown Meal"}
-                            {item.grams ? (
-                              <span className="text-xs text-muted-foreground ml-1">
-                                ({item.grams}g)
-                              </span>
-                            ) : null}
-                          </h4>
+                        {/* Meal card */}
+                        <div
+                          onClick={() => handleItemClick(item.id)}
+                          className="flex-1 ml-3 sm:ml-5 bg-white border border-border/60 rounded-xl overflow-hidden hover:shadow-md transition-all duration-300 hover:border-[#9FD923]/30 cursor-pointer group hover:-translate-y-0.5 flex items-stretch gap-2 sm:gap-3 p-1.5 sm:p-2"
+                        >
+                          {/* Image */}
+                          <div className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 overflow-hidden relative rounded-lg">
+                            <img
+                              src={item.food?.imageUrl || fallbackImage}
+                              alt={item.food?.foodName || "Food Image"}
+                              loading="lazy"
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                            />
+                          </div>
 
-                          {/* Nutrition stats */}
-                          <div className="flex items-center gap-1 flex-wrap">
-                            <NutritionBadge
-                              icon={Flame}
-                              value={item.calories}
-                              unit="kcal"
-                              color="text-orange-500"
-                            />
-                            <NutritionBadge
-                              icon={Beef}
-                              value={item.protein}
-                              unit="g"
-                              color="text-red-500"
-                            />
-                            <NutritionBadge
-                              icon={Wheat}
-                              value={item.carbs}
-                              unit="g"
-                              color="text-amber-500"
-                            />
-                            <NutritionBadge
-                              icon={Droplets}
-                              value={item.fat}
-                              unit="g"
-                              color="text-blue-500"
-                            />
+                          {/* Info */}
+                          <div className="flex-1 min-w-0 flex flex-col justify-center">
+                            <h4 className="text-sm font-bold text-foreground mb-1.5 truncate">
+                              {item.food?.foodName || "Unknown Meal"}
+                              {item.grams ? (
+                                <span className="text-xs text-muted-foreground ml-1">
+                                  ({item.grams}g)
+                                </span>
+                              ) : null}
+                            </h4>
+
+                            {/* Nutrition stats */}
+                            <div className="flex items-center gap-1 flex-wrap">
+                              <NutritionBadge
+                                icon={Flame}
+                                value={item.calories}
+                                unit="kcal"
+                                color="text-orange-500"
+                              />
+                              <NutritionBadge
+                                icon={Beef}
+                                value={item.protein}
+                                unit="g"
+                                color="text-red-500"
+                              />
+                              <NutritionBadge
+                                icon={Wheat}
+                                value={item.carbs}
+                                unit="g"
+                                color="text-amber-500"
+                              />
+                              <NutritionBadge
+                                icon={Droplets}
+                                value={item.fat}
+                                unit="g"
+                                color="text-blue-500"
+                              />
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
             </div>
-          </div>
-        );
-      })}
-    </div>
+          );
+        })}
+      </div>
+
+      {/* Meal item detail dialog */}
+      <MealItemDetailDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        mealItem={selectedItem}
+        loading={loadingId !== null}
+      />
+    </>
   );
 };
 

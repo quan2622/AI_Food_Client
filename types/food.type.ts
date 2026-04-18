@@ -44,6 +44,25 @@ export interface IFood {
   foodCategory?: IFoodCategory | null;
   nutritionProfile?: IFoodNutritionProfile | null;
   foodIngredients?: IFoodIngredient[];
+  nutritionPer100g?: {
+    calories?: number;
+    protein?: number;
+    carbs?: number;
+    fat?: number;
+    fiber?: number;
+  } | null;
+  ingredients?: Array<{
+    id?: number;
+    ingredientId?: number;
+    quantityGrams?: number;
+    ingredient?: {
+      id?: number;
+      name?: string;
+      description?: string;
+      imageUrl?: string;
+      nutritionPer100g?: any;
+    };
+  }>;
   createdAt: string;
   updatedAt: string;
 }

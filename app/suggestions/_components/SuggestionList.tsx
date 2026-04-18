@@ -80,11 +80,6 @@ export function SuggestionList({
                     alt={item.name}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover/item:scale-110"
                   />
-                  <div className="absolute inset-0 bg-black/20 opacity-0 group-hover/item:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                    <div className="bg-[#CAFD00] text-[#0F172A] p-3 rounded-full shadow-lg">
-                      <Eye className="w-5 h-5 font-black" />
-                    </div>
-                  </div>
                 </div>
                 <div className="p-3 sm:p-4 flex flex-col flex-1 justify-between bg-white relative z-10">
                   <h3 className="text-xs sm:text-sm font-black text-[#0F172A] mb-2 sm:mb-3 line-clamp-2 leading-tight group-hover/item:text-[#86a800] transition-colors">
@@ -96,9 +91,6 @@ export function SuggestionList({
                       <Flame className="w-3.5 h-3.5" />
                       {item.cals} kcal
                     </div>
-                    <span className="text-[10px] font-bold text-slate-500">
-                      Xem chi tiết
-                    </span>
                   </div>
                 </div>
               </button>

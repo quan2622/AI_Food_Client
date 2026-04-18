@@ -4,7 +4,7 @@ import { IFood } from "@/types/food.type";
 
 export const foodService = {
   getFoodById: async (id: number): Promise<ApiResponse<IFood>> => {
-    const res = await privateAxios.get<ApiResponse<IFood>>(`/foods/${id}`);
+    const res = await privateAxios.get<ApiResponse<IFood>>(`/foods/${id}/detail`);
     return res as unknown as ApiResponse<IFood>;
   },
 
