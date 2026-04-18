@@ -33,9 +33,10 @@ interface NutritionPieChartProps {
 }
 
 const periodLabel: Record<TrendOption, string> = {
-  day: "các ngày trong tuần",
-  week: "các tuần",
-  month: "các tháng",
+  day: "các bữa ăn hôm nay",
+  week: "các ngày trong tuần",
+  month: "các ngày trong tháng",
+  year: "các tháng trong năm",
 };
 
 const formatWholeNumber = (value: number) => Math.round(value).toString();
