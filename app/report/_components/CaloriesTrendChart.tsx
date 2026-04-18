@@ -24,7 +24,7 @@ import {
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 const chartConfig = {
-  value: { label: "Calories", color: "#9fd923" },
+  value: { label: "Calo", color: "#9fd923" },
 } satisfies ChartConfig;
 
 const periodLabel: Record<MetricPeriod, string> = {
@@ -36,7 +36,7 @@ export default function CaloriesTrendChart() {
   const [period, setPeriod] = useState<MetricPeriod>("month");
   const [chartData, setChartData] = useState<MetricTrendDataPoint[]>([]);
   const [summary, setSummary] = useState<MetricTrendResponse["summary"] | null>(
-    null
+    null,
   );
   const [loading, setLoading] = useState(false);
 
@@ -71,22 +71,22 @@ export default function CaloriesTrendChart() {
     summary?.trendDirection === "up"
       ? TrendingUp
       : summary?.trendDirection === "down"
-      ? TrendingDown
-      : Minus;
+        ? TrendingDown
+        : Minus;
 
   const trendColor =
     summary?.trendDirection === "up"
       ? "text-[#9fd923]"
       : summary?.trendDirection === "down"
-      ? "text-red-500"
-      : "text-gray-400";
+        ? "text-red-500"
+        : "text-gray-400";
 
   return (
     <Card className="rounded-3xl border-0 shadow-sm bg-white overflow-hidden h-full flex flex-col">
       <CardHeader className="shrink-0 flex flex-col sm:flex-row sm:items-center justify-between pb-4 gap-3">
         <div>
           <CardTitle className="text-base sm:text-lg font-bold text-gray-800">
-            Xu hướng Calories
+            Xu hướng calo
           </CardTitle>
           <CardDescription>{periodLabel[period]}</CardDescription>
         </div>
@@ -138,7 +138,10 @@ export default function CaloriesTrendChart() {
           </div>
         )}
 
-        <ChartContainer config={chartConfig} className="h-[calc(100%-40px)] w-full">
+        <ChartContainer
+          config={chartConfig}
+          className="h-[calc(100%-40px)] w-full"
+        >
           <AreaChart
             key={period}
             data={chartData}

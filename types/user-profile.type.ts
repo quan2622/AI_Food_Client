@@ -33,9 +33,12 @@ export interface ICreateUserProfileRequest {
 }
 
 export interface IUpdateUserProfileRequest {
+  fullName?: string;
+  avatarUrl?: string;
+  birthOfDate?: string;
   age?: number;
   height?: number;
   weight?: number;
   gender?: string;
-  activityLevel?: ActivityLevel;
+  activityLevel?: ActivityLevel | string;
 }

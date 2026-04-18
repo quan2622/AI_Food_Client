@@ -3,7 +3,7 @@
  * APIs: /foods | /food-categories
  * ========================================================================== */
 
-import { IFoodNutritionProfile } from './nutrient.type';
+import { IFoodNutritionProfile } from "./nutrient.type";
 
 // ─── Entities ─────────────────────────────────────────────────────────────────
 
@@ -18,14 +18,32 @@ export interface IFoodCategory {
   updatedAt: string;
 }
 
+export interface IFoodIngredient {
+  id?: number;
+  ingredientId?: number;
+  quantityGrams: number;
+  ingredient?: {
+    id?: number;
+    ingredientName: string;
+    ingredientAllergens?: Array<{
+      allergen?: {
+        name: string;
+        imageUrl?: string | null;
+      } | null;
+    }>;
+  } | null;
+}
+
 export interface IFood {
   id: number;
   foodName: string;
   description?: string | null;
   imageUrl?: string | null;
   categoryId?: number | null;
+  defaultServingGrams?: number | null;
   foodCategory?: IFoodCategory | null;
   nutritionProfile?: IFoodNutritionProfile | null;
+  foodIngredients?: IFoodIngredient[];
   createdAt: string;
   updatedAt: string;
 }

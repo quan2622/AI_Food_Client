@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   User,
@@ -28,6 +28,7 @@ import {
 import { cn, formatDate, formatNumber } from "@/lib/utils";
 import { useAuthStore } from "@/stores/authStore";
 import { authService } from "@/services/authService";
+import { userProfileService } from "@/services/userProfileService";
 import { allergenService } from "@/services/allergenService";
 import { nutritionGoalService } from "@/services/nutritionGoalService";
 import { SeverityType, GoalType, NutritionGoalStatus } from "@/types/enum.type";
@@ -41,19 +42,107 @@ import {
   DialogTrigger,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { format } from "date-fns";
+import { vi } from "date-fns/locale";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 interface ProfileDialogProps {
   trigger?: React.ReactNode;
   defaultTab?: string;
 }
 
+const normalizeActivityLevel = (val: string | undefined): string => {
+  if (!val) return "SEDENTARY";
+  if (val === "ACT_SEDENTARY" || val === "SEDENTARY") return "SEDENTARY";
+  if (val === "ACT_LIGHT" || val === "LIGHTLY_ACTIVE") return "LIGHTLY_ACTIVE";
+  if (val === "ACT_MODERATE" || val === "MODERATELY_ACTIVE") return "MODERATELY_ACTIVE";
+  if (val === "ACT_VERY" || val === "ACT_ACTIVE" || val === "VERY_ACTIVE") return "VERY_ACTIVE";
+  if (val === "ACT_SUPER" || val === "ACT_VERY_ACTIVE" || val === "SUPER_ACTIVE") return "SUPER_ACTIVE";
+  return val.replace("ACT_", ""); // Fallback
+};
+
+const denormalizeActivityLevel = (val: string | undefined): string => {
+  if (!val) return "ACT_SEDENTARY";
+  if (val === "SEDENTARY") return "ACT_SEDENTARY";
+  if (val === "LIGHTLY_ACTIVE") return "ACT_LIGHT";
+  if (val === "MODERATELY_ACTIVE") return "ACT_MODERATE";
+  if (val === "VERY_ACTIVE") return "ACT_VERY";
+  if (val === "SUPER_ACTIVE") return "ACT_SUPER";
+  return val;
+};
+
 export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialogProps) => {
-  const { user, logoutAction } = useAuthStore();
+  const { user, logoutAction, setUser } = useAuthStore();
   const router = useRouter();
   const [profileTab, setProfileTab] = useState(defaultTab);
   const [isEditing, setIsEditing] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+
+  // Profile Form State
+  const [profileForm, setProfileForm] = useState({
+    fullName: user?.fullName || "",
+    dateOfBirth: user?.dateOfBirth ? user.dateOfBirth.split("T")[0] : "",
+    weight: user?.userProfile?.weight || 0,
+    height: user?.userProfile?.height || 0,
+    gender: user?.userProfile?.gender || "MALE",
+    activityLevel: normalizeActivityLevel(user?.userProfile?.activityLevel),
+  });
+
+  const handleStartEditing = () => {
+    setProfileForm({
+      fullName: user?.fullName || "",
+      dateOfBirth: user?.dateOfBirth ? user.dateOfBirth.split("T")[0] : "",
+      weight: user?.userProfile?.weight || 0,
+      height: user?.userProfile?.height || 0,
+      gender: user?.userProfile?.gender || "MALE",
+      activityLevel: normalizeActivityLevel(user?.userProfile?.activityLevel),
+    });
+    setIsEditing(true);
+  };
+
+  const handleProfileFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setProfileForm(prev => ({
+      ...prev,
+      [name]: (name === "weight" || name === "height") ? Number(value) : value
+    }));
+  };
+
+  const currentAge = useMemo(() => {
+    const dob = isEditing ? profileForm.dateOfBirth : (user?.dateOfBirth?.split("T")[0] || "");
+    if (!dob) return 0;
+    const birthDate = new Date(dob);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  }, [profileForm.dateOfBirth, user?.dateOfBirth, isEditing]);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      toast.info("Tính năng tải ảnh lên đang được phát triển.");
+      // Logic for upload would go here
+    }
+  };
 
   // Security Form State
   const [oldPassword, setOldPassword] = useState("");
@@ -367,11 +456,21 @@ export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialog
 
   const getGoalTypeLabel = (type: GoalType) => {
     switch (type) {
-      case GoalType.GOAL_LOSS: return "Weight Loss";
-      case GoalType.GOAL_GAIN: return "Weight Gain";
-      case GoalType.GOAL_MAINTAIN: return "Maintain";
-      case GoalType.GOAL_STRICT: return "Strict Diet";
+      case GoalType.GOAL_LOSS: return "Giảm cân";
+      case GoalType.GOAL_GAIN: return "Tăng cân / cơ";
+      case GoalType.GOAL_MAINTAIN: return "Duy trì cân nặng";
+      case GoalType.GOAL_STRICT: return "Ăn kiêng nghiêm ngặt";
       default: return type;
+    }
+  };
+
+  const getGoalStatusLabel = (status: NutritionGoalStatus) => {
+    switch (status) {
+      case NutritionGoalStatus.NUTR_GOAL_ONGOING: return "Đang thực hiện";
+      case NutritionGoalStatus.NUTR_GOAL_COMPLETED: return "Đã hoàn thành";
+      case NutritionGoalStatus.NUTR_GOAL_PAUSED: return "Tạm dừng";
+      case NutritionGoalStatus.NUTR_GOAL_FAILED: return "Thất bại";
+      default: return status.replace("NUTR_GOAL_", "");
     }
   };
 
@@ -390,20 +489,76 @@ export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialog
     }
   };
 
-  const name = user?.fullName || "Guest User";
+  const name = user?.fullName || "Người dùng khách";
   const role = user?.isAdmin ? "Admin" : "Member";
   const email = user?.email || "N/A";
-  const birthday = formatDate(user?.dateOfBirth);
+  const birthday = user?.dateOfBirth ? format(new Date(user.dateOfBirth), "dd/MM/yyyy") : "N/A";
 
   const profile = user?.userProfile;
   const weight = profile?.weight || 0;
   const height = profile?.height || 0;
   const age = profile?.age || 0;
-  const gender = profile?.gender || "N/A";
-  const activity = profile?.activityLevel || "N/A";
+  
+  const genderMap: Record<string, string> = {
+    MALE: "Nam",
+    FEMALE: "Nữ",
+    UNDEFINED: "Khác",
+    "N/A": "Chưa cập nhật",
+  };
+  const gender = genderMap[profile?.gender || "N/A"] || (profile?.gender || "Chưa cập nhật");
+
+  const activityMap: Record<string, string> = {
+    SEDENTARY: "Ít vận động",
+    LIGHTLY_ACTIVE: "Vận động nhẹ",
+    MODERATELY_ACTIVE: "Vận động vừa",
+    VERY_ACTIVE: "Năng động",
+    SUPER_ACTIVE: "Cường độ cao",
+    ACT_SEDENTARY: "Ít vận động",
+    ACT_LIGHT: "Vận động nhẹ",
+    ACT_MODERATE: "Vận động vừa",
+    ACT_ACTIVE: "Năng động",
+    ACT_VERY_ACTIVE: "Cường độ cao",
+    "N/A": "Chưa cập nhật",
+  };
+  const activity = activityMap[profile?.activityLevel || "N/A"] || (profile?.activityLevel || "Chưa cập nhật");
+
   const bmi = profile?.bmi || 0;
   const bmr = profile?.bmr || 0;
   const tdee = profile?.tdee || 0;
+
+  const handleSaveProfile = async () => {
+    setIsUpdatingProfile(true);
+    try {
+      const updateData = {
+        fullName: profileForm.fullName,
+        birthOfDate: profileForm.dateOfBirth ? `${profileForm.dateOfBirth}T00:00:00.000Z` : undefined,
+        weight: profileForm.weight,
+        height: profileForm.height,
+        gender: profileForm.gender,
+        activityLevel: denormalizeActivityLevel(profileForm.activityLevel),
+      };
+      
+      const res = await userProfileService.updateUserProfile(updateData);
+      
+      if (res.metadata?.EC === 0 || !res.metadata) {
+        // Refetch user to get the latest calculated data (bmi, bmr, etc.)
+        const meRes = await authService.getMe();
+        if (meRes.metadata?.EC === 0 && meRes.data) {
+          setUser(meRes.data);
+        }
+        toast.success("Cập nhật thông tin thành công!");
+        setIsEditing(false);
+      } else {
+        toast.error(res.metadata?.message || "Cập nhật thất bại.");
+      }
+    } catch (error: any) {
+      toast.error(error?.response?.data?.metadata?.message || "Cập nhật thất bại.");
+    } finally {
+      setIsUpdatingProfile(false);
+    }
+  };
+
+  const roleLabel = user?.role === "MEMBER" ? "THÀNH VIÊN" : (user?.role || "NGƯỜI DÙNG");
 
   return (
     <Dialog
@@ -451,22 +606,22 @@ export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialog
                 <div className="md:hidden absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[#F2F2F2]/80 to-transparent pointer-events-none z-10" />
                 
                 <div className="hidden md:block mb-8 px-2">
-                  <h2 className="text-[20px] font-bold text-[#0D0D0D]">Settings</h2>
+                  <h2 className="text-[20px] font-bold text-[#0D0D0D]">Cài đặt</h2>
                   <p className="text-[12px] text-[#0D0D0D]/60 font-medium uppercase tracking-widest mt-1">
-                    User Management
+                    Quản lý tài khoản
                   </p>
                 </div>
 
                 <div className="flex md:flex-col gap-1 md:gap-2 flex-nowrap w-full md:w-auto">
                 {[
-                  { id: "Profile", icon: User, label: "Profile" },
-                  { id: "Goals", icon: Target, label: "My Goals" },
-                  { id: "Allergies", icon: AlertTriangle, label: "Allergies" },
-                  { id: "Security", icon: ShieldCheck, label: "Security" },
+                  { id: "Profile", icon: User, label: "Hồ sơ" },
+                  { id: "Goals", icon: Target, label: "Mục tiêu" },
+                  { id: "Allergies", icon: AlertTriangle, label: "Dị ứng" },
+                  { id: "Security", icon: ShieldCheck, label: "Bảo mật" },
                   {
                     id: "Logout",
                     icon: LogOut,
-                    label: "Sign Out",
+                    label: "Đăng xuất",
                     variant: "danger",
                   },
                 ].map((tab) => (
@@ -498,7 +653,7 @@ export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialog
 
                 <div className="hidden md:block mt-auto p-4 bg-[#D9F2A2]/40 rounded-2xl border border-[#9FD923]/20">
                   <p className="text-[11px] text-[#0D0D0D]/70 font-medium leading-relaxed">
-                    Need help with your account? Contact support.
+                    Bạn cần hỗ trợ? Liên hệ bộ phận CSKH.
                   </p>
                 </div>
               </div>
@@ -526,22 +681,46 @@ export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialog
                         <div className="flex items-center gap-5 p-2 bg-[#D9F2A2]/10 rounded-[2rem] border border-[#9FD923]/10">
                           <div className="relative shrink-0">
                             <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center border-2 border-[#9FD923]/20 shadow-sm overflow-hidden">
-                              <User className="w-8 h-8 text-[#9FD923]" />
+                              {user?.avatarUrl ? (
+                                <img src={user.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                              ) : (
+                                <User className="w-8 h-8 text-[#9FD923]" />
+                              )}
                             </div>
-                            <button className="absolute -bottom-1 -right-1 p-1.5 bg-[#0D0D0D] text-white rounded-lg shadow-lg border border-white/10">
+                            <button 
+                              onClick={() => fileInputRef.current?.click()}
+                              className="absolute -bottom-1 -right-1 p-1.5 bg-[#0D0D0D] text-white rounded-lg shadow-lg border border-white/10 hover:bg-[#9FD923] hover:text-[#0D0D0D] transition-all"
+                            >
                               <Camera className="w-3 h-3" />
                             </button>
+                            <input 
+                              type="file" 
+                              ref={fileInputRef} 
+                              onChange={handleAvatarChange} 
+                              className="hidden" 
+                              accept="image/*" 
+                            />
                           </div>
                           <div className="flex-1">
-                            <h3 className="text-[20px] font-black text-[#0D0D0D]">
-                              {name}
-                            </h3>
+                            {isEditing ? (
+                              <input
+                                name="fullName"
+                                value={profileForm.fullName}
+                                onChange={handleProfileFormChange}
+                                className="text-[20px] font-black text-[#0D0D0D] bg-transparent border-b-2 border-[#9FD923] outline-none w-full"
+                                placeholder="Nhập tên của bạn..."
+                              />
+                            ) : (
+                              <h3 className="text-[20px] font-black text-[#0D0D0D]">
+                                {user?.fullName || "Người dùng khách"}
+                              </h3>
+                            )}
                             <div className="flex items-center gap-2 mt-0.5">
                               <span className="px-1.5 py-0.5 rounded bg-[#9FD923] text-[#0D0D0D] text-[10px] font-black uppercase tracking-wider">
-                                {role}
+                                {roleLabel}
                               </span>
                               <span className="text-[#0D0D0D]/30 font-bold text-[11px]">
-                                {user?.status ? "Active Member" : "Inactive Member"}
+                                {user?.status ? "Thành viên hoạt động" : "Thành viên chưa kích hoạt"}
                               </span>
                             </div>
                           </div>
@@ -552,7 +731,7 @@ export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialog
                           {/* Box 1: Account Info */}
                           <div className="flex-1 p-4 bg-[#F2F2F2]/50 rounded-3xl border border-[#0D0D0D]/5 flex flex-col gap-3">
                             <h4 className="text-[10px] font-black text-[#0D0D0D]/20 uppercase tracking-widest pl-1">
-                              Personal Record
+                              Thông tin cá nhân
                             </h4>
                             {[
                               {
@@ -562,10 +741,11 @@ export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialog
                                 color: "text-[#9FD923]",
                               },
                               {
-                                label: "Birthday",
-                                value: birthday,
+                                label: "Ngày sinh",
+                                value: isEditing ? profileForm.dateOfBirth : birthday,
                                 icon: Calendar,
                                 color: "text-blue-500",
+                                type: "date"
                               },
                             ].map((field, i) => (
                               <div
@@ -583,10 +763,47 @@ export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialog
                                   </span>
                                   <div className="h-4 flex items-center">
                                     {isEditing ? (
-                                      <input
-                                        className="w-full bg-transparent text-[12px] font-bold text-[#0D0D0D] outline-none border-b border-[#9FD923]/30 focus:border-[#9FD923] p-0"
-                                        defaultValue={field.value}
-                                      />
+                                      field.type === "date" ? (
+                                        <Popover>
+                                          <PopoverTrigger asChild>
+                                            <button
+                                              className={cn(
+                                                "w-full flex items-center justify-between bg-transparent text-[12px] font-bold text-[#0D0D0D] outline-none border-b border-[#9FD923]/30 focus:border-[#9FD923] pb-0.5",
+                                                !profileForm.dateOfBirth && "text-[#0D0D0D]/40"
+                                              )}
+                                            >
+                                              {profileForm.dateOfBirth ? (
+                                                format(new Date(profileForm.dateOfBirth), "dd/MM/yyyy")
+                                              ) : (
+                                                <span>Chọn ngày sinh</span>
+                                              )}
+                                            </button>
+                                          </PopoverTrigger>
+                                          <PopoverContent className="w-auto p-0" align="start">
+                                            <CalendarComponent
+                                              mode="single"
+                                              selected={profileForm.dateOfBirth ? new Date(profileForm.dateOfBirth) : undefined}
+                                              onSelect={(date) => {
+                                                if (date) {
+                                                  // Format as YYYY-MM-DD
+                                                  const d = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+                                                  const formattedDate = d.toISOString().split("T")[0];
+                                                  setProfileForm(prev => ({ ...prev, dateOfBirth: formattedDate }));
+                                                }
+                                              }}
+                                              initialFocus
+                                              captionLayout="dropdown"
+                                              startMonth={new Date(1900, 0)}
+                                              endMonth={new Date()}
+                                            />
+                                          </PopoverContent>
+                                        </Popover>
+                                      ) : (
+                                        <input
+                                          className="w-full bg-transparent text-[12px] font-bold text-[#0D0D0D] outline-none border-b border-[#9FD923]/30 focus:border-[#9FD923] p-0"
+                                          defaultValue={field.value}
+                                        />
+                                      )
                                     ) : (
                                       <p className="text-[12px] font-bold text-[#0D0D0D] leading-none">
                                         {field.value}
@@ -601,14 +818,21 @@ export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialog
                           {/* Box 2: Body Metrics List */}
                           <div className="flex-[1.2] p-4 bg-white rounded-3xl border border-[#0D0D0D]/5 flex flex-col gap-2 shadow-sm">
                             <h4 className="text-[10px] font-black text-[#0D0D0D]/20 uppercase tracking-widest pl-1 mb-1">
-                              Body Metrics
+                              Chỉ số cơ thể
                             </h4>
                             {[
-                              { label: "Weight", value: weight.toString(), unit: "kg", icon: Scale },
-                              { label: "Height", value: height.toString(), unit: "cm", icon: Activity },
-                              { label: "Gender", value: gender, unit: "", icon: User, type: "gender" },
-                              { label: "Activity", value: activity, unit: "", icon: Dna, type: "select" },
-                              { label: "Age", value: age.toString(), unit: "y", icon: User },
+                              { label: "Cân nặng", value: profileForm.weight.toString(), unit: "kg", icon: Scale },
+                              { label: "Chiều cao", value: profileForm.height.toString(), unit: "cm", icon: Activity },
+                              { label: "Giới tính", value: gender, rawValue: profileForm.gender, unit: "", icon: User, type: "gender" },
+                              { 
+                                label: "Vận động", 
+                                value: activity, 
+                                rawValue: isEditing ? profileForm.activityLevel : normalizeActivityLevel(profile?.activityLevel), 
+                                unit: "", 
+                                icon: Dna, 
+                                type: "select" 
+                              },
+                              { label: "Tuổi", value: currentAge.toString(), unit: "y", icon: User, type: "readonly" },
                             ].map((field, i) => (
                               <div
                                 key={i}
@@ -623,30 +847,51 @@ export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialog
                                 <div className="w-24 text-right">
                                   <div className="h-5 flex items-center justify-end">
                                     {isEditing ? (
-                                      field.type === "select" ? (
-                                        <select
-                                          className="bg-transparent text-[12px] font-bold text-[#9FD923] outline-none text-right cursor-pointer p-0 m-0 h-full border-none appearance-none"
-                                          defaultValue={field.value}
+                                      field.type === "readonly" ? (
+                                        <p className="text-[12px] font-black text-[#0D0D0D]/40 leading-none">
+                                          {field.value}
+                                          <span className="text-[10px] ml-1 uppercase font-black">
+                                            {field.unit}
+                                          </span>
+                                        </p>
+                                      ) : field.type === "select" ? (
+                                        <Select
+                                          value={profileForm.activityLevel}
+                                          onValueChange={(val) => setProfileForm(prev => ({ ...prev, activityLevel: val }))}
                                         >
-                                          <option value="SEDENTARY">SEDENTARY</option>
-                                          <option value="LIGHTLY_ACTIVE">LIGHTLY_ACTIVE</option>
-                                          <option value="MODERATELY_ACTIVE">MODERATELY_ACTIVE</option>
-                                          <option value="VERY_ACTIVE">VERY_ACTIVE</option>
-                                          <option value="EXTRA_ACTIVE">EXTRA_ACTIVE</option>
-                                        </select>
+                                          <SelectTrigger className="h-full border-none bg-transparent p-0 text-[12px] font-bold text-[#9FD923] focus:ring-0 focus:ring-offset-0 justify-end gap-1">
+                                            <SelectValue placeholder="Chọn" />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            <SelectItem value="SEDENTARY">Ít vận động</SelectItem>
+                                            <SelectItem value="LIGHTLY_ACTIVE">Vận động nhẹ</SelectItem>
+                                            <SelectItem value="MODERATELY_ACTIVE">Vận động vừa</SelectItem>
+                                            <SelectItem value="VERY_ACTIVE">Năng động</SelectItem>
+                                            <SelectItem value="SUPER_ACTIVE">Cường độ cao</SelectItem>
+                                          </SelectContent>
+                                        </Select>
                                       ) : field.type === "gender" ? (
-                                        <select
-                                          className="bg-transparent text-[12px] font-bold text-[#9FD923] outline-none text-right cursor-pointer p-0 m-0 h-full border-none appearance-none"
-                                          defaultValue={field.value}
+                                        <Select
+                                          value={profileForm.gender}
+                                          onValueChange={(val) => setProfileForm(prev => ({ ...prev, gender: val }))}
                                         >
-                                          <option value="male">Male</option>
-                                          <option value="female">Female</option>
-                                        </select>
+                                          <SelectTrigger className="h-full border-none bg-transparent p-0 text-[12px] font-bold text-[#9FD923] focus:ring-0 focus:ring-offset-0 justify-end gap-1">
+                                            <SelectValue placeholder="Chọn" />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            <SelectItem value="MALE">Nam</SelectItem>
+                                            <SelectItem value="FEMALE">Nữ</SelectItem>
+                                            <SelectItem value="UNDEFINED">Khác</SelectItem>
+                                          </SelectContent>
+                                        </Select>
                                       ) : (
                                         <div className="flex items-center justify-end h-full">
                                           <input
+                                            name={field.label === "Cân nặng" ? "weight" : "height"}
+                                            type="number"
                                             className="w-10 text-right bg-transparent text-[12px] font-black text-[#0D0D0D] outline-none border-b border-[#9FD923]/30 p-0 h-full"
-                                            defaultValue={field.value}
+                                            value={field.label === "Cân nặng" ? profileForm.weight : profileForm.height}
+                                            onChange={handleProfileFormChange}
                                           />
                                           <span className="text-[10px] ml-1 text-black/20 uppercase font-black">
                                             {field.unit}
@@ -676,19 +921,19 @@ export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialog
                           <div className="flex flex-col sm:flex-row gap-4">
                             {[
                               {
-                                label: "BMI Ratio",
+                                label: "Chỉ số BMI",
                                 value: bmi.toFixed(1),
-                                status: bmi < 18.5 ? "Underweight" : bmi < 25 ? "Healthy" : "Overweight",
+                                status: bmi < 18.5 ? "Thiếu cân" : bmi < 25 ? "Khỏe mạnh" : "Thừa cân",
                                 color: bmi < 18.5 ? "text-yellow-400" : bmi < 25 ? "text-[#9FD923]" : "text-red-400",
                               },
                               {
-                                label: "BMR Rate",
+                                label: "Chỉ số BMR",
                                 value: formatNumber(bmr),
                                 status: "kcal/d",
                                 color: "text-blue-400",
                               },
                               {
-                                label: "Daily TDEE",
+                                label: "TDEE hằng ngày",
                                 value: formatNumber(tdee),
                                 status: "kcal/d",
                                 color: "text-orange-400",
@@ -721,19 +966,20 @@ export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialog
                               onClick={() => setIsEditing(false)}
                               className="px-6 h-full bg-[#F2F2F2] text-[#0D0D0D]/40 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-white hover:text-red-500 border border-transparent hover:border-red-100 transition-all flex items-center justify-center"
                             >
-                              Cancel
+                              Hủy
                             </button>
                             <button
-                              onClick={() => setIsEditing(false)}
-                              className="px-8 h-full bg-[#0D0D0D] text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] hover:bg-[#9FD923] hover:text-[#0D0D0D] transition-all group shadow-xl shadow-[#9FD923]/10 flex items-center gap-2 justify-center"
+                              onClick={handleSaveProfile}
+                              disabled={isUpdatingProfile}
+                              className="px-8 h-full bg-[#0D0D0D] text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] hover:bg-[#9FD923] hover:text-[#0D0D0D] transition-all group shadow-xl shadow-[#9FD923]/10 flex items-center gap-2 justify-center disabled:opacity-50"
                             >
-                              Save Stats
-                              <Zap className="w-3 h-3 text-[#9FD923] group-hover:text-[#0D0D0D]" />
+                              {isUpdatingProfile ? "Đang lưu..." : "Lưu thông tin"}
+                              {!isUpdatingProfile && <Zap className="w-3 h-3 text-[#9FD923] group-hover:text-[#0D0D0D]" />}
                             </button>
                           </>
                         ) : (
                           <button
-                            onClick={() => setIsEditing(true)}
+                            onClick={handleStartEditing}
                             className="group relative overflow-visible h-full"
                           >
                             <div className="absolute inset-0.5 bg-linear-to-r from-[#9FD923] to-[#D9F2A2] rounded-2xl opacity-0 group-hover:opacity-40 transition-all duration-300 blur-md" />
@@ -742,7 +988,7 @@ export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialog
                                 <Zap className="w-4 h-4 text-[#9FD923]" />
                               </div>
                               <span className="text-[12px] font-black text-white uppercase tracking-[0.15em]">
-                                Edit Profile
+                                CHỈNH SỬA HỒ SƠ
                               </span>
                               <ChevronDown className="w-4 h-4 text-white/30 -rotate-90 ml-2 group-hover:translate-x-1 transition-transform" />
                             </div>
@@ -775,7 +1021,7 @@ export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialog
                             <div>
                               <div className="flex items-center justify-between mb-3 ml-2">
                                 <h4 className="text-[11px] font-black text-[#0D0D0D]/30 uppercase tracking-[0.2em]">
-                                  Active Goal
+                                  Mục tiêu hiện tại
                                 </h4>
                                 {!currentGoal && (
                                   <button
@@ -783,7 +1029,7 @@ export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialog
                                     className="flex items-center gap-2 px-3 py-1.5 bg-[#9FD923] text-[#0D0D0D] rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-md shadow-[#9FD923]/20"
                                   >
                                     <Plus className="w-3 h-3" />
-                                    New Goal
+                                    Mục tiêu mới
                                   </button>
                                 )}
                               </div>
@@ -807,7 +1053,7 @@ export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialog
                                           "px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider border",
                                           getStatusBadge(currentGoal.status)
                                         )}>
-                                          {currentGoal.status.replace("NUTR_GOAL_", "")}
+                                          {getGoalStatusLabel(currentGoal.status)}
                                         </span>
                                       </div>
                                     </div>
@@ -825,12 +1071,12 @@ export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialog
                               ) : (
                                 <div className="p-8 bg-[#F2F2F2]/50 rounded-3xl border border-dashed border-[#0D0D0D]/10 flex flex-col items-center justify-center text-center">
                                   <Target className="w-8 h-8 text-[#0D0D0D]/10 mb-2" />
-                                  <p className="text-[13px] text-[#0D0D0D]/40 font-bold">No active nutrition goal.</p>
+                                  <p className="text-[13px] text-[#0D0D0D]/40 font-bold">Chưa có mục tiêu dinh dưỡng.</p>
                                   <button 
                                     onClick={() => setIsAddingGoal(true)}
                                     className="mt-4 text-[#9FD923] text-[11px] font-black uppercase tracking-widest hover:underline"
                                   >
-                                    Set a goal now
+                                    Thiết lập mục tiêu ngay
                                   </button>
                                 </div>
                               )}
@@ -842,7 +1088,7 @@ export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialog
                                 <div className="flex items-center gap-2">
                                   <History className="w-4 h-4 text-[#0D0D0D]/30" />
                                   <h4 className="text-[11px] font-black text-[#0D0D0D]/30 uppercase tracking-[0.2em]">
-                                    Goal History
+                                    Lịch sử mục tiêu
                                   </h4>
                                 </div>
                                 {currentGoal && (
@@ -850,7 +1096,7 @@ export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialog
                                     onClick={() => setIsAddingGoal(true)}
                                     className="text-[10px] font-black text-[#9FD923] uppercase tracking-widest hover:underline"
                                   >
-                                    + Add New
+                                    + Thêm mới
                                   </button>
                                 )}
                               </div>
@@ -858,7 +1104,7 @@ export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialog
                               <div className="flex flex-col gap-3 overflow-y-auto pr-3 -mr-3 custom-scrollbar pb-6 flex-1">
                                 {(!goalHistory || goalHistory.length === 0) ? (
                                   <div className="py-12 text-center">
-                                    <p className="text-[12px] text-[#0D0D0D]/20 font-bold italic">No history preserved yet.</p>
+                                    <p className="text-[12px] text-[#0D0D0D]/20 font-bold italic">Chưa có lịch sử mục tiêu.</p>
                                   </div>
                                 ) : (
                                   (Array.isArray(goalHistory) ? goalHistory : [])
@@ -888,10 +1134,10 @@ export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialog
                                               "inline-block px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest mb-1 border",
                                               getStatusBadge(goal.status)
                                             )}>
-                                              {goal.status.replace("NUTR_GOAL_", "")}
+                                              {getGoalStatusLabel(goal.status)}
                                             </div>
                                             <p className="text-[11px] font-black text-[#0D0D0D]/40">
-                                              Target: {goal.targetWeight}kg
+                                              Mục tiêu: {goal.targetWeight}kg
                                             </p>
                                           </div>
                                           <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -936,10 +1182,10 @@ export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialog
                               </button>
                               <div>
                                 <h3 className="text-[18px] font-black text-[#0D0D0D]">
-                                  {editingGoalId ? "View / Edit Goal Details" : "New Nutrition Goal"}
+                                  {editingGoalId ? "Xem / Sửa chi tiết mục tiêu" : "Mục tiêu dinh dưỡng mới"}
                                 </h3>
                                 <p className="text-[12px] text-[#0D0D0D]/40 font-bold">
-                                  {editingGoalId ? "Xem và cập nhật chi tiết mục tiêu của bạn" : "Define your next milestone"}
+                                  {editingGoalId ? "Xem và cập nhật chi tiết mục tiêu của bạn" : "Xác định cột mốc tiếp theo"}
                                 </p>
                               </div>
                             </div>
@@ -951,17 +1197,20 @@ export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialog
                                   <label className="text-[11px] font-black text-[#0D0D0D]/30 uppercase tracking-[0.2em] ml-1">
                                     Type
                                   </label>
-                                  <select
-                                    name="goalType"
+                                  <Select
                                     value={goalForm.goalType}
-                                    onChange={handleGoalFormChange}
-                                    className="w-full bg-[#F2F2F2]/50 border border-[#0D0D0D]/5 rounded-2xl px-4 py-3.5 text-[14px] font-bold outline-none focus:bg-white focus:border-[#9FD923] transition-all appearance-none cursor-pointer"
+                                    onValueChange={(val) => setGoalForm(prev => ({ ...prev, goalType: val as GoalType }))}
                                   >
-                                    <option value={GoalType.GOAL_LOSS}>Weight Loss</option>
-                                    <option value={GoalType.GOAL_GAIN}>Weight Gain</option>
-                                    <option value={GoalType.GOAL_MAINTAIN}>Maintenance</option>
-                                    <option value={GoalType.GOAL_STRICT}>Strict Diet</option>
-                                  </select>
+                                    <SelectTrigger className="w-full bg-[#F2F2F2]/50 border border-[#0D0D0D]/5 rounded-2xl px-4 py-3.5 h-[52px] text-[14px] font-bold outline-none focus:bg-white focus:border-[#9FD923] transition-all">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value={GoalType.GOAL_LOSS}>Giảm cân</SelectItem>
+                                      <SelectItem value={GoalType.GOAL_GAIN}>Tăng cân</SelectItem>
+                                      <SelectItem value={GoalType.GOAL_MAINTAIN}>Duy trì</SelectItem>
+                                      <SelectItem value={GoalType.GOAL_STRICT}>Ăn kiêng nghiêm ngặt</SelectItem>
+                                    </SelectContent>
+                                  </Select>
                                 </div>
                                 <div className="space-y-2">
                                   <label className="text-[11px] font-black text-[#0D0D0D]/30 uppercase tracking-[0.2em] ml-1">
@@ -995,17 +1244,20 @@ export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialog
                                   <label className="text-[11px] font-black text-[#0D0D0D]/30 uppercase tracking-[0.2em] ml-1">
                                     Status
                                   </label>
-                                  <select
-                                    name="status"
+                                  <Select
                                     value={goalForm.status}
-                                    onChange={handleGoalFormChange}
-                                    className="w-full bg-[#F2F2F2]/50 border border-[#0D0D0D]/5 rounded-2xl px-4 py-3.5 text-[14px] font-bold outline-none focus:bg-white focus:border-[#9FD923] transition-all appearance-none cursor-pointer"
+                                    onValueChange={(val) => setGoalForm(prev => ({ ...prev, status: val as NutritionGoalStatus }))}
                                   >
-                                    <option value={NutritionGoalStatus.NUTR_GOAL_ONGOING}>Ongoing</option>
-                                    <option value={NutritionGoalStatus.NUTR_GOAL_COMPLETED}>Completed</option>
-                                    <option value={NutritionGoalStatus.NUTR_GOAL_PAUSED}>Paused</option>
-                                    <option value={NutritionGoalStatus.NUTR_GOAL_FAILED}>Failed</option>
-                                  </select>
+                                    <SelectTrigger className="w-full bg-[#F2F2F2]/50 border border-[#0D0D0D]/5 rounded-2xl px-4 py-3.5 h-[52px] text-[14px] font-bold outline-none focus:bg-white focus:border-[#9FD923] transition-all">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value={NutritionGoalStatus.NUTR_GOAL_ONGOING}>Đang thực hiện</SelectItem>
+                                      <SelectItem value={NutritionGoalStatus.NUTR_GOAL_COMPLETED}>Đã hoàn thành</SelectItem>
+                                      <SelectItem value={NutritionGoalStatus.NUTR_GOAL_PAUSED}>Tạm dừng</SelectItem>
+                                      <SelectItem value={NutritionGoalStatus.NUTR_GOAL_FAILED}>Thất bại</SelectItem>
+                                    </SelectContent>
+                                  </Select>
                                 </div>
                               </div>
 
@@ -1016,10 +1268,10 @@ export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialog
                                 </label>
                                 <div className="grid grid-cols-4 gap-3">
                                   {[
-                                    { name: "targetProtein", label: "Protein", color: "border-blue-100" },
-                                    { name: "targetCarbs", label: "Carbs", color: "border-green-100" },
-                                    { name: "targetFat", label: "Fat", color: "border-yellow-100" },
-                                    { name: "targetFiber", label: "Fiber", color: "border-orange-100" },
+                                    { name: "targetProtein", label: "Đạm", color: "border-blue-100" },
+                                    { name: "targetCarbs", label: "Tinh bột", color: "border-green-100" },
+                                    { name: "targetFat", label: "Chất béo", color: "border-yellow-100" },
+                                    { name: "targetFiber", label: "Chất xơ", color: "border-orange-100" },
                                   ].map((macro) => (
                                     <div key={macro.name} className="space-y-1.5">
                                       <span className="text-[9px] font-black text-[#0D0D0D]/40 uppercase tracking-tighter block ml-1">{macro.label}</span>
@@ -1071,7 +1323,7 @@ export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialog
                                 disabled={isLoadingGoals}
                                 className="w-full py-4 bg-[#0D0D0D] text-white rounded-2xl font-black text-[12px] uppercase tracking-[0.2em] hover:bg-[#9FD923] hover:text-[#0D0D0D] transition-all shadow-xl shadow-[#9FD923]/10 flex items-center justify-center gap-3 disabled:opacity-50"
                               >
-                                {isLoadingGoals ? "Processing..." : editingGoalId ? "Save Changes" : "Create Goal"}
+                                {isLoadingGoals ? "Đang xử lý..." : editingGoalId ? "Lưu thay đổi" : "Tạo mục tiêu"}
                                 <Zap className="w-4 h-4 text-[#9FD923] group-hover:text-[#0D0D0D]" />
                               </button>
                             </div>
@@ -1122,7 +1374,7 @@ export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialog
                               {userAllergies.length === 0 ? (
                                 <div className="h-40 flex flex-col items-center justify-center bg-[#F2F2F2]/50 rounded-3xl border border-dashed border-[#0D0D0D]/10">
                                   <AlertTriangle className="w-8 h-8 text-[#0D0D0D]/20 mb-2" />
-                                  <p className="text-[13px] text-[#0D0D0D]/40 font-bold">No allergies recorded.</p>
+                                  <p className="text-[13px] text-[#0D0D0D]/40 font-bold">Chưa có dữ liệu dị ứng.</p>
                                 </div>
                               ) : (
                                 <div className="grid grid-cols-1 gap-3">
@@ -1194,10 +1446,10 @@ export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialog
                               </button>
                               <div>
                                 <h3 className="text-[18px] font-black text-[#0D0D0D]">
-                                  {editingAllergyId ? "Update Allergy" : "Add New Allergy"}
+                                  {editingAllergyId ? "Cập nhật dị ứng" : "Thêm dị ứng mới"}
                                 </h3>
                                 <p className="text-[12px] text-[#0D0D0D]/40 font-bold">
-                                  {editingAllergyId ? "Modify your allergy status" : "Select substance and severity"}
+                                  {editingAllergyId ? "Thay đổi tình trạng dị ứng của bạn" : "Chọn chất gây dị ứng và mức độ"}
                                 </p>
                               </div>
                             </div>
@@ -1213,7 +1465,7 @@ export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialog
                                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-[#0D0D0D]/30" />
                                     <input
                                       type="text"
-                                      placeholder="Search (e.g. Peanuts, Milk...)"
+                                      placeholder="Tìm kiếm (VD: Đậu phộng, Sữa...)"
                                       value={allergenSearch}
                                       onChange={(e) => setAllergenSearch(e.target.value)}
                                       className="w-full bg-[#F2F2F2]/50 border border-[#0D0D0D]/5 rounded-2xl pl-12 pr-4 py-3.5 text-[14px] font-bold outline-none focus:bg-white focus:border-[#9FD923] transition-all"
@@ -1234,11 +1486,11 @@ export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialog
                                           )}
                                         >
                                           <p className="text-[13px] font-black line-clamp-1">{alg.name}</p>
-                                          <p className="text-[10px] font-bold opacity-60 line-clamp-1">{alg.description || "No description"}</p>
+                                          <p className="text-[10px] font-bold opacity-60 line-clamp-1">{alg.description || "Không có mô tả"}</p>
                                         </button>
                                       ))
                                     ) : (
-                                      <p className="col-span-2 text-center text-[12px] text-[#0D0D0D]/30 py-4 font-bold">No allergens found</p>
+                                      <p className="col-span-2 text-center text-[12px] text-[#0D0D0D]/30 py-4 font-bold">Không tìm thấy chất dị ứng</p>
                                     )}
                                   </div>
                                 </div>
@@ -1249,9 +1501,9 @@ export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialog
                                   <AlertTriangle className="w-6 h-6 text-[#9FD923]" />
                                   <div>
                                     <h4 className="text-[14px] font-black text-[#0D0D0D]">
-                                      Editing: {allAllergens.find(a => a.id === selectedAllergenId)?.name}
+                                      Đang sửa: {allAllergens.find(a => a.id === selectedAllergenId)?.name}
                                     </h4>
-                                    <p className="text-[11px] text-[#0D0D0D]/40 font-bold">You are updating the severity or note for this allergen.</p>
+                                    <p className="text-[11px] text-[#0D0D0D]/40 font-bold">Bạn đang cập nhật mức độ hoặc ghi chú cho dị ứng này.</p>
                                   </div>
                                 </div>
                               )}
@@ -1262,16 +1514,20 @@ export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialog
                                   <label className="text-[11px] font-black text-[#0D0D0D]/30 uppercase tracking-[0.2em] ml-1">
                                     Step 2: Severity
                                   </label>
-                                  <select
+                                  <Select
                                     value={allergenSeverity}
-                                    onChange={(e) => setAllergenSeverity(e.target.value as SeverityType)}
-                                    className="w-full bg-[#F2F2F2]/50 border border-[#0D0D0D]/5 rounded-2xl px-4 py-3.5 text-[14px] font-bold outline-none focus:bg-white focus:border-[#9FD923] transition-all appearance-none cursor-pointer"
+                                    onValueChange={(val) => setAllergenSeverity(val as SeverityType)}
                                   >
-                                    <option value={SeverityType.SEV_LOW}>Low</option>
-                                    <option value={SeverityType.SEV_MEDIUM}>Medium</option>
-                                    <option value={SeverityType.SEV_HIGH}>High</option>
-                                    <option value={SeverityType.SEV_LIFE_THREATENING}>Life Threatening</option>
-                                  </select>
+                                    <SelectTrigger className="w-full bg-[#F2F2F2]/50 border border-[#0D0D0D]/5 rounded-2xl px-4 py-3.5 h-[52px] text-[14px] font-bold outline-none focus:bg-white focus:border-[#9FD923] transition-all">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value={SeverityType.SEV_LOW}>Nhẹ</SelectItem>
+                                      <SelectItem value={SeverityType.SEV_MEDIUM}>Trung bình</SelectItem>
+                                      <SelectItem value={SeverityType.SEV_HIGH}>Nặng</SelectItem>
+                                      <SelectItem value={SeverityType.SEV_LIFE_THREATENING}>Nguy hiểm tính mạng</SelectItem>
+                                    </SelectContent>
+                                  </Select>
                                 </div>
                                 <div className="space-y-2">
                                   <label className="text-[11px] font-black text-[#0D0D0D]/30 uppercase tracking-[0.2em] ml-1">
@@ -1279,7 +1535,7 @@ export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialog
                                   </label>
                                   <input
                                     type="text"
-                                    placeholder="Optional details..."
+                                    placeholder="Chi tiết bổ sung (không bắt buộc)..."
                                     value={allergenNote}
                                     onChange={(e) => setAllergenNote(e.target.value)}
                                     className="w-full bg-[#F2F2F2]/50 border border-[#0D0D0D]/5 rounded-2xl px-4 py-3.5 text-[14px] font-bold outline-none focus:bg-white focus:border-[#9FD923] transition-all"
@@ -1292,7 +1548,7 @@ export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialog
                                 disabled={!selectedAllergenId || isLoadingAllergies}
                                 className="w-full py-4 bg-[#0D0D0D] text-white rounded-2xl font-black text-[12px] uppercase tracking-[0.2em] hover:bg-[#9FD923] hover:text-[#0D0D0D] transition-all shadow-xl shadow-[#9FD923]/10 flex items-center justify-center gap-3 disabled:opacity-50 disabled:grayscale transition-all"
                               >
-                                {isLoadingAllergies ? "Processing..." : editingAllergyId ? "Update Allergy" : "Confirm & Save"}
+                                {isLoadingAllergies ? "Đang xử lý..." : editingAllergyId ? "Cập nhật dị ứng" : "Xác nhận & Lưu"}
                                 <Zap className="w-4 h-4 text-[#9FD923] group-hover:text-[#0D0D0D]" />
                               </button>
                             </div>
@@ -1360,7 +1616,7 @@ export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialog
                                 disabled={isUpdatingPassword}
                                 className="px-8 py-3.5 bg-[#0D0D0D] text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] hover:bg-[#9FD923] hover:text-[#0D0D0D] transition-all group shadow-xl shadow-[#9FD923]/10 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                               >
-                                {isUpdatingPassword ? "Saving..." : "Save Password"}
+                                {isUpdatingPassword ? "Đang lưu..." : "Lưu mật khẩu"}
                                 <ShieldCheck className="w-3.5 h-3.5 text-[#9FD923] group-hover:text-[#0D0D0D]" />
                               </button>
                             </div>
@@ -1395,10 +1651,10 @@ export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialog
                         </div>
                       </div>
                       <h3 className="text-[22px] font-black text-[#0D0D0D] mb-2">
-                        Sign Out
+                        Đăng xuất
                       </h3>
                       <p className="text-[14px] text-[#0D0D0D]/60 font-medium mb-8">
-                        Are you sure you want to log out of your account? You will need to sign back in to access your data.
+                        Bạn có chắc chắn muốn đăng xuất không? Bạn sẽ cần đăng nhập lại để tiếp tục sử dụng dịch vụ.
                       </p>
                       
                       <div className="flex w-full gap-3">
@@ -1406,13 +1662,13 @@ export const ProfileDialog = ({ trigger, defaultTab = "Profile" }: ProfileDialog
                           onClick={() => setShowLogoutConfirm(false)}
                           className="flex-1 py-4 bg-[#F2F2F2] text-[#0D0D0D] rounded-2xl text-[12px] font-black uppercase tracking-widest hover:bg-[#E5E5E5] transition-colors border border-[#0D0D0D]/5"
                         >
-                          Cancel
+                          Hủy
                         </button>
                         <button 
                           onClick={handleLogout}
                           className="flex-1 py-4 bg-red-500 text-white rounded-2xl text-[12px] font-black uppercase tracking-widest hover:bg-red-600 transition-colors shadow-lg shadow-red-500/20"
                         >
-                          Yes, Sign Out
+                          Đăng xuất ngay
                         </button>
                       </div>
                     </motion.div>

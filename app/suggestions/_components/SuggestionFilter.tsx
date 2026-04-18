@@ -18,14 +18,14 @@ interface SuggestionFilterProps {
 
 export function SuggestionFilter({ selectedMeal, onMealChange, selectedPriority, onPriorityChange, totals, target, onApplyFilter, isOpen, onToggle }: SuggestionFilterProps) {
   const meals = ["Bữa sáng", "Bữa trưa", "Bữa tối", "Bữa phụ"];
-  const priorities = ["Cân bằng", "Nhiều Protein", "Nhiều Carbs", "Nhiều Fat", "Nhiều Fiber"];
+  const priorities = ["Cân bằng", "Nhiều chất đạm", "Nhiều tinh bột", "Nhiều chất béo", "Nhiều chất xơ"];
 
   const nutritionStatus = [
     { label: "Calo", current: totals?.calories || 0, target: target?.targetCalories || 0, unit: "kcal", icon: Flame, color: "text-orange-500", bg: "bg-orange-50" },
-    { label: "Pro", current: totals?.protein || 0, target: target?.targetProtein || 0, unit: "g", icon: Beef, color: "text-red-500", bg: "bg-red-50" },
-    { label: "Carb", current: totals?.carbs || 0, target: target?.targetCarbs || 0, unit: "g", icon: Wheat, color: "text-amber-500", bg: "bg-amber-50" },
-    { label: "Fat", current: totals?.fat || 0, target: target?.targetFat || 0, unit: "g", icon: Droplet, color: "text-yellow-500", bg: "bg-yellow-50" },
-    { label: "Fib", current: totals?.fiber || 0, target: target?.targetFiber || 30, unit: "g", icon: Leaf, color: "text-green-600", bg: "bg-green-50" },
+    { label: "Đạm", current: totals?.protein || 0, target: target?.targetProtein || 0, unit: "g", icon: Beef, color: "text-red-500", bg: "bg-red-50" },
+    { label: "Tinh bột", current: totals?.carbs || 0, target: target?.targetCarbs || 0, unit: "g", icon: Wheat, color: "text-amber-500", bg: "bg-amber-50" },
+    { label: "Béo", current: totals?.fat || 0, target: target?.targetFat || 0, unit: "g", icon: Droplet, color: "text-yellow-500", bg: "bg-yellow-50" },
+    { label: "Xơ", current: totals?.fiber || 0, target: target?.targetFiber || 30, unit: "g", icon: Leaf, color: "text-green-600", bg: "bg-green-50" },
   ];
 
   /* ─── Nội dung bộ lọc (dùng chung cho cả mobile và desktop) ─── */
@@ -39,9 +39,12 @@ export function SuggestionFilter({ selectedMeal, onMealChange, selectedPriority,
         </label>
         <div className="flex flex-wrap gap-2">
           {nutritionStatus.map((item, idx) => (
-            <div key={idx} className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border border-white shadow-sm ${item.bg}`}>
-              <item.icon className={`w-3.5 h-3.5 ${item.color}`} />
-              <div className="flex items-baseline gap-0.5 whitespace-nowrap">
+            <div key={idx} className={`flex items-center gap-2 px-3 py-2 rounded-xl border border-white shadow-sm ${item.bg}`}>
+              <div className="flex items-center gap-1.5 border-r border-[#0F172A]/10 pr-2">
+                <item.icon className={`w-3.5 h-3.5 ${item.color}`} />
+                <span className={`text-[11px] font-black uppercase tracking-wider ${item.color}`}>{item.label}</span>
+              </div>
+              <div className="flex items-baseline gap-0.5 whitespace-nowrap pl-0.5">
                 <span className="text-xs font-black text-[#0F172A]">{Intl.NumberFormat('en-US').format(item.current)}</span>
                 <span className="text-[10px] font-bold text-slate-500">/{Intl.NumberFormat('en-US').format(item.target)} {item.unit}</span>
               </div>

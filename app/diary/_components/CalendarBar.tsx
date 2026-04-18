@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useEffect, useRef } from "react";
 
-const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const months = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"];
 
 interface CalendarBarProps {
   onDateChange: (date: Date) => void;
@@ -51,6 +51,7 @@ const CalendarBar = ({ onDateChange }: CalendarBarProps) => {
           <button onClick={handleNextYear} className="text-muted-foreground hover:text-foreground cursor-pointer"><ChevronRight className="w-4 h-4" /></button>
         </div>
         <div className="flex items-center gap-1 ml-1 sm:ml-2 overflow-x-auto scrollbar-hide">
+          <span className="text-xs font-bold text-muted-foreground mr-1 whitespace-nowrap uppercase tracking-wider">Tháng</span>
           {months.map((m, i) => (
             <button
               key={m}
@@ -61,10 +62,10 @@ const CalendarBar = ({ onDateChange }: CalendarBarProps) => {
                 if (activeDay > maxDaysInNewMonth) setActiveDay(maxDaysInNewMonth);
               }}
               className={cn(
-                "px-2.5 py-1 text-xs font-medium rounded-full transition-colors cursor-pointer shrink-0",
+                "w-7 h-7 flex items-center justify-center text-xs font-bold rounded-full transition-colors cursor-pointer shrink-0",
                 activeMonth === i
                   ? "bg-[#9FD923] text-black shadow-sm"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  : "text-muted-foreground hover:text-foreground hover:bg-[#F2F2F2]"
               )}
             >
               {m}

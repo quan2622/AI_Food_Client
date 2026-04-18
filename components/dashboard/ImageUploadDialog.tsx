@@ -9,6 +9,13 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Upload, X, Image as ImageIcon, CheckCircle2, ArrowRight, Loader2, Utensils, AlertTriangle } from "lucide-react";
 import Image from "next/image";
@@ -550,16 +557,20 @@ const ImageUploadDialog: React.FC<ImageUploadDialogProps> = ({
           <form onSubmit={handleReportSubmit} className="space-y-5 mt-4">
             <div className="space-y-2">
               <label className="text-sm font-bold text-slate-300">Phân loại lỗi</label>
-              <select
+              <Select
                 value={reportForm.category}
-                onChange={(e) => setReportForm({ ...reportForm, category: e.target.value as SubmissionCategory })}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white font-bold outline-none focus:border-[#CAFD00] transition-colors appearance-none"
+                onValueChange={(val) => setReportForm({ ...reportForm, category: val as SubmissionCategory })}
               >
-                <option value={SubmissionCategory.WRONG_INFO} className="bg-[#0F172A]">Thông tin dinh dưỡng sai</option>
-                <option value={SubmissionCategory.BAD_IMAGE} className="bg-[#0F172A]">Ảnh không đúng / Chất lượng kém</option>
-                <option value={SubmissionCategory.DUPLICATE} className="bg-[#0F172A]">Bị trùng lặp</option>
-                <option value={SubmissionCategory.NEW_FOOD} className="bg-[#0F172A]">Đây là món ăn mới</option>
-              </select>
+                <SelectTrigger className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 h-[46px] text-sm text-white font-bold outline-none focus:border-[#CAFD00] transition-colors">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-[#0F172A] border-[#CAFD00]/20 text-white">
+                  <SelectItem value={SubmissionCategory.WRONG_INFO}>Thông tin dinh dưỡng sai</SelectItem>
+                  <SelectItem value={SubmissionCategory.BAD_IMAGE}>Ảnh không đúng / Chất lượng kém</SelectItem>
+                  <SelectItem value={SubmissionCategory.DUPLICATE}>Bị trùng lặp</SelectItem>
+                  <SelectItem value={SubmissionCategory.NEW_FOOD}>Đây là món ăn mới</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <label className="text-sm font-bold text-slate-300">Chi tiết lỗi sai</label>

@@ -20,10 +20,10 @@ import {
 import { NutritionTrendItem, TrendOption } from "@/services/reportService";
 
 const chartConfig = {
-  protein: { label: "Protein", color: "#9fd923" },
-  carbs: { label: "Carbs", color: "#3b82f6" },
-  fat: { label: "Fat", color: "#f59e0b" },
-  fiber: { label: "Fiber", color: "#ec4899" },
+  protein: { label: "Chất đạm", color: "#9fd923" },
+  carbs: { label: "Tinh bột", color: "#3b82f6" },
+  fat: { label: "Chất béo", color: "#f59e0b" },
+  fiber: { label: "Chất xơ", color: "#ec4899" },
 } satisfies ChartConfig;
 
 interface NutritionTrendChartProps {

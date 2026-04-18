@@ -21,4 +21,18 @@ export const userProfileService = {
     );
     return res as unknown as ApiResponse<IUserProfileWithUser>;
   },
+
+  /**
+   * Update current user's profile
+   * PATCH /user-profiles
+   */
+  updateUserProfile: async (
+    data: import("@/types/user-profile.type").IUpdateUserProfileRequest
+  ): Promise<ApiResponse<IUserProfileWithUser>> => {
+    const res = await privateAxios.patch<ApiResponse<IUserProfileWithUser>>(
+      "/user-profiles",
+      data
+    );
+    return res as unknown as ApiResponse<IUserProfileWithUser>;
+  },
 };

@@ -19,11 +19,11 @@ import {
 import { NutritionTrendItem, TrendOption } from "@/services/reportService";
 
 const chartConfig = {
-  amount: { label: "Amount (g)" },
-  protein: { label: "Protein", color: "#9fd923" },
-  carbs: { label: "Carbs", color: "#3b82f6" },
-  fat: { label: "Fat", color: "#f59e0b" },
-  fiber: { label: "Fiber", color: "#ec4899" },
+  amount: { label: "Khối lượng (g)" },
+  protein: { label: "Chất đạm", color: "#9fd923" },
+  carbs: { label: "Tinh bột", color: "#3b82f6" },
+  fat: { label: "Chất béo", color: "#f59e0b" },
+  fiber: { label: "Chất xơ", color: "#ec4899" },
 } satisfies ChartConfig;
 
 interface NutritionPieChartProps {
@@ -38,6 +38,8 @@ const periodLabel: Record<TrendOption, string> = {
   month: "các tháng",
 };
 
+const formatWholeNumber = (value: number) => Math.round(value).toString();
+
 export default function NutritionPieChart({
   data,
   loading,
@@ -51,14 +53,17 @@ export default function NutritionPieChart({
       fat: acc.fat + (item.fat ?? 0),
       fiber: acc.fiber + (item.fiber ?? 0),
     }),
-    { protein: 0, carbs: 0, fat: 0, fiber: 0 }
+    { protein: 0, carbs: 0, fat: 0, fiber: 0 },
   );
 
-  const grandTotal =
-    totals.protein + totals.carbs + totals.fat + totals.fiber;
+  const grandTotal = totals.protein + totals.carbs + totals.fat + totals.fiber;
 
   const chartData = [
-    { nutrient: "protein", amount: totals.protein, fill: "var(--color-protein)" },
+    {
+      nutrient: "protein",
+      amount: totals.protein,
+      fill: "var(--color-protein)",
+    },
     { nutrient: "carbs", amount: totals.carbs, fill: "var(--color-carbs)" },
     { nutrient: "fat", amount: totals.fat, fill: "var(--color-fat)" },
     { nutrient: "fiber", amount: totals.fiber, fill: "var(--color-fiber)" },
@@ -70,9 +75,7 @@ export default function NutritionPieChart({
         <CardTitle className="text-base sm:text-lg font-bold text-gray-800">
           Tỉ lệ dinh dưỡng
         </CardTitle>
-        <CardDescription>
-          Tổng hợp từ {periodLabel[period]}
-        </CardDescription>
+        <CardDescription>Tổng hợp từ {periodLabel[period]}</CardDescription>
       </CardHeader>
 
       <CardContent className="flex-1 min-h-0 pb-0 flex items-center justify-center relative">
@@ -98,7 +101,7 @@ export default function NutritionPieChart({
                 data={chartData}
                 dataKey="amount"
                 nameKey="nutrient"
-                label
+                label={({ value }) => formatWholeNumber(Number(value ?? 0))}
                 innerRadius={60}
                 strokeWidth={4}
               />
@@ -115,9 +118,7 @@ export default function NutritionPieChart({
                 item.nutrient as Exclude<keyof typeof chartConfig, "amount">
               ];
             const pct =
-              grandTotal > 0
-                ? Math.round((item.amount / grandTotal) * 100)
-                : 0;
+              grandTotal > 0 ? Math.round((item.amount / grandTotal) * 100) : 0;
             return (
               <div
                 key={item.nutrient}
