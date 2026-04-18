@@ -3,7 +3,16 @@
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ProfileDialog } from "@/components/common/ProfileDialog";
-import { Activity, Target, Weight, Zap, Flame, Ruler, Settings, Loader2 } from "lucide-react";
+import {
+  Activity,
+  Target,
+  Weight,
+  Zap,
+  Flame,
+  Ruler,
+  Settings,
+  Loader2,
+} from "lucide-react";
 import {
   userProfileService,
   IUserProfileWithUser,
@@ -23,7 +32,7 @@ function activityLabel(level?: string | null): string {
     ACT_VERY_ACTIVE: "Rất năng động",
     SUPER_ACTIVE: "Rất năng động",
   };
-  return level ? map[level] ?? level : "—";
+  return level ? (map[level] ?? level) : "—";
 }
 
 /** BMI classification in Vietnamese */
@@ -40,24 +49,11 @@ interface MetricItem {
   sub: string;
   color: string;
   icon: React.ComponentType<{ size?: number }>;
+  desc?: string;
 }
 
 function buildMetrics(profile: IUserProfileWithUser): MetricItem[] {
   return [
-    {
-      label: "BMI",
-      value: profile.bmi?.toFixed(1) ?? "—",
-      sub: bmiClassification(profile.bmi ?? 0),
-      color: "bg-green-50 text-green-600",
-      icon: Weight,
-    },
-    {
-      label: "TDEE",
-      value: profile.tdee?.toLocaleString() ?? "—",
-      sub: "kcal/ngày",
-      color: "bg-blue-50 text-blue-600",
-      icon: Zap,
-    },
     {
       label: "Chiều cao",
       value: profile.height?.toString() ?? "—",
@@ -73,11 +69,28 @@ function buildMetrics(profile: IUserProfileWithUser): MetricItem[] {
       icon: Activity,
     },
     {
+      label: "BMI",
+      value: profile.bmi?.toFixed(1) ?? "—",
+      sub: bmiClassification(profile.bmi ?? 0),
+      color: "bg-green-50 text-green-600",
+      icon: Weight,
+      desc: "Chỉ số khối cơ thể — đánh giá mức độ béo/gầy dựa trên chiều cao và cân nặng",
+    },
+    {
+      label: "TDEE",
+      value: profile.tdee?.toLocaleString() ?? "—",
+      sub: "kcal/ngày",
+      color: "bg-blue-50 text-blue-600",
+      icon: Zap,
+      desc: "Tổng năng lượng tiêu hao mỗi ngày — bao gồm cả vận động",
+    },
+    {
       label: "BMR",
       value: profile.bmr?.toLocaleString() ?? "—",
       sub: "kcal/ngày",
       color: "bg-red-50 text-red-600",
       icon: Flame,
+      desc: "Năng lượng cơ thể cần để duy trì sự sống khi nghỉ ngơi hoàn toàn",
     },
     {
       label: "Vận động",
@@ -120,13 +133,17 @@ export default function BodyMetrics() {
   return (
     <Card className="rounded-3xl border-0 shadow-sm bg-white overflow-hidden h-full">
       <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 px-4 sm:px-6 pt-4 sm:pt-6 -mb-3 gap-3">
-        <CardTitle className="text-base sm:text-lg font-bold">Chỉ số cơ thể</CardTitle>
-        <ProfileDialog trigger={
-          <button className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-gray-50 text-gray-400 hover:bg-[#9fd923] hover:text-[#0D0D0D] transition-all duration-300 font-bold text-sm shadow-xs border border-gray-100/50">
-            <Settings size={16} />
-            <span>Chỉnh sửa</span>
-          </button>
-        } />
+        <CardTitle className="text-base sm:text-lg font-bold">
+          Chỉ số cơ thể
+        </CardTitle>
+        <ProfileDialog
+          trigger={
+            <button className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-gray-50 text-gray-400 hover:bg-[#9fd923] hover:text-[#0D0D0D] transition-all duration-300 font-bold text-sm shadow-xs border border-gray-100/50">
+              <Settings size={16} />
+              <span>Chỉnh sửa</span>
+            </button>
+          }
+        />
       </CardHeader>
       <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
         {loading ? (
@@ -141,15 +158,26 @@ export default function BodyMetrics() {
                 className="group p-2.5 sm:p-4 rounded-2xl border border-gray-50 bg-gray-50/50 hover:bg-white hover:border-[#9fd923] hover:shadow-md transition-all duration-300 flex flex-col justify-center min-w-0"
               >
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">{m.label}</span>
+                  <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">
+                    {m.label}
+                  </span>
                   <div className={`p-1.5 rounded-lg ${m.color}`}>
                     <m.icon size={16} />
                   </div>
                 </div>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-xl font-black text-gray-800 tracking-tight group-hover:text-[#9fd923] transition-colors">{m.value}</span>
-                  <span className="text-[10px] text-gray-400 font-semibold">{m.sub}</span>
+                  <span className="text-xl font-black text-gray-800 tracking-tight group-hover:text-[#9fd923] transition-colors">
+                    {m.value}
+                  </span>
+                  <span className="text-[10px] text-gray-400 font-semibold">
+                    {m.sub}
+                  </span>
                 </div>
+                {m.desc && (
+                  <p className="mt-1.5 text-[10px] text-gray-400 leading-snug">
+                    {m.desc}
+                  </p>
+                )}
               </div>
             ))}
           </div>
