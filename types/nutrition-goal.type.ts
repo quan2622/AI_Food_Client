@@ -30,6 +30,12 @@ export interface ICreateNutritionGoalRequest {
   status?: NutritionGoalStatus;
 }
 
+export interface ISmartNutritionGoalRequest {
+  goalType: GoalType;
+  targetWeight?: number;
+  endDate: string;
+}
+
 export interface IUpdateNutritionGoalRequest extends Partial<ICreateNutritionGoalRequest> {}
 
 export interface IBulkDeleteNutritionGoalRequest {

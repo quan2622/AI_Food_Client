@@ -36,6 +36,7 @@ import { IAllergen, IUserAllergy } from "@/types/allergen.type";
 import {
   INutritionGoal,
   ICreateNutritionGoalRequest,
+  ISmartNutritionGoalRequest,
 } from "@/types/nutrition-goal.type";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -215,6 +216,15 @@ export const ProfileDialog = ({
       .split("T")[0],
     status: NutritionGoalStatus.NUTR_GOAL_ONGOING,
   });
+
+  const [smartGoalForm, setSmartGoalForm] =
+    useState<ISmartNutritionGoalRequest>({
+      goalType: GoalType.GOAL_LOSS,
+      targetWeight: user?.userProfile?.weight || 0,
+      endDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .split("T")[0],
+    });
 
   const handleLogout = async () => {
     try {
@@ -435,7 +445,14 @@ export const ProfileDialog = ({
   const handleAddGoal = async () => {
     setIsLoadingGoals(true);
     try {
-      const res = await nutritionGoalService.createGoal(goalForm);
+      const payload: ISmartNutritionGoalRequest = {
+        goalType: smartGoalForm.goalType,
+        endDate: smartGoalForm.endDate,
+        ...(smartGoalForm.goalType !== GoalType.GOAL_MAINTAIN && {
+          targetWeight: smartGoalForm.targetWeight,
+        }),
+      };
+      const res = await nutritionGoalService.createSmartGoal(payload);
       if (res.metadata?.EC === 0) {
         toast.success("Đã tạo mục tiêu mới!");
         setIsAddingGoal(false);
@@ -444,7 +461,9 @@ export const ProfileDialog = ({
         toast.error(res.metadata?.message || "Tạo mục tiêu thất bại.");
       }
     } catch (error: any) {
-      toast.error(error?.response?.data?.metadata?.message || "Đã xảy ra lỗi.");
+      const msg =
+        error?.message || error?.metadata?.message || "Đã xảy ra lỗi.";
+      toast.error(msg);
     } finally {
       setIsLoadingGoals(false);
     }
@@ -1590,20 +1609,27 @@ export const ProfileDialog = ({
                             </div>
 
                             <div className="flex-1 overflow-y-auto pr-3 -mr-3 custom-scrollbar space-y-4 pb-6">
-                              {/* Goal Type & Target Weight */}
-                              <div className="p-4 bg-gradient-to-br from-[#9FD923]/8 to-[#D9F2A2]/10 rounded-2xl border border-[#9FD923]/15 space-y-3">
-                                <p className="text-[10px] font-black text-[#9FD923] uppercase tracking-[0.2em]">
-                                  Thông tin cơ bản
-                                </p>
-                                <div className="grid grid-cols-2 gap-3">
-                                  <div className="space-y-1.5">
-                                    <label className="text-[11px] font-black text-[#0D0D0D]/50 uppercase tracking-wider ml-1">
+                              {!editingGoalId ? (
+                                /* ── Smart Create Form ── */
+                                <>
+                                  {/* Info banner */}
+                                  <div className="flex items-start gap-3 p-3.5 bg-[#9FD923]/8 rounded-2xl border border-[#9FD923]/20">
+                                    <Zap className="w-4 h-4 text-[#9FD923] shrink-0 mt-0.5" />
+                                    <p className="text-[11px] font-bold text-[#0D0D0D]/50 leading-relaxed">
+                                      Backend sẽ tự tính calo và các chỉ tiêu
+                                      dinh dưỡng dựa trên hồ sơ của bạn.
+                                    </p>
+                                  </div>
+
+                                  {/* Goal Type */}
+                                  <div className="p-4 bg-gradient-to-br from-[#9FD923]/8 to-[#D9F2A2]/10 rounded-2xl border border-[#9FD923]/15 space-y-3">
+                                    <p className="text-[10px] font-black text-[#9FD923] uppercase tracking-[0.2em]">
                                       Loại mục tiêu
-                                    </label>
+                                    </p>
                                     <Select
-                                      value={goalForm.goalType}
+                                      value={smartGoalForm.goalType}
                                       onValueChange={(val) =>
-                                        setGoalForm((prev) => ({
+                                        setSmartGoalForm((prev) => ({
                                           ...prev,
                                           goalType: val as GoalType,
                                         }))
@@ -1617,12 +1643,12 @@ export const ProfileDialog = ({
                                           Giảm cân
                                         </SelectItem>
                                         <SelectItem value={GoalType.GOAL_GAIN}>
-                                          Tăng cân
+                                          Tăng cân / cơ
                                         </SelectItem>
                                         <SelectItem
                                           value={GoalType.GOAL_MAINTAIN}
                                         >
-                                          Duy trì
+                                          Duy trì cân nặng
                                         </SelectItem>
                                         <SelectItem
                                           value={GoalType.GOAL_STRICT}
@@ -1632,206 +1658,328 @@ export const ProfileDialog = ({
                                       </SelectContent>
                                     </Select>
                                   </div>
-                                  <div className="space-y-1.5">
-                                    <label className="text-[11px] font-black text-[#0D0D0D]/50 uppercase tracking-wider ml-1">
-                                      Cân nặng mục tiêu (kg)
-                                    </label>
-                                    <input
-                                      type="number"
-                                      name="targetWeight"
-                                      value={goalForm.targetWeight}
-                                      onChange={handleGoalFormChange}
-                                      className="w-full bg-white border border-[#9FD923]/20 rounded-xl px-3 py-2.5 h-11 text-[13px] font-bold outline-none focus:border-[#9FD923] shadow-sm transition-all"
-                                    />
-                                  </div>
-                                </div>
-                              </div>
 
-                              {/* Calories & Status */}
-                              <div className="p-4 bg-gradient-to-br from-orange-50 to-amber-50/50 rounded-2xl border border-orange-100 space-y-3">
-                                <p className="text-[10px] font-black text-orange-400 uppercase tracking-[0.2em]">
-                                  Năng lượng & Trạng thái
-                                </p>
-                                <div className="grid grid-cols-2 gap-3">
-                                  <div className="space-y-1.5">
-                                    <label className="text-[11px] font-black text-[#0D0D0D]/50 uppercase tracking-wider ml-1">
-                                      Calo/ngày (kcal)
-                                    </label>
+                                  {/* Target Weight — hidden for MAINTAIN */}
+                                  {smartGoalForm.goalType !==
+                                    GoalType.GOAL_MAINTAIN && (
+                                    <div className="p-4 bg-gradient-to-br from-[#9FD923]/8 to-[#D9F2A2]/10 rounded-2xl border border-[#9FD923]/15 space-y-3">
+                                      <p className="text-[10px] font-black text-[#9FD923] uppercase tracking-[0.2em]">
+                                        Cân nặng mục tiêu
+                                      </p>
+                                      <div className="flex items-center gap-3">
+                                        <input
+                                          type="number"
+                                          min={20}
+                                          max={300}
+                                          value={
+                                            smartGoalForm.targetWeight ?? ""
+                                          }
+                                          onChange={(e) =>
+                                            setSmartGoalForm((prev) => ({
+                                              ...prev,
+                                              targetWeight: Number(
+                                                e.target.value,
+                                              ),
+                                            }))
+                                          }
+                                          className="flex-1 bg-white border border-[#9FD923]/20 rounded-xl px-3 py-2.5 h-11 text-[13px] font-bold outline-none focus:border-[#9FD923] shadow-sm transition-all"
+                                          placeholder="VD: 60"
+                                        />
+                                        <span className="text-[13px] font-black text-[#0D0D0D]/40 shrink-0">
+                                          kg
+                                        </span>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* End Date */}
+                                  <div className="p-4 bg-gradient-to-br from-purple-50 to-pink-50/40 rounded-2xl border border-purple-100 space-y-3">
+                                    <p className="text-[10px] font-black text-purple-400 uppercase tracking-[0.2em]">
+                                      Ngày kết thúc
+                                    </p>
                                     <input
-                                      type="number"
-                                      name="targetCalories"
-                                      value={goalForm.targetCalories}
-                                      onChange={handleGoalFormChange}
-                                      className="w-full bg-white border border-orange-100 rounded-xl px-3 py-2.5 h-11 text-[13px] font-bold outline-none focus:border-orange-300 shadow-sm transition-all"
-                                    />
-                                  </div>
-                                  <div className="space-y-1.5">
-                                    <label className="text-[11px] font-black text-[#0D0D0D]/50 uppercase tracking-wider ml-1">
-                                      Trạng thái
-                                    </label>
-                                    <Select
-                                      value={goalForm.status}
-                                      onValueChange={(val) =>
-                                        setGoalForm((prev) => ({
+                                      type="date"
+                                      value={smartGoalForm.endDate}
+                                      min={
+                                        new Date(Date.now() + 86400000)
+                                          .toISOString()
+                                          .split("T")[0]
+                                      }
+                                      onChange={(e) =>
+                                        setSmartGoalForm((prev) => ({
                                           ...prev,
-                                          status: val as NutritionGoalStatus,
+                                          endDate: e.target.value,
                                         }))
                                       }
-                                    >
-                                      <SelectTrigger className="w-full bg-white border border-orange-100 rounded-xl px-3 py-2.5 h-11 text-[13px] font-bold outline-none focus:border-orange-300 shadow-sm transition-all">
-                                        <SelectValue />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem
-                                          value={
-                                            NutritionGoalStatus.NUTR_GOAL_ONGOING
-                                          }
-                                        >
-                                          Đang thực hiện
-                                        </SelectItem>
-                                        <SelectItem
-                                          value={
-                                            NutritionGoalStatus.NUTR_GOAL_COMPLETED
-                                          }
-                                        >
-                                          Đã hoàn thành
-                                        </SelectItem>
-                                        <SelectItem
-                                          value={
-                                            NutritionGoalStatus.NUTR_GOAL_PAUSED
-                                          }
-                                        >
-                                          Tạm dừng
-                                        </SelectItem>
-                                        <SelectItem
-                                          value={
-                                            NutritionGoalStatus.NUTR_GOAL_FAILED
-                                          }
-                                        >
-                                          Thất bại
-                                        </SelectItem>
-                                      </SelectContent>
-                                    </Select>
+                                      className="w-full bg-white border border-purple-100 rounded-xl px-3 py-2.5 text-[13px] font-bold outline-none focus:border-purple-300 shadow-sm transition-all"
+                                    />
+                                    <p className="text-[10px] text-[#0D0D0D]/30 font-bold">
+                                      Ngày bắt đầu sẽ được tính từ hôm nay.
+                                    </p>
                                   </div>
-                                </div>
-                              </div>
 
-                              {/* Macros Grid */}
-                              <div className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50/40 rounded-2xl border border-blue-100 space-y-3">
-                                <p className="text-[10px] font-black text-blue-400 uppercase tracking-[0.2em]">
-                                  Chỉ tiêu dinh dưỡng (gram)
-                                </p>
-                                <div className="grid grid-cols-4 gap-2">
-                                  {[
-                                    {
-                                      name: "targetProtein",
-                                      label: "Đạm",
-                                      bg: "bg-blue-50",
-                                      border: "border-blue-200",
-                                      text: "text-blue-600",
-                                      focus: "focus:border-blue-400",
-                                    },
-                                    {
-                                      name: "targetCarbs",
-                                      label: "Tinh bột",
-                                      bg: "bg-green-50",
-                                      border: "border-green-200",
-                                      text: "text-green-600",
-                                      focus: "focus:border-green-400",
-                                    },
-                                    {
-                                      name: "targetFat",
-                                      label: "Chất béo",
-                                      bg: "bg-yellow-50",
-                                      border: "border-yellow-200",
-                                      text: "text-yellow-600",
-                                      focus: "focus:border-yellow-400",
-                                    },
-                                    {
-                                      name: "targetFiber",
-                                      label: "Chất xơ",
-                                      bg: "bg-orange-50",
-                                      border: "border-orange-200",
-                                      text: "text-orange-600",
-                                      focus: "focus:border-orange-400",
-                                    },
-                                  ].map((macro) => (
-                                    <div key={macro.name} className="space-y-1">
-                                      <span
-                                        className={cn(
-                                          "text-[9px] font-black uppercase tracking-tighter block text-center",
-                                          macro.text,
-                                        )}
-                                      >
-                                        {macro.label}
-                                      </span>
-                                      <input
-                                        type="number"
-                                        name={macro.name}
-                                        value={(goalForm as any)[macro.name]}
-                                        onChange={handleGoalFormChange}
-                                        className={cn(
-                                          "w-full border rounded-xl px-1 py-2 text-[13px] font-black text-center outline-none transition-all shadow-sm",
-                                          macro.bg,
-                                          macro.border,
-                                          macro.text,
-                                          macro.focus,
-                                        )}
-                                      />
+                                  <button
+                                    onClick={handleAddGoal}
+                                    disabled={isLoadingGoals}
+                                    className="w-full py-4 bg-gradient-to-r from-[#0D0D0D] to-[#1a1a1a] text-white rounded-2xl font-black text-[12px] uppercase tracking-[0.2em] hover:from-[#9FD923] hover:to-[#b8e83c] hover:text-[#0D0D0D] transition-all duration-300 shadow-xl shadow-[#9FD923]/10 flex items-center justify-center gap-3 disabled:opacity-50 group"
+                                  >
+                                    {isLoadingGoals
+                                      ? "Đang xử lý..."
+                                      : "Tạo mục tiêu"}
+                                    <Zap className="w-4 h-4 text-[#9FD923] group-hover:text-[#0D0D0D] transition-colors" />
+                                  </button>
+                                </>
+                              ) : (
+                                /* ── Full Edit Form ── */
+                                <>
+                                  {/* Goal Type & Target Weight */}
+                                  <div className="p-4 bg-gradient-to-br from-[#9FD923]/8 to-[#D9F2A2]/10 rounded-2xl border border-[#9FD923]/15 space-y-3">
+                                    <p className="text-[10px] font-black text-[#9FD923] uppercase tracking-[0.2em]">
+                                      Thông tin cơ bản
+                                    </p>
+                                    <div className="grid grid-cols-2 gap-3">
+                                      <div className="space-y-1.5">
+                                        <label className="text-[11px] font-black text-[#0D0D0D]/50 uppercase tracking-wider ml-1">
+                                          Loại mục tiêu
+                                        </label>
+                                        <Select
+                                          value={goalForm.goalType}
+                                          onValueChange={(val) =>
+                                            setGoalForm((prev) => ({
+                                              ...prev,
+                                              goalType: val as GoalType,
+                                            }))
+                                          }
+                                        >
+                                          <SelectTrigger className="w-full bg-white border border-[#9FD923]/20 rounded-xl px-3 py-2.5 h-11 text-[13px] font-bold outline-none focus:border-[#9FD923] shadow-sm transition-all">
+                                            <SelectValue />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            <SelectItem
+                                              value={GoalType.GOAL_LOSS}
+                                            >
+                                              Giảm cân
+                                            </SelectItem>
+                                            <SelectItem
+                                              value={GoalType.GOAL_GAIN}
+                                            >
+                                              Tăng cân
+                                            </SelectItem>
+                                            <SelectItem
+                                              value={GoalType.GOAL_MAINTAIN}
+                                            >
+                                              Duy trì
+                                            </SelectItem>
+                                            <SelectItem
+                                              value={GoalType.GOAL_STRICT}
+                                            >
+                                              Ăn kiêng nghiêm ngặt
+                                            </SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                      <div className="space-y-1.5">
+                                        <label className="text-[11px] font-black text-[#0D0D0D]/50 uppercase tracking-wider ml-1">
+                                          Cân nặng mục tiêu (kg)
+                                        </label>
+                                        <input
+                                          type="number"
+                                          name="targetWeight"
+                                          value={goalForm.targetWeight ?? ""}
+                                          onChange={handleGoalFormChange}
+                                          className="w-full bg-white border border-[#9FD923]/20 rounded-xl px-3 py-2.5 h-11 text-[13px] font-bold outline-none focus:border-[#9FD923] shadow-sm transition-all"
+                                        />
+                                      </div>
                                     </div>
-                                  ))}
-                                </div>
-                              </div>
-
-                              {/* Dates */}
-                              <div className="p-4 bg-gradient-to-br from-purple-50 to-pink-50/40 rounded-2xl border border-purple-100 space-y-3">
-                                <p className="text-[10px] font-black text-purple-400 uppercase tracking-[0.2em]">
-                                  Thời gian thực hiện
-                                </p>
-                                <div className="grid grid-cols-2 gap-3">
-                                  <div className="space-y-1.5">
-                                    <label className="text-[11px] font-black text-[#0D0D0D]/50 uppercase tracking-wider ml-1">
-                                      Ngày bắt đầu
-                                    </label>
-                                    <input
-                                      type="date"
-                                      name="startDate"
-                                      value={goalForm.startDate}
-                                      onChange={handleGoalFormChange}
-                                      className="w-full bg-white border border-purple-100 rounded-xl px-3 py-2.5 text-[13px] font-bold outline-none focus:border-purple-300 shadow-sm transition-all"
-                                    />
                                   </div>
-                                  <div className="space-y-1.5">
-                                    <label className="text-[11px] font-black text-[#0D0D0D]/50 uppercase tracking-wider ml-1">
-                                      Ngày kết thúc
-                                    </label>
-                                    <input
-                                      type="date"
-                                      name="endDate"
-                                      value={goalForm.endDate}
-                                      onChange={handleGoalFormChange}
-                                      className="w-full bg-white border border-purple-100 rounded-xl px-3 py-2.5 text-[13px] font-bold outline-none focus:border-purple-300 shadow-sm transition-all"
-                                    />
-                                  </div>
-                                </div>
-                              </div>
 
-                              <button
-                                onClick={
-                                  editingGoalId
-                                    ? handleUpdateGoal
-                                    : handleAddGoal
-                                }
-                                disabled={isLoadingGoals}
-                                className="w-full py-4 bg-gradient-to-r from-[#0D0D0D] to-[#1a1a1a] text-white rounded-2xl font-black text-[12px] uppercase tracking-[0.2em] hover:from-[#9FD923] hover:to-[#b8e83c] hover:text-[#0D0D0D] transition-all duration-300 shadow-xl shadow-[#9FD923]/10 flex items-center justify-center gap-3 disabled:opacity-50 group"
-                              >
-                                {isLoadingGoals
-                                  ? "Đang xử lý..."
-                                  : editingGoalId
-                                    ? "Lưu thay đổi"
-                                    : "Tạo mục tiêu"}
-                                <Zap className="w-4 h-4 text-[#9FD923] group-hover:text-[#0D0D0D] transition-colors" />
-                              </button>
+                                  {/* Calories & Status */}
+                                  <div className="p-4 bg-gradient-to-br from-orange-50 to-amber-50/50 rounded-2xl border border-orange-100 space-y-3">
+                                    <p className="text-[10px] font-black text-orange-400 uppercase tracking-[0.2em]">
+                                      Năng lượng & Trạng thái
+                                    </p>
+                                    <div className="grid grid-cols-2 gap-3">
+                                      <div className="space-y-1.5">
+                                        <label className="text-[11px] font-black text-[#0D0D0D]/50 uppercase tracking-wider ml-1">
+                                          Calo/ngày (kcal)
+                                        </label>
+                                        <input
+                                          type="number"
+                                          name="targetCalories"
+                                          value={goalForm.targetCalories}
+                                          onChange={handleGoalFormChange}
+                                          className="w-full bg-white border border-orange-100 rounded-xl px-3 py-2.5 h-11 text-[13px] font-bold outline-none focus:border-orange-300 shadow-sm transition-all"
+                                        />
+                                      </div>
+                                      <div className="space-y-1.5">
+                                        <label className="text-[11px] font-black text-[#0D0D0D]/50 uppercase tracking-wider ml-1">
+                                          Trạng thái
+                                        </label>
+                                        <Select
+                                          value={goalForm.status}
+                                          onValueChange={(val) =>
+                                            setGoalForm((prev) => ({
+                                              ...prev,
+                                              status:
+                                                val as NutritionGoalStatus,
+                                            }))
+                                          }
+                                        >
+                                          <SelectTrigger className="w-full bg-white border border-orange-100 rounded-xl px-3 py-2.5 h-11 text-[13px] font-bold outline-none focus:border-orange-300 shadow-sm transition-all">
+                                            <SelectValue />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            <SelectItem
+                                              value={
+                                                NutritionGoalStatus.NUTR_GOAL_ONGOING
+                                              }
+                                            >
+                                              Đang thực hiện
+                                            </SelectItem>
+                                            <SelectItem
+                                              value={
+                                                NutritionGoalStatus.NUTR_GOAL_COMPLETED
+                                              }
+                                            >
+                                              Đã hoàn thành
+                                            </SelectItem>
+                                            <SelectItem
+                                              value={
+                                                NutritionGoalStatus.NUTR_GOAL_PAUSED
+                                              }
+                                            >
+                                              Tạm dừng
+                                            </SelectItem>
+                                            <SelectItem
+                                              value={
+                                                NutritionGoalStatus.NUTR_GOAL_FAILED
+                                              }
+                                            >
+                                              Thất bại
+                                            </SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Macros Grid */}
+                                  <div className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50/40 rounded-2xl border border-blue-100 space-y-3">
+                                    <p className="text-[10px] font-black text-blue-400 uppercase tracking-[0.2em]">
+                                      Chỉ tiêu dinh dưỡng (gram)
+                                    </p>
+                                    <div className="grid grid-cols-4 gap-2">
+                                      {[
+                                        {
+                                          name: "targetProtein",
+                                          label: "Đạm",
+                                          bg: "bg-blue-50",
+                                          border: "border-blue-200",
+                                          text: "text-blue-600",
+                                          focus: "focus:border-blue-400",
+                                        },
+                                        {
+                                          name: "targetCarbs",
+                                          label: "Tinh bột",
+                                          bg: "bg-green-50",
+                                          border: "border-green-200",
+                                          text: "text-green-600",
+                                          focus: "focus:border-green-400",
+                                        },
+                                        {
+                                          name: "targetFat",
+                                          label: "Chất béo",
+                                          bg: "bg-yellow-50",
+                                          border: "border-yellow-200",
+                                          text: "text-yellow-600",
+                                          focus: "focus:border-yellow-400",
+                                        },
+                                        {
+                                          name: "targetFiber",
+                                          label: "Chất xơ",
+                                          bg: "bg-orange-50",
+                                          border: "border-orange-200",
+                                          text: "text-orange-600",
+                                          focus: "focus:border-orange-400",
+                                        },
+                                      ].map((macro) => (
+                                        <div
+                                          key={macro.name}
+                                          className="space-y-1"
+                                        >
+                                          <span
+                                            className={cn(
+                                              "text-[9px] font-black uppercase tracking-tighter block text-center",
+                                              macro.text,
+                                            )}
+                                          >
+                                            {macro.label}
+                                          </span>
+                                          <input
+                                            type="number"
+                                            name={macro.name}
+                                            value={
+                                              (goalForm as any)[macro.name]
+                                            }
+                                            onChange={handleGoalFormChange}
+                                            className={cn(
+                                              "w-full border rounded-xl px-1 py-2 text-[13px] font-black text-center outline-none transition-all shadow-sm",
+                                              macro.bg,
+                                              macro.border,
+                                              macro.text,
+                                              macro.focus,
+                                            )}
+                                          />
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+
+                                  {/* Dates */}
+                                  <div className="p-4 bg-gradient-to-br from-purple-50 to-pink-50/40 rounded-2xl border border-purple-100 space-y-3">
+                                    <p className="text-[10px] font-black text-purple-400 uppercase tracking-[0.2em]">
+                                      Thời gian thực hiện
+                                    </p>
+                                    <div className="grid grid-cols-2 gap-3">
+                                      <div className="space-y-1.5">
+                                        <label className="text-[11px] font-black text-[#0D0D0D]/50 uppercase tracking-wider ml-1">
+                                          Ngày bắt đầu
+                                        </label>
+                                        <input
+                                          type="date"
+                                          name="startDate"
+                                          value={goalForm.startDate}
+                                          onChange={handleGoalFormChange}
+                                          className="w-full bg-white border border-purple-100 rounded-xl px-3 py-2.5 text-[13px] font-bold outline-none focus:border-purple-300 shadow-sm transition-all"
+                                        />
+                                      </div>
+                                      <div className="space-y-1.5">
+                                        <label className="text-[11px] font-black text-[#0D0D0D]/50 uppercase tracking-wider ml-1">
+                                          Ngày kết thúc
+                                        </label>
+                                        <input
+                                          type="date"
+                                          name="endDate"
+                                          value={goalForm.endDate}
+                                          onChange={handleGoalFormChange}
+                                          className="w-full bg-white border border-purple-100 rounded-xl px-3 py-2.5 text-[13px] font-bold outline-none focus:border-purple-300 shadow-sm transition-all"
+                                        />
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  <button
+                                    onClick={handleUpdateGoal}
+                                    disabled={isLoadingGoals}
+                                    className="w-full py-4 bg-gradient-to-r from-[#0D0D0D] to-[#1a1a1a] text-white rounded-2xl font-black text-[12px] uppercase tracking-[0.2em] hover:from-[#9FD923] hover:to-[#b8e83c] hover:text-[#0D0D0D] transition-all duration-300 shadow-xl shadow-[#9FD923]/10 flex items-center justify-center gap-3 disabled:opacity-50 group"
+                                  >
+                                    {isLoadingGoals
+                                      ? "Đang xử lý..."
+                                      : "Lưu thay đổi"}
+                                    <Zap className="w-4 h-4 text-[#9FD923] group-hover:text-[#0D0D0D] transition-colors" />
+                                  </button>
+                                </>
+                              )}
                             </div>
                           </motion.div>
                         )}
