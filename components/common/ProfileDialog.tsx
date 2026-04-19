@@ -1393,178 +1393,210 @@ export const ProfileDialog = ({
                             transition={{ duration: 0.2, ease: "easeOut" }}
                             className="flex-1 flex flex-col min-h-0"
                           >
+                            {/* Goal Form Header */}
                             <div className="flex items-center gap-4 mb-6">
                               <button
                                 onClick={() => {
                                   setIsAddingGoal(false);
                                   setEditingGoalId(null);
                                 }}
-                                className="p-2 bg-[#F2F2F2] hover:bg-white rounded-xl border border-transparent hover:border-[#0D0D0D]/5 transition-all"
+                                className="p-2 bg-[#F2F2F2] hover:bg-white rounded-xl border border-transparent hover:border-[#9FD923]/30 transition-all"
                               >
                                 <ArrowLeft className="w-5 h-5 text-[#0D0D0D]" />
                               </button>
-                              <div>
-                                <h3 className="text-[18px] font-black text-[#0D0D0D]">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-7 h-7 rounded-lg bg-[#9FD923] flex items-center justify-center shadow-sm">
+                                    <Target className="w-4 h-4 text-[#0D0D0D]" />
+                                  </div>
+                                  <h3 className="text-[18px] font-black text-[#0D0D0D]">
+                                    {editingGoalId
+                                      ? "Sửa mục tiêu"
+                                      : "Mục tiêu mới"}
+                                  </h3>
+                                </div>
+                                <p className="text-[12px] text-[#0D0D0D]/40 font-bold mt-0.5 ml-9">
                                   {editingGoalId
-                                    ? "Xem / Sửa chi tiết mục tiêu"
-                                    : "Mục tiêu dinh dưỡng mới"}
-                                </h3>
-                                <p className="text-[12px] text-[#0D0D0D]/40 font-bold">
-                                  {editingGoalId
-                                    ? "Xem và cập nhật chi tiết mục tiêu của bạn"
-                                    : "Xác định cột mốc tiếp theo"}
+                                    ? "Cập nhật chi tiết mục tiêu của bạn"
+                                    : "Xác định cột mốc dinh dưỡng tiếp theo"}
                                 </p>
                               </div>
                             </div>
 
-                            <div className="flex-1 overflow-y-auto pr-3 -mr-3 custom-scrollbar space-y-6 pb-6">
+                            <div className="flex-1 overflow-y-auto pr-3 -mr-3 custom-scrollbar space-y-4 pb-6">
                               {/* Goal Type & Target Weight */}
-                              <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                  <label className="text-[11px] font-black text-[#0D0D0D]/30 uppercase tracking-[0.2em] ml-1">
-                                    Type
-                                  </label>
-                                  <Select
-                                    value={goalForm.goalType}
-                                    onValueChange={(val) =>
-                                      setGoalForm((prev) => ({
-                                        ...prev,
-                                        goalType: val as GoalType,
-                                      }))
-                                    }
-                                  >
-                                    <SelectTrigger className="w-full bg-[#F2F2F2]/50 border border-[#0D0D0D]/5 rounded-2xl px-4 py-3.5 h-[52px] text-[14px] font-bold outline-none focus:bg-white focus:border-[#9FD923] transition-all">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value={GoalType.GOAL_LOSS}>
-                                        Giảm cân
-                                      </SelectItem>
-                                      <SelectItem value={GoalType.GOAL_GAIN}>
-                                        Tăng cân
-                                      </SelectItem>
-                                      <SelectItem
-                                        value={GoalType.GOAL_MAINTAIN}
-                                      >
-                                        Duy trì
-                                      </SelectItem>
-                                      <SelectItem value={GoalType.GOAL_STRICT}>
-                                        Ăn kiêng nghiêm ngặt
-                                      </SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                                <div className="space-y-2">
-                                  <label className="text-[11px] font-black text-[#0D0D0D]/30 uppercase tracking-[0.2em] ml-1">
-                                    Target Weight (kg)
-                                  </label>
-                                  <input
-                                    type="number"
-                                    name="targetWeight"
-                                    value={goalForm.targetWeight}
-                                    onChange={handleGoalFormChange}
-                                    className="w-full bg-[#F2F2F2]/50 border border-[#0D0D0D]/5 rounded-2xl px-4 py-3.5 text-[14px] font-bold outline-none focus:bg-white focus:border-[#9FD923] transition-all"
-                                  />
+                              <div className="p-4 bg-gradient-to-br from-[#9FD923]/8 to-[#D9F2A2]/10 rounded-2xl border border-[#9FD923]/15 space-y-3">
+                                <p className="text-[10px] font-black text-[#9FD923] uppercase tracking-[0.2em]">
+                                  Thông tin cơ bản
+                                </p>
+                                <div className="grid grid-cols-2 gap-3">
+                                  <div className="space-y-1.5">
+                                    <label className="text-[11px] font-black text-[#0D0D0D]/50 uppercase tracking-wider ml-1">
+                                      Loại mục tiêu
+                                    </label>
+                                    <Select
+                                      value={goalForm.goalType}
+                                      onValueChange={(val) =>
+                                        setGoalForm((prev) => ({
+                                          ...prev,
+                                          goalType: val as GoalType,
+                                        }))
+                                      }
+                                    >
+                                      <SelectTrigger className="w-full bg-white border border-[#9FD923]/20 rounded-xl px-3 py-2.5 h-11 text-[13px] font-bold outline-none focus:border-[#9FD923] shadow-sm transition-all">
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value={GoalType.GOAL_LOSS}>
+                                          Giảm cân
+                                        </SelectItem>
+                                        <SelectItem value={GoalType.GOAL_GAIN}>
+                                          Tăng cân
+                                        </SelectItem>
+                                        <SelectItem
+                                          value={GoalType.GOAL_MAINTAIN}
+                                        >
+                                          Duy trì
+                                        </SelectItem>
+                                        <SelectItem
+                                          value={GoalType.GOAL_STRICT}
+                                        >
+                                          Ăn kiêng nghiêm ngặt
+                                        </SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                  <div className="space-y-1.5">
+                                    <label className="text-[11px] font-black text-[#0D0D0D]/50 uppercase tracking-wider ml-1">
+                                      Cân nặng mục tiêu (kg)
+                                    </label>
+                                    <input
+                                      type="number"
+                                      name="targetWeight"
+                                      value={goalForm.targetWeight}
+                                      onChange={handleGoalFormChange}
+                                      className="w-full bg-white border border-[#9FD923]/20 rounded-xl px-3 py-2.5 h-11 text-[13px] font-bold outline-none focus:border-[#9FD923] shadow-sm transition-all"
+                                    />
+                                  </div>
                                 </div>
                               </div>
 
                               {/* Calories & Status */}
-                              <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                  <label className="text-[11px] font-black text-[#0D0D0D]/30 uppercase tracking-[0.2em] ml-1">
-                                    Daily Calories (kcal)
-                                  </label>
-                                  <input
-                                    type="number"
-                                    name="targetCalories"
-                                    value={goalForm.targetCalories}
-                                    onChange={handleGoalFormChange}
-                                    className="w-full bg-[#F2F2F2]/50 border border-[#0D0D0D]/5 rounded-2xl px-4 py-3.5 text-[14px] font-bold outline-none focus:bg-white focus:border-[#9FD923] transition-all"
-                                  />
-                                </div>
-                                <div className="space-y-2">
-                                  <label className="text-[11px] font-black text-[#0D0D0D]/30 uppercase tracking-[0.2em] ml-1">
-                                    Status
-                                  </label>
-                                  <Select
-                                    value={goalForm.status}
-                                    onValueChange={(val) =>
-                                      setGoalForm((prev) => ({
-                                        ...prev,
-                                        status: val as NutritionGoalStatus,
-                                      }))
-                                    }
-                                  >
-                                    <SelectTrigger className="w-full bg-[#F2F2F2]/50 border border-[#0D0D0D]/5 rounded-2xl px-4 py-3.5 h-[52px] text-[14px] font-bold outline-none focus:bg-white focus:border-[#9FD923] transition-all">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem
-                                        value={
-                                          NutritionGoalStatus.NUTR_GOAL_ONGOING
-                                        }
-                                      >
-                                        Đang thực hiện
-                                      </SelectItem>
-                                      <SelectItem
-                                        value={
-                                          NutritionGoalStatus.NUTR_GOAL_COMPLETED
-                                        }
-                                      >
-                                        Đã hoàn thành
-                                      </SelectItem>
-                                      <SelectItem
-                                        value={
-                                          NutritionGoalStatus.NUTR_GOAL_PAUSED
-                                        }
-                                      >
-                                        Tạm dừng
-                                      </SelectItem>
-                                      <SelectItem
-                                        value={
-                                          NutritionGoalStatus.NUTR_GOAL_FAILED
-                                        }
-                                      >
-                                        Thất bại
-                                      </SelectItem>
-                                    </SelectContent>
-                                  </Select>
+                              <div className="p-4 bg-gradient-to-br from-orange-50 to-amber-50/50 rounded-2xl border border-orange-100 space-y-3">
+                                <p className="text-[10px] font-black text-orange-400 uppercase tracking-[0.2em]">
+                                  Năng lượng & Trạng thái
+                                </p>
+                                <div className="grid grid-cols-2 gap-3">
+                                  <div className="space-y-1.5">
+                                    <label className="text-[11px] font-black text-[#0D0D0D]/50 uppercase tracking-wider ml-1">
+                                      Calo/ngày (kcal)
+                                    </label>
+                                    <input
+                                      type="number"
+                                      name="targetCalories"
+                                      value={goalForm.targetCalories}
+                                      onChange={handleGoalFormChange}
+                                      className="w-full bg-white border border-orange-100 rounded-xl px-3 py-2.5 h-11 text-[13px] font-bold outline-none focus:border-orange-300 shadow-sm transition-all"
+                                    />
+                                  </div>
+                                  <div className="space-y-1.5">
+                                    <label className="text-[11px] font-black text-[#0D0D0D]/50 uppercase tracking-wider ml-1">
+                                      Trạng thái
+                                    </label>
+                                    <Select
+                                      value={goalForm.status}
+                                      onValueChange={(val) =>
+                                        setGoalForm((prev) => ({
+                                          ...prev,
+                                          status: val as NutritionGoalStatus,
+                                        }))
+                                      }
+                                    >
+                                      <SelectTrigger className="w-full bg-white border border-orange-100 rounded-xl px-3 py-2.5 h-11 text-[13px] font-bold outline-none focus:border-orange-300 shadow-sm transition-all">
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem
+                                          value={
+                                            NutritionGoalStatus.NUTR_GOAL_ONGOING
+                                          }
+                                        >
+                                          Đang thực hiện
+                                        </SelectItem>
+                                        <SelectItem
+                                          value={
+                                            NutritionGoalStatus.NUTR_GOAL_COMPLETED
+                                          }
+                                        >
+                                          Đã hoàn thành
+                                        </SelectItem>
+                                        <SelectItem
+                                          value={
+                                            NutritionGoalStatus.NUTR_GOAL_PAUSED
+                                          }
+                                        >
+                                          Tạm dừng
+                                        </SelectItem>
+                                        <SelectItem
+                                          value={
+                                            NutritionGoalStatus.NUTR_GOAL_FAILED
+                                          }
+                                        >
+                                          Thất bại
+                                        </SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
                                 </div>
                               </div>
 
                               {/* Macros Grid */}
-                              <div className="space-y-3">
-                                <label className="text-[11px] font-black text-[#0D0D0D]/30 uppercase tracking-[0.2em] ml-1">
-                                  Macros Targets (grams)
-                                </label>
-                                <div className="grid grid-cols-4 gap-3">
+                              <div className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50/40 rounded-2xl border border-blue-100 space-y-3">
+                                <p className="text-[10px] font-black text-blue-400 uppercase tracking-[0.2em]">
+                                  Chỉ tiêu dinh dưỡng (gram)
+                                </p>
+                                <div className="grid grid-cols-4 gap-2">
                                   {[
                                     {
                                       name: "targetProtein",
                                       label: "Đạm",
-                                      color: "border-blue-100",
+                                      bg: "bg-blue-50",
+                                      border: "border-blue-200",
+                                      text: "text-blue-600",
+                                      focus: "focus:border-blue-400",
                                     },
                                     {
                                       name: "targetCarbs",
                                       label: "Tinh bột",
-                                      color: "border-green-100",
+                                      bg: "bg-green-50",
+                                      border: "border-green-200",
+                                      text: "text-green-600",
+                                      focus: "focus:border-green-400",
                                     },
                                     {
                                       name: "targetFat",
                                       label: "Chất béo",
-                                      color: "border-yellow-100",
+                                      bg: "bg-yellow-50",
+                                      border: "border-yellow-200",
+                                      text: "text-yellow-600",
+                                      focus: "focus:border-yellow-400",
                                     },
                                     {
                                       name: "targetFiber",
                                       label: "Chất xơ",
-                                      color: "border-orange-100",
+                                      bg: "bg-orange-50",
+                                      border: "border-orange-200",
+                                      text: "text-orange-600",
+                                      focus: "focus:border-orange-400",
                                     },
                                   ].map((macro) => (
-                                    <div
-                                      key={macro.name}
-                                      className="space-y-1.5"
-                                    >
-                                      <span className="text-[9px] font-black text-[#0D0D0D]/40 uppercase tracking-tighter block ml-1">
+                                    <div key={macro.name} className="space-y-1">
+                                      <span
+                                        className={cn(
+                                          "text-[9px] font-black uppercase tracking-tighter block text-center",
+                                          macro.text,
+                                        )}
+                                      >
                                         {macro.label}
                                       </span>
                                       <input
@@ -1573,8 +1605,11 @@ export const ProfileDialog = ({
                                         value={(goalForm as any)[macro.name]}
                                         onChange={handleGoalFormChange}
                                         className={cn(
-                                          "w-full bg-[#F2F2F2]/50 border rounded-xl px-2 py-2.5 text-[13px] font-black text-center outline-none focus:bg-white focus:border-[#9FD923] transition-all",
-                                          macro.color,
+                                          "w-full border rounded-xl px-1 py-2 text-[13px] font-black text-center outline-none transition-all shadow-sm",
+                                          macro.bg,
+                                          macro.border,
+                                          macro.text,
+                                          macro.focus,
                                         )}
                                       />
                                     </div>
@@ -1583,30 +1618,35 @@ export const ProfileDialog = ({
                               </div>
 
                               {/* Dates */}
-                              <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                  <label className="text-[11px] font-black text-[#0D0D0D]/30 uppercase tracking-[0.2em] ml-1">
-                                    Start Date
-                                  </label>
-                                  <input
-                                    type="date"
-                                    name="startDate"
-                                    value={goalForm.startDate}
-                                    onChange={handleGoalFormChange}
-                                    className="w-full bg-[#F2F2F2]/50 border border-[#0D0D0D]/5 rounded-2xl px-4 py-3.5 text-[14px] font-bold outline-none focus:bg-white focus:border-[#9FD923] transition-all"
-                                  />
-                                </div>
-                                <div className="space-y-2">
-                                  <label className="text-[11px] font-black text-[#0D0D0D]/30 uppercase tracking-[0.2em] ml-1">
-                                    End Date
-                                  </label>
-                                  <input
-                                    type="date"
-                                    name="endDate"
-                                    value={goalForm.endDate}
-                                    onChange={handleGoalFormChange}
-                                    className="w-full bg-[#F2F2F2]/50 border border-[#0D0D0D]/5 rounded-2xl px-4 py-3.5 text-[14px] font-bold outline-none focus:bg-white focus:border-[#9FD923] transition-all"
-                                  />
+                              <div className="p-4 bg-gradient-to-br from-purple-50 to-pink-50/40 rounded-2xl border border-purple-100 space-y-3">
+                                <p className="text-[10px] font-black text-purple-400 uppercase tracking-[0.2em]">
+                                  Thời gian thực hiện
+                                </p>
+                                <div className="grid grid-cols-2 gap-3">
+                                  <div className="space-y-1.5">
+                                    <label className="text-[11px] font-black text-[#0D0D0D]/50 uppercase tracking-wider ml-1">
+                                      Ngày bắt đầu
+                                    </label>
+                                    <input
+                                      type="date"
+                                      name="startDate"
+                                      value={goalForm.startDate}
+                                      onChange={handleGoalFormChange}
+                                      className="w-full bg-white border border-purple-100 rounded-xl px-3 py-2.5 text-[13px] font-bold outline-none focus:border-purple-300 shadow-sm transition-all"
+                                    />
+                                  </div>
+                                  <div className="space-y-1.5">
+                                    <label className="text-[11px] font-black text-[#0D0D0D]/50 uppercase tracking-wider ml-1">
+                                      Ngày kết thúc
+                                    </label>
+                                    <input
+                                      type="date"
+                                      name="endDate"
+                                      value={goalForm.endDate}
+                                      onChange={handleGoalFormChange}
+                                      className="w-full bg-white border border-purple-100 rounded-xl px-3 py-2.5 text-[13px] font-bold outline-none focus:border-purple-300 shadow-sm transition-all"
+                                    />
+                                  </div>
                                 </div>
                               </div>
 
@@ -1617,14 +1657,14 @@ export const ProfileDialog = ({
                                     : handleAddGoal
                                 }
                                 disabled={isLoadingGoals}
-                                className="w-full py-4 bg-[#0D0D0D] text-white rounded-2xl font-black text-[12px] uppercase tracking-[0.2em] hover:bg-[#9FD923] hover:text-[#0D0D0D] transition-all shadow-xl shadow-[#9FD923]/10 flex items-center justify-center gap-3 disabled:opacity-50"
+                                className="w-full py-4 bg-gradient-to-r from-[#0D0D0D] to-[#1a1a1a] text-white rounded-2xl font-black text-[12px] uppercase tracking-[0.2em] hover:from-[#9FD923] hover:to-[#b8e83c] hover:text-[#0D0D0D] transition-all duration-300 shadow-xl shadow-[#9FD923]/10 flex items-center justify-center gap-3 disabled:opacity-50 group"
                               >
                                 {isLoadingGoals
                                   ? "Đang xử lý..."
                                   : editingGoalId
                                     ? "Lưu thay đổi"
                                     : "Tạo mục tiêu"}
-                                <Zap className="w-4 h-4 text-[#9FD923] group-hover:text-[#0D0D0D]" />
+                                <Zap className="w-4 h-4 text-[#9FD923] group-hover:text-[#0D0D0D] transition-colors" />
                               </button>
                             </div>
                           </motion.div>
@@ -1656,10 +1696,10 @@ export const ProfileDialog = ({
                             <div className="flex items-center justify-between mb-6 ml-2">
                               <div>
                                 <h4 className="text-[11px] font-black text-[#0D0D0D]/30 uppercase tracking-[0.2em] mb-1">
-                                  Your Profile
+                                  Hồ sơ của bạn
                                 </h4>
                                 <h3 className="text-[18px] font-black text-[#0D0D0D]">
-                                  Known Allergies
+                                  Dị ứng đã biết
                                 </h3>
                               </div>
                               <button
@@ -1667,7 +1707,7 @@ export const ProfileDialog = ({
                                 className="flex items-center gap-2 px-4 py-2.5 bg-[#0D0D0D] text-white rounded-xl text-[11px] font-black uppercase tracking-[0.1em] hover:bg-[#9FD923] hover:text-[#0D0D0D] transition-all shadow-lg shadow-[#9FD923]/10"
                               >
                                 <Plus className="w-4 h-4" />
-                                Add Allergy
+                                Thêm dị ứng
                               </button>
                             </div>
 
@@ -1701,10 +1741,16 @@ export const ProfileDialog = ({
                                                 getSeverityColor(item.severity),
                                               )}
                                             >
-                                              {item.severity.replace(
-                                                "SEV_",
-                                                "",
-                                              )}
+                                              {item.severity ===
+                                              SeverityType.SEV_LOW
+                                                ? "Nhẹ"
+                                                : item.severity ===
+                                                    SeverityType.SEV_MEDIUM
+                                                  ? "Trung bình"
+                                                  : item.severity ===
+                                                      SeverityType.SEV_HIGH
+                                                    ? "Nặng"
+                                                    : "Nguy hiểm tính mạng"}
                                             </span>
                                             {item.note && (
                                               <p className="text-[11px] text-[#0D0D0D]/40 font-bold italic line-clamp-1 max-w-[200px]">
@@ -1747,39 +1793,45 @@ export const ProfileDialog = ({
                             transition={{ duration: 0.2, ease: "easeOut" }}
                             className="flex-1 flex flex-col min-h-0"
                           >
-                            <div className="flex items-center gap-4 mb-8">
+                            {/* Allergy Form Header */}
+                            <div className="flex items-center gap-4 mb-6">
                               <button
                                 onClick={() => {
                                   setIsAddingAllergy(false);
                                   setEditingAllergyId(null);
                                 }}
-                                className="p-2 bg-[#F2F2F2] hover:bg-white rounded-xl border border-transparent hover:border-[#0D0D0D]/5 transition-all"
+                                className="p-2 bg-[#F2F2F2] hover:bg-white rounded-xl border border-transparent hover:border-red-200 transition-all"
                               >
                                 <ArrowLeft className="w-5 h-5 text-[#0D0D0D]" />
                               </button>
-                              <div>
-                                <h3 className="text-[18px] font-black text-[#0D0D0D]">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-orange-400 to-red-400 flex items-center justify-center shadow-sm">
+                                    <AlertTriangle className="w-4 h-4 text-white" />
+                                  </div>
+                                  <h3 className="text-[18px] font-black text-[#0D0D0D]">
+                                    {editingAllergyId
+                                      ? "Cập nhật dị ứng"
+                                      : "Thêm dị ứng mới"}
+                                  </h3>
+                                </div>
+                                <p className="text-[12px] text-[#0D0D0D]/40 font-bold mt-0.5 ml-9">
                                   {editingAllergyId
-                                    ? "Cập nhật dị ứng"
-                                    : "Thêm dị ứng mới"}
-                                </h3>
-                                <p className="text-[12px] text-[#0D0D0D]/40 font-bold">
-                                  {editingAllergyId
-                                    ? "Thay đổi tình trạng dị ứng của bạn"
-                                    : "Chọn chất gây dị ứng và mức độ"}
+                                    ? "Thay đổi mức độ hoặc ghi chú"
+                                    : "Chọn chất gây dị ứng và mức độ ảnh hưởng"}
                                 </p>
                               </div>
                             </div>
 
-                            <div className="space-y-6">
-                              {/* Search & Select - Hidden when editing */}
+                            <div className="space-y-4">
+                              {/* Search & Select */}
                               {!editingAllergyId && (
-                                <div className="space-y-3">
-                                  <label className="text-[11px] font-black text-[#0D0D0D]/30 uppercase tracking-[0.2em] ml-1">
-                                    Step 1: Find Allergen
-                                  </label>
+                                <div className="p-4 bg-gradient-to-br from-amber-50 to-orange-50/40 rounded-2xl border border-amber-100 space-y-3">
+                                  <p className="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em]">
+                                    Bước 1 — Tìm chất gây dị ứng
+                                  </p>
                                   <div className="relative">
-                                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-[#0D0D0D]/30" />
+                                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-amber-400" />
                                     <input
                                       type="text"
                                       placeholder="Tìm kiếm (VD: Đậu phộng, Sữa...)"
@@ -1787,11 +1839,10 @@ export const ProfileDialog = ({
                                       onChange={(e) =>
                                         setAllergenSearch(e.target.value)
                                       }
-                                      className="w-full bg-[#F2F2F2]/50 border border-[#0D0D0D]/5 rounded-2xl pl-12 pr-4 py-3.5 text-[14px] font-bold outline-none focus:bg-white focus:border-[#9FD923] transition-all"
+                                      className="w-full bg-white border border-amber-100 rounded-xl pl-10 pr-4 py-2.5 text-[13px] font-bold outline-none focus:border-amber-300 shadow-sm transition-all"
                                     />
                                   </div>
-
-                                  <div className="max-h-[160px] overflow-y-auto pr-2 custom-scrollbar grid grid-cols-2 gap-2 mt-2">
+                                  <div className="max-h-[150px] overflow-y-auto pr-1 custom-scrollbar grid grid-cols-2 gap-2">
                                     {filteredAllergens.length > 0 ? (
                                       filteredAllergens.map((alg) => (
                                         <button
@@ -1800,16 +1851,16 @@ export const ProfileDialog = ({
                                             setSelectedAllergenId(alg.id)
                                           }
                                           className={cn(
-                                            "p-3 rounded-xl border text-left transition-all",
+                                            "p-2.5 rounded-xl border text-left transition-all",
                                             selectedAllergenId === alg.id
-                                              ? "bg-[#9FD923] border-[#9FD923] text-[#0D0D0D] shadow-md shadow-[#9FD923]/20"
-                                              : "bg-white border-[#0D0D0D]/5 text-[#0D0D0D]/60 hover:border-[#9FD923]/30",
+                                              ? "bg-amber-400 border-amber-400 text-white shadow-md shadow-amber-200"
+                                              : "bg-white border-amber-100 text-[#0D0D0D]/60 hover:border-amber-300 hover:bg-amber-50",
                                           )}
                                         >
-                                          <p className="text-[13px] font-black line-clamp-1">
+                                          <p className="text-[12px] font-black line-clamp-1">
                                             {alg.name}
                                           </p>
-                                          <p className="text-[10px] font-bold opacity-60 line-clamp-1">
+                                          <p className="text-[10px] font-bold opacity-60 line-clamp-1 mt-0.5">
                                             {alg.description ||
                                               "Không có mô tả"}
                                           </p>
@@ -1825,75 +1876,85 @@ export const ProfileDialog = ({
                               )}
 
                               {editingAllergyId && (
-                                <div className="p-4 bg-[#D9F2A2]/20 rounded-2xl border border-[#9FD923]/20 flex items-center gap-4">
-                                  <AlertTriangle className="w-6 h-6 text-[#9FD923]" />
+                                <div className="p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl border border-amber-200 flex items-center gap-4 shadow-sm">
+                                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-400 to-red-400 flex items-center justify-center shadow-md">
+                                    <AlertTriangle className="w-5 h-5 text-white" />
+                                  </div>
                                   <div>
                                     <h4 className="text-[14px] font-black text-[#0D0D0D]">
-                                      Đang sửa:{" "}
                                       {
                                         allAllergens.find(
                                           (a) => a.id === selectedAllergenId,
                                         )?.name
                                       }
                                     </h4>
-                                    <p className="text-[11px] text-[#0D0D0D]/40 font-bold">
-                                      Bạn đang cập nhật mức độ hoặc ghi chú cho
-                                      dị ứng này.
+                                    <p className="text-[11px] text-orange-500 font-bold">
+                                      Đang chỉnh sửa mức độ &amp; ghi chú
                                     </p>
                                   </div>
                                 </div>
                               )}
 
                               {/* Severity & Note */}
-                              <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                  <label className="text-[11px] font-black text-[#0D0D0D]/30 uppercase tracking-[0.2em] ml-1">
-                                    Step 2: Severity
-                                  </label>
-                                  <Select
-                                    value={allergenSeverity}
-                                    onValueChange={(val) =>
-                                      setAllergenSeverity(val as SeverityType)
-                                    }
-                                  >
-                                    <SelectTrigger className="w-full bg-[#F2F2F2]/50 border border-[#0D0D0D]/5 rounded-2xl px-4 py-3.5 h-[52px] text-[14px] font-bold outline-none focus:bg-white focus:border-[#9FD923] transition-all">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value={SeverityType.SEV_LOW}>
-                                        Nhẹ
-                                      </SelectItem>
-                                      <SelectItem
-                                        value={SeverityType.SEV_MEDIUM}
-                                      >
-                                        Trung bình
-                                      </SelectItem>
-                                      <SelectItem value={SeverityType.SEV_HIGH}>
-                                        Nặng
-                                      </SelectItem>
-                                      <SelectItem
-                                        value={
-                                          SeverityType.SEV_LIFE_THREATENING
-                                        }
-                                      >
-                                        Nguy hiểm tính mạng
-                                      </SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                                <div className="space-y-2">
-                                  <label className="text-[11px] font-black text-[#0D0D0D]/30 uppercase tracking-[0.2em] ml-1">
-                                    Step 3: Notes
-                                  </label>
-                                  <input
-                                    type="text"
-                                    placeholder="Chi tiết bổ sung (không bắt buộc)..."
-                                    value={allergenNote}
-                                    onChange={(e) =>
-                                      setAllergenNote(e.target.value)
-                                    }
-                                    className="w-full bg-[#F2F2F2]/50 border border-[#0D0D0D]/5 rounded-2xl px-4 py-3.5 text-[14px] font-bold outline-none focus:bg-white focus:border-[#9FD923] transition-all"
-                                  />
+                              <div className="p-4 bg-gradient-to-br from-red-50 to-pink-50/40 rounded-2xl border border-red-100 space-y-3">
+                                <p className="text-[10px] font-black text-red-400 uppercase tracking-[0.2em]">
+                                  {editingAllergyId ? "Bước 1" : "Bước 2"} — Mức
+                                  độ &amp; Ghi chú
+                                </p>
+                                <div className="grid grid-cols-2 gap-3">
+                                  <div className="space-y-1.5">
+                                    <label className="text-[11px] font-black text-[#0D0D0D]/50 uppercase tracking-wider ml-1">
+                                      Mức độ phản ứng
+                                    </label>
+                                    <Select
+                                      value={allergenSeverity}
+                                      onValueChange={(val) =>
+                                        setAllergenSeverity(val as SeverityType)
+                                      }
+                                    >
+                                      <SelectTrigger className="w-full bg-white border border-red-100 rounded-xl px-3 py-2.5 h-11 text-[13px] font-bold outline-none focus:border-red-300 shadow-sm transition-all">
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem
+                                          value={SeverityType.SEV_LOW}
+                                        >
+                                          🟢 Nhẹ
+                                        </SelectItem>
+                                        <SelectItem
+                                          value={SeverityType.SEV_MEDIUM}
+                                        >
+                                          🟡 Trung bình
+                                        </SelectItem>
+                                        <SelectItem
+                                          value={SeverityType.SEV_HIGH}
+                                        >
+                                          🟠 Nặng
+                                        </SelectItem>
+                                        <SelectItem
+                                          value={
+                                            SeverityType.SEV_LIFE_THREATENING
+                                          }
+                                        >
+                                          🔴 Nguy hiểm tính mạng
+                                        </SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                  <div className="space-y-1.5">
+                                    <label className="text-[11px] font-black text-[#0D0D0D]/50 uppercase tracking-wider ml-1">
+                                      Ghi chú thêm
+                                    </label>
+                                    <input
+                                      type="text"
+                                      placeholder="Chi tiết bổ sung (không bắt buộc)..."
+                                      value={allergenNote}
+                                      onChange={(e) =>
+                                        setAllergenNote(e.target.value)
+                                      }
+                                      className="w-full bg-white border border-red-100 rounded-xl px-3 py-2.5 h-11 text-[13px] font-bold outline-none focus:border-red-300 shadow-sm transition-all"
+                                    />
+                                  </div>
                                 </div>
                               </div>
 
@@ -1906,14 +1967,14 @@ export const ProfileDialog = ({
                                 disabled={
                                   !selectedAllergenId || isLoadingAllergies
                                 }
-                                className="w-full py-4 bg-[#0D0D0D] text-white rounded-2xl font-black text-[12px] uppercase tracking-[0.2em] hover:bg-[#9FD923] hover:text-[#0D0D0D] transition-all shadow-xl shadow-[#9FD923]/10 flex items-center justify-center gap-3 disabled:opacity-50 disabled:grayscale transition-all"
+                                className="w-full py-4 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-2xl font-black text-[12px] uppercase tracking-[0.2em] hover:from-orange-400 hover:to-red-400 transition-all duration-300 shadow-xl shadow-red-200 flex items-center justify-center gap-3 disabled:opacity-50 disabled:grayscale group"
                               >
                                 {isLoadingAllergies
                                   ? "Đang xử lý..."
                                   : editingAllergyId
                                     ? "Cập nhật dị ứng"
                                     : "Xác nhận & Lưu"}
-                                <Zap className="w-4 h-4 text-[#9FD923] group-hover:text-[#0D0D0D]" />
+                                <Zap className="w-4 h-4 text-white/80 group-hover:scale-110 transition-transform" />
                               </button>
                             </div>
                           </motion.div>

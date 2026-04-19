@@ -207,10 +207,25 @@ export default function Home() {
       : targetWeight;
   const totalDiff = Math.abs(initialWeight - targetWeight) || 1;
   const currentDiff = Math.abs(currentWeight - targetWeight);
-  const progressPercent = Math.max(
-    0,
-    Math.min(100, ((totalDiff - currentDiff) / totalDiff) * 100),
-  );
+  const progressPercent = (() => {
+    const start = activeGoal?.startDate
+      ? new Date(activeGoal.startDate).getTime()
+      : null;
+    const end = activeGoal?.endDate
+      ? new Date(activeGoal.endDate).getTime()
+      : null;
+    if (start && end && end > start) {
+      const now = Date.now();
+      return Math.max(
+        0,
+        Math.min(100, Math.round(((now - start) / (end - start)) * 100)),
+      );
+    }
+    return Math.max(
+      0,
+      Math.min(100, Math.round(((totalDiff - currentDiff) / totalDiff) * 100)),
+    );
+  })();
 
   const calculateTotalDays = (start?: string, end?: string) => {
     if (!start || !end) return 60;
@@ -748,6 +763,14 @@ export default function Home() {
                 </div>
 
                 <div className="relative mt-2">
+                  <div className="flex justify-between items-center mb-1.5">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
+                      Tiến độ
+                    </span>
+                    <span className="text-[11px] font-extrabold text-dash-primary">
+                      {progressPercent}%
+                    </span>
+                  </div>
                   <div className="h-3 w-full bg-dash-surface-container-highest rounded-full overflow-hidden flex">
                     <div
                       className="h-full bg-dash-primary rounded-full transition-all duration-500"
@@ -756,23 +779,14 @@ export default function Home() {
                   </div>
                   {/* Current position marker */}
                   <div
-                    className="absolute top-1/2 -mt-2.5 w-5 h-5 bg-white border-2 border-dash-primary rounded-full shadow-md flex items-center justify-center -ml-2.5 transition-all duration-500"
+                    className="absolute top-1/2 mt-1 w-5 h-5 bg-white border-2 border-dash-primary rounded-full shadow-md flex items-center justify-center -ml-2.5 transition-all duration-500"
                     style={{ left: `${progressPercent}%` }}
                   >
                     <div className="w-1.5 h-1.5 bg-dash-primary rounded-full animate-pulse"></div>
                   </div>
                 </div>
 
-                <div className="flex justify-between text-[11px] font-bold text-on-surface-variant mt-1 pl-1 pr-1">
-                  <span>Ban đầu: {initialWeight} kg</span>
-                  <span className="text-dash-primary flex items-center gap-1">
-                    {currentWeight === targetWeight
-                      ? "Đạt mục tiêu!"
-                      : `Chỉ còn ${currentDiff.toFixed(1)} kg`}
-                  </span>
-                </div>
-
-                <div className="flex justify-between items-center text-[10px] uppercase font-bold text-on-surface-variant/70 mt-1 pt-2 border-t border-dash-surface-container-highest/30">
+                <div className="flex justify-between items-center text-[10px] uppercase font-bold text-on-surface-variant/70 mt-3 pt-2 border-t border-dash-surface-container-highest/30">
                   <div className="flex flex-col gap-0.5">
                     <span>Bắt đầu</span>
                     <span className="text-on-surface-variant text-[11px]">
