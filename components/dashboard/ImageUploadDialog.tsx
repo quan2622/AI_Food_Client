@@ -16,6 +16,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import {
   Upload,
@@ -26,6 +33,9 @@ import {
   Loader2,
   Utensils,
   AlertTriangle,
+  Plus,
+  BarChart3,
+  ChevronDown,
 } from "lucide-react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
@@ -75,6 +85,15 @@ const ImageUploadDialog: React.FC<ImageUploadDialogProps> = ({
   // Flow State
   const [step, setStep] = useState<"UPLOAD" | "LOADING" | "FORM">("UPLOAD");
   const [detectedFood, setDetectedFood] = useState<any>(null);
+  const [predictions, setPredictions] = useState<
+    Array<{
+      rank: number;
+      class_name: string;
+      name: string;
+      confidence: number;
+    }>
+  >([]);
+  const [showPredictions, setShowPredictions] = useState(false);
 
   // Form State
   const [mealType, setMealType] = useState<string>("MEAL_SNACK");
@@ -88,6 +107,24 @@ const ImageUploadDialog: React.FC<ImageUploadDialogProps> = ({
     type: SubmissionType.REPORT,
     category: SubmissionCategory.WRONG_INFO,
     description: "",
+  });
+  const [showNewFoodForm, setShowNewFoodForm] = useState(false);
+  const [newFoodPayload, setNewFoodPayload] = useState({
+    foodName: "",
+    categoryName: "",
+    defaultServingGrams: 0,
+    description: "",
+    imageUrl: "",
+    sourceUrl: "",
+    nutrition: {
+      per100g: true,
+      calories: 0,
+      protein: 0,
+      carbs: 0,
+      fat: 0,
+      fiber: 0,
+    },
+    ingredients: "" as string, // comma-separated, split on submit
   });
 
   useEffect(() => {
@@ -189,6 +226,8 @@ const ImageUploadDialog: React.FC<ImageUploadDialogProps> = ({
         recognizedName: recognizedClassName,
         confidence: predictRes.data.top1.confidence,
       });
+      setPredictions(predictRes.data.predictions || []);
+      setShowPredictions(false);
       if (matchedFood.defaultServingGrams) {
         setGrams(matchedFood.defaultServingGrams);
       }
@@ -260,16 +299,88 @@ const ImageUploadDialog: React.FC<ImageUploadDialogProps> = ({
       return;
     }
 
+    // Build submission request
+    const submissionData: ICreateSubmissionRequest = {
+      ...reportForm,
+      targetFoodId: detectedFood?.id,
+    };
+
+    // If user opted in for new food info, attach payload and set type to CONTRIBUTION
+    if (showNewFoodForm) {
+      if (
+        !newFoodPayload.foodName.trim() ||
+        !newFoodPayload.categoryName.trim() ||
+        !newFoodPayload.defaultServingGrams
+      ) {
+        toast.error(
+          "Vui lòng nhập đầy đủ: Tên món, Danh mục và Khối lượng phần ăn",
+        );
+        return;
+      }
+      submissionData.type = SubmissionType.CONTRIBUTION;
+      submissionData.category = SubmissionCategory.NEW_FOOD;
+      const ingredientsArr = newFoodPayload.ingredients
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+      submissionData.payload = {
+        foodName: newFoodPayload.foodName,
+        categoryName: newFoodPayload.categoryName,
+        defaultServingGrams: newFoodPayload.defaultServingGrams,
+        ...(newFoodPayload.description && {
+          description: newFoodPayload.description,
+        }),
+        ...(newFoodPayload.imageUrl && { imageUrl: newFoodPayload.imageUrl }),
+        ...(newFoodPayload.sourceUrl && {
+          sourceUrl: newFoodPayload.sourceUrl,
+        }),
+        nutrition: {
+          per100g: newFoodPayload.nutrition.per100g,
+          ...(newFoodPayload.nutrition.calories && {
+            calories: newFoodPayload.nutrition.calories,
+          }),
+          ...(newFoodPayload.nutrition.protein && {
+            protein: newFoodPayload.nutrition.protein,
+          }),
+          ...(newFoodPayload.nutrition.carbs && {
+            carbs: newFoodPayload.nutrition.carbs,
+          }),
+          ...(newFoodPayload.nutrition.fat && {
+            fat: newFoodPayload.nutrition.fat,
+          }),
+          ...(newFoodPayload.nutrition.fiber && {
+            fiber: newFoodPayload.nutrition.fiber,
+          }),
+        },
+        ...(ingredientsArr.length > 0 && { ingredients: ingredientsArr }),
+      };
+    }
+
     setIsSubmittingReport(true);
     try {
-      const res = await userSubmissionService.createSubmission({
-        ...reportForm,
-        targetFoodId: detectedFood?.id,
-      });
+      const res = await userSubmissionService.createSubmission(submissionData);
       if (res.metadata?.EC === 0 || !res.metadata) {
         toast.success("Báo cáo của bạn đã được gửi thành công!");
         setIsReportOpen(false);
+        setShowNewFoodForm(false);
         setReportForm({ ...reportForm, description: "" });
+        setNewFoodPayload({
+          foodName: "",
+          categoryName: "",
+          defaultServingGrams: 0,
+          description: "",
+          imageUrl: "",
+          sourceUrl: "",
+          nutrition: {
+            per100g: true,
+            calories: 0,
+            protein: 0,
+            carbs: 0,
+            fat: 0,
+            fiber: 0,
+          },
+          ingredients: "",
+        });
       } else {
         toast.error("Gửi báo cáo thất bại");
       }
@@ -419,37 +530,121 @@ const ImageUploadDialog: React.FC<ImageUploadDialogProps> = ({
               className="p-4 sm:p-6 pt-2 grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6"
             >
               <div className="space-y-6">
-                <div className="flex gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl bg-white/5 border border-white/10">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-lg bg-slate-800 flex items-center justify-center overflow-hidden relative">
-                    {files[0] ? (
-                      <Image
-                        src={files[0].preview}
-                        alt="food"
-                        fill
-                        className="object-cover"
-                        unoptimized
-                      />
-                    ) : (
-                      <Utensils className="w-8 h-8 text-slate-400" />
-                    )}
-                  </div>
-                  <div className="flex flex-col justify-center">
-                    <p className="text-xs font-bold text-[#CAFD00] uppercase tracking-wider mb-1 flex items-center gap-1">
-                      <CheckCircle2 className="w-3 h-3" />
-                      Độ chính xác: {(detectedFood.confidence * 100).toFixed(1)}
-                      %
-                    </p>
-                    <p className="text-base sm:text-xl font-bold text-white capitalize leading-tight">
-                      {detectedFood.foodName ||
-                        detectedFood.name ||
-                        detectedFood.recognizedName}
-                    </p>
-                    {detectedFood.foodCategory?.name && (
-                      <p className="text-xs text-slate-400 mt-1">
-                        {detectedFood.foodCategory.name}
+                <div className="rounded-xl bg-white/5 border border-white/10 overflow-hidden">
+                  <div className="flex gap-3 sm:gap-4 p-3 sm:p-4">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-lg bg-slate-800 flex items-center justify-center overflow-hidden relative">
+                      {files[0] ? (
+                        <Image
+                          src={files[0].preview}
+                          alt="food"
+                          fill
+                          className="object-cover"
+                          unoptimized
+                        />
+                      ) : (
+                        <Utensils className="w-8 h-8 text-slate-400" />
+                      )}
+                    </div>
+                    <div className="flex flex-col justify-center flex-1 min-w-0">
+                      <p className="text-xs font-bold text-[#CAFD00] uppercase tracking-wider mb-1 flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3" />
+                        Độ chính xác:{" "}
+                        {(detectedFood.confidence * 100).toFixed(1)}%
                       </p>
-                    )}
+                      <p className="text-base sm:text-xl font-bold text-white capitalize leading-tight">
+                        {detectedFood.foodName ||
+                          detectedFood.name ||
+                          detectedFood.recognizedName}
+                      </p>
+                      {detectedFood.foodCategory?.name && (
+                        <p className="text-xs text-slate-400 mt-1">
+                          {detectedFood.foodCategory.name}
+                        </p>
+                      )}
+                    </div>
                   </div>
+
+                  {/* Toggle predictions button */}
+                  {predictions.length > 0 && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => setShowPredictions(!showPredictions)}
+                        className="w-full flex items-center justify-center gap-1.5 py-2 border-t border-white/10 text-xs font-bold text-slate-400 hover:text-[#CAFD00] hover:bg-white/5 transition-all"
+                      >
+                        <BarChart3 className="w-3.5 h-3.5" />
+                        {showPredictions
+                          ? "Ẩn dự đoán"
+                          : "Xem chi tiết dự đoán"}
+                        <ChevronDown
+                          className={cn(
+                            "w-3.5 h-3.5 transition-transform",
+                            showPredictions && "rotate-180",
+                          )}
+                        />
+                      </button>
+
+                      <AnimatePresence>
+                        {showPredictions && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="overflow-hidden"
+                          >
+                            <div className="px-3 sm:px-4 pb-3 space-y-2">
+                              {predictions.map((pred, idx) => (
+                                <div key={idx} className="space-y-1">
+                                  <div className="flex items-center justify-between">
+                                    <span
+                                      className={cn(
+                                        "text-xs font-medium capitalize truncate",
+                                        idx === 0
+                                          ? "text-[#CAFD00]"
+                                          : "text-slate-400",
+                                      )}
+                                    >
+                                      {idx === 0 && "🥇 "}
+                                      {idx === 1 && "🥈 "}
+                                      {idx === 2 && "🥉 "}
+                                      {idx > 2 && `#${idx + 1} `}
+                                      {pred.name || pred.class_name}
+                                    </span>
+                                    <span
+                                      className={cn(
+                                        "text-xs font-bold shrink-0 ml-2",
+                                        idx === 0
+                                          ? "text-[#CAFD00]"
+                                          : "text-slate-500",
+                                      )}
+                                    >
+                                      {(pred.confidence * 100).toFixed(1)}%
+                                    </span>
+                                  </div>
+                                  <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+                                    <div
+                                      className={cn(
+                                        "h-full rounded-full transition-all",
+                                        idx === 0
+                                          ? "bg-[#CAFD00]"
+                                          : idx === 1
+                                            ? "bg-[#CAFD00]/50"
+                                            : "bg-white/20",
+                                      )}
+                                      style={{
+                                        width: `${(pred.confidence * 100).toFixed(1)}%`,
+                                      }}
+                                    />
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </>
+                  )}
                 </div>
 
                 <div className="space-y-4">
@@ -631,7 +826,7 @@ const ImageUploadDialog: React.FC<ImageUploadDialogProps> = ({
                 onClick={() => setIsReportOpen(true)}
                 className="bg-transparent border border-[#CAFD00]/30 text-[#CAFD00] hover:bg-[#CAFD00]/10 font-bold px-4 rounded-xl h-11 transition-all text-xs sm:text-sm"
               >
-                Báo lỗi dự đoán
+                Báo cáo
               </Button>
               <Button
                 onClick={handleConfirmForm}
@@ -646,26 +841,24 @@ const ImageUploadDialog: React.FC<ImageUploadDialogProps> = ({
       </DialogContent>
 
       <Dialog open={isReportOpen} onOpenChange={setIsReportOpen}>
-        <DialogContent className="sm:max-w-[425px] bg-[#0F172A] text-white border-[#CAFD00]/20 rounded-3xl p-6 shadow-2xl">
+        <DialogContent className="sm:max-w-[520px] max-h-[90vh] bg-[#0F172A] text-white border-[#CAFD00]/20 rounded-3xl p-6 shadow-2xl overflow-y-auto scrollbar-hide">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold flex items-center gap-2 text-white">
               <span className="p-2 rounded-lg bg-orange-500/10 text-orange-400">
                 <AlertTriangle className="h-5 w-5" />
               </span>
-              Báo cáo sai sót
+              Báo cáo
             </DialogTitle>
             <DialogDescription className="text-slate-400">
-              Giúp chúng tôi sửa lại thông tin món{" "}
-              {detectedFood?.foodName ||
-                detectedFood?.name ||
-                detectedFood?.recognizedName}{" "}
-              nếu AI nhận diện chưa đúng.
+              Giúp chúng tôi cải thiện hệ thống — báo lỗi hoặc đề xuất thêm món
+              ăn mới.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleReportSubmit} className="space-y-5 mt-4">
+            {/* --- Phân loại lỗi --- */}
             <div className="space-y-2">
               <label className="text-sm font-bold text-slate-300">
-                Phân loại lỗi
+                Phân loại
               </label>
               <Select
                 value={reportForm.category}
@@ -681,29 +874,25 @@ const ImageUploadDialog: React.FC<ImageUploadDialogProps> = ({
                 </SelectTrigger>
                 <SelectContent className="bg-[#0F172A] border-[#CAFD00]/20 text-white">
                   <SelectItem value={SubmissionCategory.WRONG_INFO}>
-                    Thông tin dinh dưỡng sai
-                  </SelectItem>
-                  <SelectItem value={SubmissionCategory.BAD_IMAGE}>
-                    Ảnh không đúng / Chất lượng kém
-                  </SelectItem>
-                  <SelectItem value={SubmissionCategory.DUPLICATE}>
-                    Bị trùng lặp
+                    Nhận diện sai
                   </SelectItem>
                   <SelectItem value={SubmissionCategory.NEW_FOOD}>
-                    Đây là món ăn mới
+                    Thêm thông tin món ăn mới
                   </SelectItem>
                 </SelectContent>
               </Select>
             </div>
+
+            {/* --- Chi tiết lỗi sai --- */}
             <div className="space-y-2">
               <label className="text-sm font-bold text-slate-300">
-                Chi tiết lỗi sai
+                Chi tiết
               </label>
               <textarea
                 required
                 placeholder="VD: Món này là Bún Bò chứ không phải Phở..."
                 maxLength={2000}
-                rows={4}
+                rows={3}
                 value={reportForm.description}
                 onChange={(e) =>
                   setReportForm({ ...reportForm, description: e.target.value })
@@ -711,6 +900,258 @@ const ImageUploadDialog: React.FC<ImageUploadDialogProps> = ({
                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white font-medium outline-none focus:border-[#CAFD00] transition-colors resize-none scrollbar-hide"
               />
             </div>
+
+            {/* --- Toggle: Thêm thông tin món ăn mới --- */}
+            <div className="flex items-center gap-3 pt-1">
+              <Checkbox
+                id="new-food-toggle"
+                checked={showNewFoodForm}
+                onCheckedChange={(v) => setShowNewFoodForm(v === true)}
+                className="border-white/20 data-[state=checked]:bg-[#CAFD00] data-[state=checked]:border-[#CAFD00] data-[state=checked]:text-[#0F172A]"
+              />
+              <label
+                htmlFor="new-food-toggle"
+                className="text-sm font-bold text-slate-300 cursor-pointer select-none flex items-center gap-1.5"
+              >
+                <Plus className="w-3.5 h-3.5 text-[#CAFD00]" />
+                Thêm thông tin món ăn mới (nếu cần)
+              </label>
+            </div>
+
+            {/* --- New Food Payload Accordion --- */}
+            {showNewFoodForm && (
+              <Accordion
+                type="multiple"
+                defaultValue={["basic", "nutrition", "extra"]}
+                className="space-y-2"
+              >
+                {/* Basic info */}
+                <AccordionItem
+                  value="basic"
+                  className="border border-white/10 rounded-xl overflow-hidden"
+                >
+                  <AccordionTrigger className="px-4 py-3 text-sm font-bold text-[#CAFD00] hover:no-underline">
+                    Thông tin cơ bản
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4 pb-4">
+                    <div className="space-y-3">
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-400">
+                          Tên món ăn *
+                        </label>
+                        <input
+                          type="text"
+                          required={showNewFoodForm}
+                          placeholder="VD: Bún đậu mắm tôm"
+                          value={newFoodPayload.foodName}
+                          onChange={(e) =>
+                            setNewFoodPayload({
+                              ...newFoodPayload,
+                              foodName: e.target.value,
+                            })
+                          }
+                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white font-medium outline-none focus:border-[#CAFD00] transition-colors"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-xs font-bold text-slate-400">
+                            Danh mục *
+                          </label>
+                          <input
+                            type="text"
+                            required={showNewFoodForm}
+                            placeholder="VD: Món bún"
+                            value={newFoodPayload.categoryName}
+                            onChange={(e) =>
+                              setNewFoodPayload({
+                                ...newFoodPayload,
+                                categoryName: e.target.value,
+                              })
+                            }
+                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white font-medium outline-none focus:border-[#CAFD00] transition-colors"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-xs font-bold text-slate-400">
+                            Phần ăn (g) *
+                          </label>
+                          <input
+                            type="number"
+                            min="1"
+                            required={showNewFoodForm}
+                            placeholder="400"
+                            value={newFoodPayload.defaultServingGrams || ""}
+                            onChange={(e) =>
+                              setNewFoodPayload({
+                                ...newFoodPayload,
+                                defaultServingGrams:
+                                  e.target.valueAsNumber || 0,
+                              })
+                            }
+                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white font-medium outline-none focus:border-[#CAFD00] transition-colors"
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-400">
+                          Mô tả món ăn
+                        </label>
+                        <textarea
+                          placeholder="Mô tả ngắn về món ăn..."
+                          rows={2}
+                          maxLength={500}
+                          value={newFoodPayload.description}
+                          onChange={(e) =>
+                            setNewFoodPayload({
+                              ...newFoodPayload,
+                              description: e.target.value,
+                            })
+                          }
+                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white font-medium outline-none focus:border-[#CAFD00] transition-colors resize-none"
+                        />
+                      </div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* Nutrition */}
+                <AccordionItem
+                  value="nutrition"
+                  className="border border-white/10 rounded-xl overflow-hidden"
+                >
+                  <AccordionTrigger className="px-4 py-3 text-sm font-bold text-[#CAFD00] hover:no-underline">
+                    Thông tin dinh dưỡng
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4 pb-4">
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3">
+                        <Checkbox
+                          id="per100g"
+                          checked={newFoodPayload.nutrition.per100g}
+                          onCheckedChange={(v) =>
+                            setNewFoodPayload({
+                              ...newFoodPayload,
+                              nutrition: {
+                                ...newFoodPayload.nutrition,
+                                per100g: v === true,
+                              },
+                            })
+                          }
+                          className="border-white/20 data-[state=checked]:bg-[#CAFD00] data-[state=checked]:border-[#CAFD00] data-[state=checked]:text-[#0F172A]"
+                        />
+                        <label
+                          htmlFor="per100g"
+                          className="text-xs font-medium text-slate-400 cursor-pointer"
+                        >
+                          Giá trị tính trên 100g (bỏ tích = tính trên 1 phần ăn)
+                        </label>
+                      </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        {(
+                          [
+                            { key: "calories", label: "Calories (kcal)" },
+                            { key: "protein", label: "Protein (g)" },
+                            { key: "carbs", label: "Carbs (g)" },
+                            { key: "fat", label: "Fat (g)" },
+                            { key: "fiber", label: "Fiber (g)" },
+                          ] as const
+                        ).map((item) => (
+                          <div key={item.key} className="space-y-1">
+                            <label className="text-xs font-bold text-slate-400">
+                              {item.label}
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.1"
+                              placeholder="0"
+                              value={newFoodPayload.nutrition[item.key] || ""}
+                              onChange={(e) =>
+                                setNewFoodPayload({
+                                  ...newFoodPayload,
+                                  nutrition: {
+                                    ...newFoodPayload.nutrition,
+                                    [item.key]: e.target.valueAsNumber || 0,
+                                  },
+                                })
+                              }
+                              className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white font-medium outline-none focus:border-[#CAFD00] transition-colors"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* Extra */}
+                <AccordionItem
+                  value="extra"
+                  className="border border-white/10 rounded-xl overflow-hidden"
+                >
+                  <AccordionTrigger className="px-4 py-3 text-sm font-bold text-[#CAFD00] hover:no-underline">
+                    Nguyên liệu & Liên kết
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4 pb-4">
+                    <div className="space-y-3">
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-400">
+                          Nguyên liệu (phân cách bằng dấu phẩy)
+                        </label>
+                        <textarea
+                          rows={2}
+                          placeholder="VD: bún tươi, đậu phụ, chả cốm, mắm tôm"
+                          value={newFoodPayload.ingredients}
+                          onChange={(e) =>
+                            setNewFoodPayload({
+                              ...newFoodPayload,
+                              ingredients: e.target.value,
+                            })
+                          }
+                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white font-medium outline-none focus:border-[#CAFD00] transition-colors resize-none"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-400">
+                          URL ảnh (Cloudinary)
+                        </label>
+                        <input
+                          type="url"
+                          placeholder="https://res.cloudinary.com/..."
+                          value={newFoodPayload.imageUrl}
+                          onChange={(e) =>
+                            setNewFoodPayload({
+                              ...newFoodPayload,
+                              imageUrl: e.target.value,
+                            })
+                          }
+                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white font-medium outline-none focus:border-[#CAFD00] transition-colors"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-400">
+                          Nguồn tham khảo
+                        </label>
+                        <input
+                          type="url"
+                          placeholder="https://example.com/recipe"
+                          value={newFoodPayload.sourceUrl}
+                          onChange={(e) =>
+                            setNewFoodPayload({
+                              ...newFoodPayload,
+                              sourceUrl: e.target.value,
+                            })
+                          }
+                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white font-medium outline-none focus:border-[#CAFD00] transition-colors"
+                        />
+                      </div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            )}
+
             <Button
               type="submit"
               disabled={isSubmittingReport}

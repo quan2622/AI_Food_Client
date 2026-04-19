@@ -8,7 +8,9 @@ export interface FoodRecognitionResponse {
     index: number;
   };
   predictions: Array<{
+    rank: number;
     class_name: string;
+    name: string;
     confidence: number;
     index: number;
   }>;
@@ -42,7 +44,10 @@ export interface FoodRecognitionResponse {
 }
 
 export const foodRecognitionService = {
-  predict: async (image: File, queryParams?: { model_name?: string; meal_id?: number }): Promise<ApiResponse<FoodRecognitionResponse>> => {
+  predict: async (
+    image: File,
+    queryParams?: { model_name?: string; meal_id?: number },
+  ): Promise<ApiResponse<FoodRecognitionResponse>> => {
     const formData = new FormData();
     formData.append("image", image);
 
@@ -53,7 +58,11 @@ export const foodRecognitionService = {
       params: queryParams,
     };
 
-    const res = await privateAxios.post<ApiResponse<FoodRecognitionResponse>>("/food-recognition/predict", formData, config);
+    const res = await privateAxios.post<ApiResponse<FoodRecognitionResponse>>(
+      "/food-recognition/predict",
+      formData,
+      config,
+    );
     return res as unknown as ApiResponse<FoodRecognitionResponse>;
   },
 };

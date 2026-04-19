@@ -35,6 +35,10 @@ import { useAuthStore } from "@/stores/authStore";
 import { toast } from "sonner";
 import { foodRecognitionService } from "@/services/foodRecognitionService";
 import { foodService } from "@/services/foodService";
+import {
+  nutritionNotificationService,
+  NutritionNotification,
+} from "@/services/nutritionNotificationService";
 
 export enum GoalType {
   WEIGHT_LOSS = "WEIGHT_LOSS",
@@ -95,6 +99,9 @@ export default function Home() {
   );
   const [isScanDialogOpen, setIsScanDialogOpen] = React.useState(false);
   const [waterIntake, setWaterIntake] = React.useState(0);
+  const [notification, setNotification] =
+    React.useState<NutritionNotification | null>(null);
+  const [notificationLoading, setNotificationLoading] = React.useState(true);
   const [greetingInfo, setGreetingInfo] = React.useState({
     text: "Chào bạn",
     icon: "☀️",
@@ -154,10 +161,25 @@ export default function Home() {
       });
     };
 
+    const fetchNotification = async () => {
+      try {
+        setNotificationLoading(true);
+        const result = await nutritionNotificationService.getToday();
+        if (result) {
+          setNotification(result);
+        }
+      } catch (err) {
+        console.error("Failed to fetch nutrition notification:", err);
+      } finally {
+        setNotificationLoading(false);
+      }
+    };
+
     fetchLog();
     fetchGoals();
     loadWaterIntake();
     loadGreeting();
+    fetchNotification();
   }, []);
 
   const handleAddWater = (amount: number) => {
@@ -432,15 +454,31 @@ export default function Home() {
             {/* Smart Insights */}
             <div className="bg-dash-tertiary-fixed text-on-tertiary-fixed-variant p-5 rounded-xl flex items-start gap-4 shadow-sm border border-dash-tertiary-fixed-dim/20">
               <Lightbulb className="w-5 h-5 text-dash-tertiary shrink-0 fill-dash-tertiary/20" />
-              <div>
-                <p className="font-bold text-sm leading-tight mb-1">
-                  Bạn chưa đủ Protein hôm nay...
-                </p>
-                <p className="text-xs opacity-80">
-                  Hãy thử thêm ức gà hoặc đậu phụ vào bữa tối để đạt mục tiêu
-                  nhé!
-                </p>
-              </div>
+              {notificationLoading ? (
+                <div className="flex flex-col gap-2 flex-1">
+                  <div className="h-4 w-3/4 bg-on-tertiary-fixed/10 rounded animate-pulse" />
+                  <div className="h-3 w-full bg-on-tertiary-fixed/10 rounded animate-pulse" />
+                </div>
+              ) : notification ? (
+                <div>
+                  <p className="font-bold text-sm leading-tight mb-1">
+                    {notification.mainMessage}
+                  </p>
+                  <p className="text-xs opacity-80">
+                    {notification.subMessage}
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <p className="font-bold text-sm leading-tight mb-1">
+                    Ăn uống đều đặn — chìa khóa cho một cơ thể khỏe mạnh!
+                  </p>
+                  <p className="text-xs opacity-80">
+                    Cố gắng duy trì đủ 3 bữa mỗi ngày, uống đủ nước và ăn nhiều
+                    rau xanh để cơ thể luôn năng động.
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Meal Log Timeline */}
