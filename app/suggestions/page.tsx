@@ -183,6 +183,9 @@ export default function SuggestionsPage() {
           onPriorityChange={setSelectedPriority}
           totals={totals}
           target={target}
+          goalStatus={activeGoal?.status}
+          goalType={activeGoal?.goalType}
+          endDate={activeGoal?.endDate}
           onApplyFilter={handleApplyFilter}
           isOpen={filterOpen}
           onToggle={() => setFilterOpen(!filterOpen)}

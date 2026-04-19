@@ -196,6 +196,9 @@ export const ProfileDialog = ({
   const [isAddingGoal, setIsAddingGoal] = useState(false);
   const [editingGoalId, setEditingGoalId] = useState<number | null>(null);
   const [isLoadingGoals, setIsLoadingGoals] = useState(false);
+  const [viewingGoalDetail, setViewingGoalDetail] =
+    useState<INutritionGoal | null>(null);
+  const [isLoadingGoalDetail, setIsLoadingGoalDetail] = useState(false);
 
   // Nutrition Goal Form State
   const [goalForm, setGoalForm] = useState<ICreateNutritionGoalRequest>({
@@ -390,26 +393,20 @@ export const ProfileDialog = ({
   // ── Nutrition Goals Logic ──────────────────────────────────────────────────
   const fetchGoals = async () => {
     try {
-      const [currentRes, historyRes] = await Promise.all([
-        nutritionGoalService.getCurrentGoal(),
-        nutritionGoalService.getMyGoals(),
-      ]);
+      const myGoalsRes = await nutritionGoalService.getMyGoals();
 
-      const currentData = currentRes.data
-        ? currentRes.data
-        : currentRes && "id" in currentRes
-          ? currentRes
-          : null;
-      setCurrentGoal(currentData as INutritionGoal | null);
+      const myGoalsData = myGoalsRes?.data as unknown as {
+        current: INutritionGoal | null;
+        history: INutritionGoal[];
+      } | null;
 
-      const historyData = Array.isArray(historyRes)
-        ? historyRes
-        : historyRes && Array.isArray(historyRes.data)
-          ? historyRes.data
-          : [];
-      setGoalHistory(historyData);
+      setCurrentGoal(myGoalsData?.current ?? null);
+      setGoalHistory(
+        Array.isArray(myGoalsData?.history) ? myGoalsData.history : [],
+      );
     } catch (error) {
       console.error("Failed to fetch goals", error);
+      setCurrentGoal(null);
       setGoalHistory([]);
     }
   };
@@ -503,6 +500,22 @@ export const ProfileDialog = ({
       }
     } catch (error) {
       toast.error("Xóa mục tiêu thất bại.");
+    }
+  };
+
+  const handleViewGoalDetail = async (goal: INutritionGoal) => {
+    setIsLoadingGoalDetail(true);
+    setViewingGoalDetail(goal); // show immediately with data we have
+    try {
+      const res = await nutritionGoalService.getGoalById(goal.id);
+      const detail = res?.data ?? (res as unknown as INutritionGoal);
+      if (detail && "id" in detail) {
+        setViewingGoalDetail(detail as INutritionGoal);
+      }
+    } catch (error) {
+      console.error("Failed to fetch goal detail", error);
+    } finally {
+      setIsLoadingGoalDetail(false);
     }
   };
 
@@ -1209,7 +1222,159 @@ export const ProfileDialog = ({
                       className="h-full flex flex-col pt-2"
                     >
                       <AnimatePresence mode="wait">
-                        {!isAddingGoal ? (
+                        {viewingGoalDetail ? (
+                          <motion.div
+                            key="goal-detail"
+                            initial={{ opacity: 0, x: 15 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -15 }}
+                            transition={{ duration: 0.2, ease: "easeOut" }}
+                            className="flex-1 flex flex-col min-h-0"
+                          >
+                            {/* Detail Header */}
+                            <div className="flex items-center gap-4 mb-6">
+                              <button
+                                onClick={() => setViewingGoalDetail(null)}
+                                className="p-2 bg-[#F2F2F2] hover:bg-white rounded-xl border border-transparent hover:border-[#9FD923]/30 transition-all"
+                              >
+                                <ArrowLeft className="w-5 h-5 text-[#0D0D0D]" />
+                              </button>
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-7 h-7 rounded-lg bg-[#9FD923] flex items-center justify-center shadow-sm">
+                                    <Eye className="w-4 h-4 text-[#0D0D0D]" />
+                                  </div>
+                                  <h3 className="text-[18px] font-black text-[#0D0D0D]">
+                                    Chi tiết mục tiêu
+                                  </h3>
+                                </div>
+                                <p className="text-[12px] text-[#0D0D0D]/40 font-bold mt-0.5 ml-9">
+                                  {getGoalTypeLabel(viewingGoalDetail.goalType)}
+                                </p>
+                              </div>
+                              <span
+                                className={cn(
+                                  "px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border",
+                                  getStatusBadge(viewingGoalDetail.status),
+                                )}
+                              >
+                                {getGoalStatusLabel(viewingGoalDetail.status)}
+                              </span>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto pr-3 -mr-3 custom-scrollbar pb-6 space-y-4">
+                              {/* Dates */}
+                              <div className="p-4 bg-[#F2F2F2]/60 rounded-2xl border border-[#0D0D0D]/5 space-y-2">
+                                <p className="text-[10px] font-black text-[#0D0D0D]/30 uppercase tracking-widest mb-3">
+                                  Thời gian
+                                </p>
+                                <div className="flex items-center justify-between">
+                                  <span className="text-[12px] font-bold text-[#0D0D0D]/50">
+                                    Bắt đầu
+                                  </span>
+                                  <span className="text-[13px] font-black text-[#0D0D0D]">
+                                    {formatDate(viewingGoalDetail.startDate)}
+                                  </span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                  <span className="text-[12px] font-bold text-[#0D0D0D]/50">
+                                    Kết thúc
+                                  </span>
+                                  <span className="text-[13px] font-black text-[#0D0D0D]">
+                                    {formatDate(viewingGoalDetail.endDate)}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Target Weight */}
+                              <div className="p-4 bg-gradient-to-br from-[#9FD923]/8 to-[#D9F2A2]/10 rounded-2xl border border-[#9FD923]/15">
+                                <p className="text-[10px] font-black text-[#0D0D0D]/30 uppercase tracking-widest mb-3">
+                                  Cân nặng mục tiêu
+                                </p>
+                                <div className="flex items-baseline gap-1.5">
+                                  <span className="text-[32px] font-black text-[#0D0D0D] leading-none">
+                                    {viewingGoalDetail.targetWeight}
+                                  </span>
+                                  <span className="text-[14px] font-black text-[#0D0D0D]/40">
+                                    kg
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Macros */}
+                              <div className="p-4 bg-[#F2F2F2]/60 rounded-2xl border border-[#0D0D0D]/5 space-y-3">
+                                <p className="text-[10px] font-black text-[#0D0D0D]/30 uppercase tracking-widest mb-1">
+                                  Dinh dưỡng mục tiêu / ngày
+                                </p>
+                                {[
+                                  {
+                                    label: "Calo",
+                                    value: viewingGoalDetail.targetCalories,
+                                    unit: "kcal",
+                                    color: "bg-orange-400",
+                                  },
+                                  {
+                                    label: "Protein",
+                                    value: viewingGoalDetail.targetProtein,
+                                    unit: "g",
+                                    color: "bg-blue-400",
+                                  },
+                                  {
+                                    label: "Carbs",
+                                    value: viewingGoalDetail.targetCarbs,
+                                    unit: "g",
+                                    color: "bg-yellow-400",
+                                  },
+                                  {
+                                    label: "Chất béo",
+                                    value: viewingGoalDetail.targetFat,
+                                    unit: "g",
+                                    color: "bg-red-400",
+                                  },
+                                  {
+                                    label: "Chất xơ",
+                                    value: viewingGoalDetail.targetFiber,
+                                    unit: "g",
+                                    color: "bg-green-400",
+                                  },
+                                ].map((item) => (
+                                  <div
+                                    key={item.label}
+                                    className="flex items-center gap-3"
+                                  >
+                                    <div
+                                      className={cn(
+                                        "w-2 h-2 rounded-full shrink-0",
+                                        item.color,
+                                      )}
+                                    />
+                                    <span className="text-[13px] font-bold text-[#0D0D0D]/60 flex-1">
+                                      {item.label}
+                                    </span>
+                                    <span className="text-[14px] font-black text-[#0D0D0D]">
+                                      {item.value ?? (
+                                        <span className="text-[#0D0D0D]/20 italic text-[11px]">
+                                          —
+                                        </span>
+                                      )}
+                                    </span>
+                                    <span className="text-[11px] font-bold text-[#0D0D0D]/30 w-8 text-right">
+                                      {item.unit}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+
+                              {/* Created at */}
+                              {viewingGoalDetail.createdAt && (
+                                <p className="text-center text-[10px] text-[#0D0D0D]/20 font-bold">
+                                  Tạo lúc{" "}
+                                  {formatDate(viewingGoalDetail.createdAt)}
+                                </p>
+                              )}
+                            </div>
+                          </motion.div>
+                        ) : !isAddingGoal ? (
                           <motion.div
                             key="goal-list"
                             initial={{ opacity: 0, x: 15 }}
@@ -1358,23 +1523,24 @@ export const ProfileDialog = ({
                                               Mục tiêu: {goal.targetWeight}kg
                                             </p>
                                           </div>
-                                          <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                          <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                                             <button
                                               onClick={() =>
-                                                handleEditGoal(goal)
+                                                handleViewGoalDetail(goal)
                                               }
-                                              className="p-1.5 hover:bg-[#F2F2F2] rounded-lg text-[#0D0D0D]/30 hover:text-[#9FD923] transition-all"
+                                              className="p-2 bg-[#9FD923]/10 hover:bg-[#9FD923]/25 border border-[#9FD923]/30 hover:border-[#9FD923]/60 rounded-xl text-[#7ab800] hover:text-[#5a8a00] transition-all duration-150"
                                               title="Xem chi tiết"
                                             >
-                                              <Eye className="w-3.5 h-3.5" />
+                                              <Eye className="w-4 h-4" />
                                             </button>
                                             <button
                                               onClick={() =>
                                                 handleDeleteGoal(goal.id)
                                               }
-                                              className="p-1.5 hover:bg-red-50 rounded-lg text-red-100 hover:text-red-500 transition-all"
+                                              className="p-2 bg-red-50 hover:bg-red-100 border border-red-200 hover:border-red-400 rounded-xl text-red-400 hover:text-red-600 transition-all duration-150"
+                                              title="Xóa"
                                             >
-                                              <Trash2 className="w-3.5 h-3.5" />
+                                              <Trash2 className="w-4 h-4" />
                                             </button>
                                           </div>
                                         </div>
