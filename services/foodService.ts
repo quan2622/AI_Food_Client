@@ -26,6 +26,15 @@ export const foodService = {
     return res as unknown as ApiResponse<IFood>;
   },
 
+  getFoodCategories: async (): Promise<
+    ApiResponse<{ id: number; name: string }[]>
+  > => {
+    const res = await privateAxios.get<
+      ApiResponse<{ id: number; name: string }[]>
+    >(`/food-categories/roots`);
+    return res as unknown as ApiResponse<{ id: number; name: string }[]>;
+  },
+
   searchFood: async (q: string, size = 20): Promise<FoodSearchResult[]> => {
     const res = await privateAxios.get<FoodSearchResult[]>("/search/foods", {
       params: { q, size },

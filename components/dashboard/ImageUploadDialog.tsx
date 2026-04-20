@@ -103,6 +103,9 @@ const ImageUploadDialog: React.FC<ImageUploadDialogProps> = ({
   // Report State
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
+  const [categories, setCategories] = useState<{ id: number; name: string }[]>(
+    [],
+  );
   const [reportForm, setReportForm] = useState<ICreateSubmissionRequest>({
     type: SubmissionType.REPORT,
     category: SubmissionCategory.WRONG_INFO,
@@ -124,7 +127,6 @@ const ImageUploadDialog: React.FC<ImageUploadDialogProps> = ({
       fat: 0,
       fiber: 0,
     },
-    ingredients: "" as string, // comma-separated, split on submit
   });
 
   useEffect(() => {
@@ -147,6 +149,17 @@ const ImageUploadDialog: React.FC<ImageUploadDialogProps> = ({
       else setMealType("MEAL_SNACK");
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    if (!isReportOpen) return;
+    foodService
+      .getFoodCategories()
+      .then((res) => {
+        const list = Array.isArray(res.data) ? res.data : [];
+        setCategories(list);
+      })
+      .catch(() => setCategories([]));
+  }, [isReportOpen]);
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -319,10 +332,6 @@ const ImageUploadDialog: React.FC<ImageUploadDialogProps> = ({
       }
       submissionData.type = SubmissionType.CONTRIBUTION;
       submissionData.category = SubmissionCategory.NEW_FOOD;
-      const ingredientsArr = newFoodPayload.ingredients
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean);
       submissionData.payload = {
         foodName: newFoodPayload.foodName,
         categoryName: newFoodPayload.categoryName,
@@ -352,7 +361,6 @@ const ImageUploadDialog: React.FC<ImageUploadDialogProps> = ({
             fiber: newFoodPayload.nutrition.fiber,
           }),
         },
-        ...(ingredientsArr.length > 0 && { ingredients: ingredientsArr }),
       };
     }
 
@@ -379,7 +387,6 @@ const ImageUploadDialog: React.FC<ImageUploadDialogProps> = ({
             fat: 0,
             fiber: 0,
           },
-          ingredients: "",
         });
       } else {
         toast.error("Gửi báo cáo thất bại");
@@ -958,19 +965,26 @@ const ImageUploadDialog: React.FC<ImageUploadDialogProps> = ({
                           <label className="text-xs font-bold text-slate-400">
                             Danh mục *
                           </label>
-                          <input
-                            type="text"
-                            required={showNewFoodForm}
-                            placeholder="VD: Món bún"
+                          <Select
                             value={newFoodPayload.categoryName}
-                            onChange={(e) =>
+                            onValueChange={(val) =>
                               setNewFoodPayload({
                                 ...newFoodPayload,
-                                categoryName: e.target.value,
+                                categoryName: val,
                               })
                             }
-                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white font-medium outline-none focus:border-[#CAFD00] transition-colors"
-                          />
+                          >
+                            <SelectTrigger className="w-full bg-white/5 border border-white/10 rounded-xl px-4 h-9.5 text-sm text-white font-medium outline-none focus:border-[#CAFD00] transition-colors">
+                              <SelectValue placeholder="Chọn danh mục" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-[#0F172A] border-[#CAFD00]/20 text-white">
+                              {categories.map((cat) => (
+                                <SelectItem key={cat.id} value={cat.name}>
+                                  {cat.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
                         <div className="space-y-1">
                           <label className="text-xs font-bold text-slate-400">
@@ -1080,71 +1094,6 @@ const ImageUploadDialog: React.FC<ImageUploadDialogProps> = ({
                             />
                           </div>
                         ))}
-                      </div>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-
-                {/* Extra */}
-                <AccordionItem
-                  value="extra"
-                  className="border border-white/10 rounded-xl overflow-hidden"
-                >
-                  <AccordionTrigger className="px-4 py-3 text-sm font-bold text-[#CAFD00] hover:no-underline">
-                    Nguyên liệu & Liên kết
-                  </AccordionTrigger>
-                  <AccordionContent className="px-4 pb-4">
-                    <div className="space-y-3">
-                      <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-400">
-                          Nguyên liệu (phân cách bằng dấu phẩy)
-                        </label>
-                        <textarea
-                          rows={2}
-                          placeholder="VD: bún tươi, đậu phụ, chả cốm, mắm tôm"
-                          value={newFoodPayload.ingredients}
-                          onChange={(e) =>
-                            setNewFoodPayload({
-                              ...newFoodPayload,
-                              ingredients: e.target.value,
-                            })
-                          }
-                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white font-medium outline-none focus:border-[#CAFD00] transition-colors resize-none"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-400">
-                          URL ảnh (Cloudinary)
-                        </label>
-                        <input
-                          type="url"
-                          placeholder="https://res.cloudinary.com/..."
-                          value={newFoodPayload.imageUrl}
-                          onChange={(e) =>
-                            setNewFoodPayload({
-                              ...newFoodPayload,
-                              imageUrl: e.target.value,
-                            })
-                          }
-                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white font-medium outline-none focus:border-[#CAFD00] transition-colors"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-400">
-                          Nguồn tham khảo
-                        </label>
-                        <input
-                          type="url"
-                          placeholder="https://example.com/recipe"
-                          value={newFoodPayload.sourceUrl}
-                          onChange={(e) =>
-                            setNewFoodPayload({
-                              ...newFoodPayload,
-                              sourceUrl: e.target.value,
-                            })
-                          }
-                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white font-medium outline-none focus:border-[#CAFD00] transition-colors"
-                        />
                       </div>
                     </div>
                   </AccordionContent>
