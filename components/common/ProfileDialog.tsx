@@ -311,6 +311,57 @@ export const ProfileDialog = ({
     );
   }, [allAllergens, allergenSearch]);
 
+  // Compute minimum days / end-date for the Smart Create goal form
+  const smartGoalMinInfo = useMemo(() => {
+    const MIN_DAYS = 30;
+    const maxDeltaMap: Record<string, number> = {
+      [GoalType.GOAL_LOSS]: 500,
+      [GoalType.GOAL_GAIN]: 500,
+      [GoalType.GOAL_STRICT]: 750,
+      [GoalType.GOAL_MAINTAIN]: 0,
+    };
+    const maxDelta = maxDeltaMap[smartGoalForm.goalType] ?? 500;
+    const currentWeight = user?.userProfile?.weight ?? 0;
+    const targetWeight = smartGoalForm.targetWeight ?? currentWeight;
+    const weightDiff = Math.abs(targetWeight - currentWeight);
+
+    let dynamicMinDays = 0;
+    if (maxDelta > 0 && weightDiff > 0) {
+      dynamicMinDays = Math.ceil((7700 * weightDiff) / maxDelta);
+    }
+    const minDays = Math.max(MIN_DAYS, dynamicMinDays);
+    const minEndDate = new Date(Date.now() + minDays * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split("T")[0];
+
+    let reason = `Tối thiểu ${MIN_DAYS} ngày cho mọi mục tiêu dinh dưỡng.`;
+    if (dynamicMinDays > MIN_DAYS && weightDiff > 0) {
+      const goalLabel =
+        smartGoalForm.goalType === GoalType.GOAL_STRICT
+          ? "ăn kiêng nghiêm ngặt"
+          : smartGoalForm.goalType === GoalType.GOAL_LOSS
+            ? "giảm cân"
+            : "tăng cân";
+      reason = `Chênh lệch ${weightDiff.toFixed(1)} kg (${goalLabel}, tối đa ${maxDelta} kcal/ngày) → cần ít nhất ${dynamicMinDays} ngày để an toàn.`;
+    }
+
+    return { minDays, minEndDate, reason };
+  }, [
+    smartGoalForm.goalType,
+    smartGoalForm.targetWeight,
+    user?.userProfile?.weight,
+  ]);
+
+  // Auto-clamp endDate when minimum changes
+  useEffect(() => {
+    if (smartGoalForm.endDate < smartGoalMinInfo.minEndDate) {
+      setSmartGoalForm((prev) => ({
+        ...prev,
+        endDate: smartGoalMinInfo.minEndDate,
+      }));
+    }
+  }, [smartGoalMinInfo.minEndDate]);
+
   const handleAddAllergy = async () => {
     if (!user?.id || !selectedAllergenId) return;
     setIsLoadingAllergies(true);
@@ -523,16 +574,16 @@ export const ProfileDialog = ({
   };
 
   const handleViewGoalDetail = async (goal: INutritionGoal) => {
-    setIsLoadingGoalDetail(true);
     setViewingGoalDetail(goal); // show immediately with data we have
+    setIsLoadingGoalDetail(true);
     try {
       const res = await nutritionGoalService.getGoalById(goal.id);
-      const detail = res?.data ?? (res as unknown as INutritionGoal);
-      if (detail && "id" in detail) {
-        setViewingGoalDetail(detail as INutritionGoal);
+      const detail = (res?.data ?? res) as unknown as INutritionGoal;
+      if (detail && typeof detail === "object" && "id" in detail) {
+        setViewingGoalDetail(detail);
       }
-    } catch (error) {
-      console.error("Failed to fetch goal detail", error);
+    } catch {
+      // silently keep showing the history data already set above
     } finally {
       setIsLoadingGoalDetail(false);
     }
@@ -1700,11 +1751,7 @@ export const ProfileDialog = ({
                                     <input
                                       type="date"
                                       value={smartGoalForm.endDate}
-                                      min={
-                                        new Date(Date.now() + 86400000)
-                                          .toISOString()
-                                          .split("T")[0]
-                                      }
+                                      min={smartGoalMinInfo.minEndDate}
                                       onChange={(e) =>
                                         setSmartGoalForm((prev) => ({
                                           ...prev,
@@ -1713,8 +1760,13 @@ export const ProfileDialog = ({
                                       }
                                       className="w-full bg-white border border-purple-100 rounded-xl px-3 py-2.5 text-[13px] font-bold outline-none focus:border-purple-300 shadow-sm transition-all"
                                     />
-                                    <p className="text-[10px] text-[#0D0D0D]/30 font-bold">
-                                      Ngày bắt đầu sẽ được tính từ hôm nay.
+                                    <p className="text-[10px] text-purple-400/70 font-bold leading-relaxed">
+                                      Tối thiểu{" "}
+                                      <span className="text-purple-500 font-black">
+                                        {smartGoalMinInfo.minDays} ngày
+                                      </span>
+                                      {" — "}
+                                      {smartGoalMinInfo.reason}
                                     </p>
                                   </div>
 

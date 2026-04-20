@@ -80,7 +80,7 @@ export function FoodDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[60vw] sm:max-w-[1400px] max-h-[90vh] rounded-3xl p-0 overflow-hidden border-[#E2E8F0]">
+      <DialogContent className="w-[90vw] sm:max-w-[1400px] max-h-[90vh] rounded-3xl p-0 overflow-hidden border-[#E2E8F0]">
         <DialogHeader className="px-5 sm:px-6 py-4 border-b bg-white">
           <DialogTitle className="text-lg sm:text-xl font-black text-[#0F172A]">
             {food?.foodName || foodPreview?.name || "Chi tiết món ăn"}
