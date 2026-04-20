@@ -186,7 +186,7 @@ export function MealItemDetailDialog({
                         Trọng lượng
                       </p>
                       <p className="text-xl font-black text-[#0F172A]">
-                        {mealItem.grams}
+                        {Math.round(mealItem.grams)}
                         <span className="text-xs ml-1 font-bold text-slate-500">
                           g
                         </span>
@@ -200,9 +200,10 @@ export function MealItemDetailDialog({
                         Khẩu phần
                       </p>
                       <p className="text-xl font-black text-[#0F172A]">
-                        {mealItem.quantity}
+                        {Math.round(mealItem.quantity)}
                         <span className="text-xs ml-1 font-bold text-slate-500">
-                          phần ({food?.defaultServingGrams ?? "—"}g/phần)
+                          phần ({food?.defaultServingGrams ?? "—"}{" "}
+                          g/phần)
                         </span>
                       </p>
                     </div>
@@ -227,7 +228,7 @@ export function MealItemDetailDialog({
                           <m.icon className="w-3.5 h-3.5" />
                         </div>
                         <p className="text-lg font-black text-[#0F172A]">
-                          {m.value}
+                          {Math.round(m.value)}
                           <span className="text-[10px] ml-0.5 font-bold text-slate-500">
                             {m.unit}
                           </span>
@@ -253,7 +254,7 @@ export function MealItemDetailDialog({
                             {item.label}
                           </span>
                           <span className="text-sm font-black text-[#0F172A]">
-                            {item.value}
+                            {Math.round(item.value)}
                             <span className="text-[9px] ml-0.5 font-bold text-slate-400">
                               {item.unit}
                             </span>

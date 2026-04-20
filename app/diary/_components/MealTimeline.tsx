@@ -42,7 +42,7 @@ const NutritionBadge = ({
 }) => (
   <div className="flex items-center gap-0.5 bg-[#F2F2F2]/50 px-1.5 py-0.5 rounded border border-[#0D0D0D]/5">
     <Icon className={`w-3 h-3 ${color}`} />
-    <span className="text-[11px] font-bold text-foreground">{value}</span>
+    <span className="text-[11px] font-bold text-foreground">{Math.round(value)}</span>
     <span className="text-[9px] text-muted-foreground uppercase font-semibold">
       {unit}
     </span>
@@ -171,7 +171,7 @@ const MealTimeline = ({ meals = [] }: MealTimelineProps) => {
                               {item.food?.foodName || "Unknown Meal"}
                               {item.grams ? (
                                 <span className="text-xs text-muted-foreground ml-1">
-                                  ({item.grams}g)
+                                  ({Math.round(item.grams)}g)
                                 </span>
                               ) : null}
                             </h4>
